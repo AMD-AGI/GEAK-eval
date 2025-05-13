@@ -8,7 +8,7 @@ import datetime
 import json
 from parse_llm_code import extract_code_blocks
 import numpy as np
-
+MODULE_DIR = os.path.dirname(__file__)
 ## Implementation from https://arxiv.org/pdf/2107.03374
 def passk(n, c, k):
     if n -c < k: return 1.0
@@ -149,11 +149,14 @@ def extract_code_from_llm_output(response):
         return response
     code_blocks = extract_code_blocks(response)
     for _code in code_blocks.code_dict_list:
-        code += _code['context'] + "\n"
+        if code is None:
+            code = _code['context'] + "\n"
+        else:
+            code += _code['context'] + "\n"
     return code
 
 def get_fname_difficulty_from_label(label):
-    triton_root = "TritonBench/data/TritonBench_G_comp_alpac_v1_fixed_with_difficulty.json"
+    triton_root = os.path.join(MODULE_DIR, "TritonBench/data/TritonBench_G_comp_alpac_v1_fixed_with_difficulty.json")
     with open(triton_root, 'r') as f:
         data = json.load(f)
         for item in data:
@@ -161,36 +164,74 @@ def get_fname_difficulty_from_label(label):
                 return item['file'], item['difficulty']
     return None, None
 
+class TestFunctionRemover(ast.NodeTransformer):
+    def visit_FunctionDef(self, node):
+        if node.name.startswith('test_'):
+            return None  # Kill the function
+        return self.generic_visit(node)
+
+    def visit_Expr(self, node):
+        if isinstance(node.value, ast.Call):
+            func = node.value.func
+            if isinstance(func, ast.Name) and func.id.startswith('test_'):
+                return None  # Kill expressions like test_foo()
+            if isinstance(func, ast.Attribute) and func.attr.startswith('test_'):
+                return None
+        return self.generic_visit(node)
+
+    def visit_Assign(self, node):
+        # If the value being assigned is a call to test_ function, kill the entire assignment
+        if isinstance(node.value, ast.Call):
+            func = node.value.func
+            if isinstance(func, ast.Name) and func.id.startswith('test_'):
+                return None
+            if isinstance(func, ast.Attribute) and func.attr.startswith('test_'):
+                return None
+        return self.generic_visit(node)
+
+    def visit_AugAssign(self, node):
+        # For augmented assignments like x += test_func()
+        if isinstance(node.value, ast.Call):
+            func = node.value.func
+            if isinstance(func, ast.Name) and func.id.startswith('test_'):
+                return None
+            if isinstance(func, ast.Attribute) and func.attr.startswith('test_'):
+                return None
+        return self.generic_visit(node)
+
+    def visit_Module(self, node):
+        # Manually rebuild body without None's
+        node.body = [stmt for stmt in map(self.visit, node.body) if stmt is not None]
+        return node
+
+    def visit_ClassDef(self, node):
+        node.body = [stmt for stmt in map(self.visit, node.body) if stmt is not None]
+        return node
+
+def strip_test_functions(source_code):
+    tree = ast.parse(source_code)
+    remover = TestFunctionRemover()
+    tree = remover.visit(tree)
+    ast.fix_missing_locations(tree)
+    return ast.unparse(tree)
+
 def process_code(code: str):
     if "```python" in code:
-        code = code.split("```python")[-1].replace("<|im_end|>", "").replace("<|EOT|>", "")
-    
+        code = code.split("```python")[-1].replace("<|im_end|>", "").replace("<|EOT|>", "")    
     try:
-        tree = ast.parse(code)
-        imports = []
-        function_definitions = []
+        code = strip_test_functions(code)
+    except Exception as e:
+        pass    
+    return code
 
-        # Traverse the AST to find import statements and function definitions
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import) or isinstance(node, ast.ImportFrom):
-                # Collect the import statements
-                imports.append(ast.unparse(node))  # Convert the AST node back to code
-            elif isinstance(node, ast.FunctionDef):
-                # Collect function definitions
-                function_code = ast.unparse(node)  # Get the Python code for the function
-                function_definitions.append(function_code)
+DEFAULT_TRITON_BENCH_ROOT = os.path.join(MODULE_DIR, "TritonBench/data/TritonBench_G_v1")
 
-        return "\n".join(imports) + "\n\n" + "\n".join(function_definitions)
-
-    except:
-        return code
-
-
-def code_call_exec_success_allclose(code, fname, temp_root="tmp2", atol=1e-3, rtol=1e-1, timeout=2*60, verbose=False):
+def code_call_exec_success_allclose(code, fname, temp_root="tmp2", atol=1e-3, rtol=1e-1, timeout=2*60, ground_truth_root=DEFAULT_TRITON_BENCH_ROOT, verbose=False):
     tmp_gen_folder = os.path.join(temp_root, "gen")
     os.makedirs(tmp_gen_folder, exist_ok=True)
     
-    triton_root = "TritonBench/data/TritonBench_G_v1"
+    triton_root = ground_truth_root
+    assert os.path.exists(triton_root), f"GROUND TRUTH ROOT dir {triton_root} does not exist!"
     triton_file = os.path.join(triton_root, fname)
 
     gen_file = get_temp_file(prefix=f'{fname}_gen_triton_code')
@@ -219,7 +260,7 @@ def code_call_exec_success_allclose(code, fname, temp_root="tmp2", atol=1e-3, rt
         call_status = result_call.returncode == 0
 
         # Check for correctness
-        result_corr = subprocess.run([f'python3 correctness.py --gen_file {gen_file} --ref_file {triton_file} --atol {atol} --rtol {rtol}'], capture_output=True, text=True, timeout=timeout, shell=True)
+        result_corr = subprocess.run([f'python3 {MODULE_DIR}/correctness.py --gen_file {gen_file} --ref_file {triton_file} --atol {atol} --rtol {rtol}'], capture_output=True, text=True, timeout=timeout, shell=True)
         stdout_corr = result_corr.stdout
         stderr_corr = result_corr.stderr
 

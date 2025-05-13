@@ -10,6 +10,7 @@ parser = argparse.ArgumentParser(description="Check correctness of the code.")
 parser.add_argument('--folder_or_file', '-f', type=str, required=True, help='Folder to check')
 parser.add_argument('--outfile', '-o', type=str, required=True, help='Output file to save results')
 
+parser.add_argument('--ground_truth_dir', '-g', type=str, default=None, help='Folder to check')
 parser.add_argument('--file_pat', '-p', type=str, default="*", help='Folder to check')
 parser.add_argument('--k_vals', '-k', type=str, default="1,2,3,5,10,15", help='Folder to check')
 
@@ -55,14 +56,26 @@ for file in tqdm(files, desc="Testing a folder", unit="file"):
                 num_files += 1
             response = item['predict']
             code = extract_code_from_llm_output(response)
-            fname, difficulty = get_fname_difficulty_from_label(item['label'])
+            if "file" in item:
+                fname = item['file']
+                difficulty = item.get('difficulty', -1)
+            else:
+                fname, difficulty = get_fname_difficulty_from_label(item['label'])
             if fname in FAILED_FILES:
                 print(f"Skipping {fname} as it is known to fail.")
                 continue
             assert fname is not None, f"File name is None for {item['label']}"
             assert difficulty is not None, f"Difficulty is None for {item['label']}"
-            assert code is not None, f"Code is None for {item['label']}"
-            call_status, exec_status, stdout, stderr = code_call_exec_success_allclose(code, fname, tmp_folder, atol=1e-2, rtol=1e-1)
+            # assert code is not None, f"Code is None for {item['label']}" 
+            ## FIXED: Actually if the code is None just for a few prompts, then other prompts should be evaluated
+            if code is None:
+                call_status, exec_status, stdout, stderr = False, False, "", "Code is empty"
+            else:
+                if args.ground_truth_dir is None:
+                    call_status, exec_status, stdout, stderr = code_call_exec_success_allclose(code, fname, tmp_folder, atol=1e-2, rtol=1e-1)
+                else:
+                    call_status, exec_status, stdout, stderr = code_call_exec_success_allclose(code, fname, tmp_folder, atol=1e-2, rtol=1e-1, ground_truth_root=args.ground_truth_dir)
+
             eval_data = {
                 'pass_num': pass_num,
                 'file_name': fname,
@@ -87,16 +100,19 @@ for file in tqdm(files, desc="Testing a folder", unit="file"):
             _log = f"{get_time()} => File: {file}, Call Accuracy: {call_acc}, Exec Accuracy: {exec_acc}"
             out_f.write(_log + '\n')
     data_across_passes += eval_data_for_file
+    # Save the data for this pass to a file
+    with open(out_file + "results.json", 'w') as out_f:
+        json.dump(eval_data_for_file, out_f, indent=4)
 
 # Save the data across passes to a file
-with open(args.outfile.replace(".json", "_all_passes.json"), 'w') as out_f:
+with open(args.outfile +  "_all_passes.json", 'w') as out_f:
     json.dump(data_across_passes, out_f, indent=4)
 # Save the data across passes to a CSV file
 df = pd.DataFrame(data_across_passes)
 
-df.to_csv(args.outfile.replace(".json", "_all_passes.csv"), index=False)
+df.to_csv(args.outfile + "_all_passes.csv", index=False)
 # Save the data across passes to a pickle file
-df.to_pickle(args.outfile.replace(".json", "_all_passes.pkl"))
+df.to_pickle(args.outfile +  "_all_passes.pkl")
 ## For each unique value in file_name column, calculate sum(call_status) and sum(exec_status) columns
 # df = df.explode('file_name')
 # df = df.explode('call_status')
