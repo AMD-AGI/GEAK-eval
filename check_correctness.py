@@ -66,7 +66,7 @@ for file in tqdm(files, desc="Testing a folder", unit="file"):
                 continue
             assert fname is not None, f"File name is None for {item['label']}"
             assert difficulty is not None, f"Difficulty is None for {item['label']}"
-            assert code is not None, f"Code is None for {item['label']}" 
+            # assert code is not None, f"Code is None for {item['label']}" 
             ## FIXED: Actually if the code is None just for a few prompts, then other prompts should be evaluated
             if code is None:
                 call_status, exec_status, stdout, stderr = False, False, "", "Code is empty"
