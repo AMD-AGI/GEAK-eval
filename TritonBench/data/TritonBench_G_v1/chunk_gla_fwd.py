@@ -231,7 +231,7 @@ def chunk_gla_fwd_kernel_o(
     for i_k in range(tl.cdiv(K, BK)):
         p_q = tl.make_block_ptr(q + i_bh * s_k_h, (T, K), (s_k_t, 1), (i_t * BT, i_k * BK), (BT, BK), (1, 0))
         p_g = tl.make_block_ptr(g + i_bh * s_k_h, (T, K), (s_k_t, 1), (i_t * BT, i_k * BK), (BT, BK), (1, 0))
-        p_h = tl.make_block_ptr(h + i_bh * s_h_h + i_t * K * V, (K, V), (s_h_t, 1), (i_k * BK, i_v * BV), (BK, BV), (1, 0))
+        p_h = tl.make_block_ptr(h + i_bh * s_h_h, (K, V), (s_h_t, 1), (i_k * BK, i_v * BV), (BK, BV), (1, 0))
 
         b_q = tl.load(p_q, boundary_check=(0, 1))
         b_q = (b_q * scale).to(b_q.dtype)
@@ -277,7 +277,7 @@ def chunk_fwd_intra_gated_gk_fn(q, k, g, scale, BT):
     else:
         BK = 128
         NK = triton.cdiv(K, BK)
-        A_intra = q.new_empty(NK, B, H, BT, BC, dtype=torch.float32)
+        A_intra = q.new_empty(NK, B, H, T, BC, dtype=torch.float32)
         grid = (NK, NT * NC, B * H)
         chunk_gla_fwd_A_kernel_intra_sub_intra_split[grid](
             q, k, g, A_intra,

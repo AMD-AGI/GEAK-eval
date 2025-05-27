@@ -3,6 +3,15 @@ import torch
 import triton
 import triton.language as tl
 from typing import Tuple
+import functools
+
+def contiguous(fn):
+    @functools.wraps(fn)
+    def wrapper(ctx, *args, **kwargs):
+        return fn(ctx,
+                  *(i if not isinstance(i, torch.Tensor) else i.contiguous() for i in args),
+                  **{k: (v if not isinstance(v, torch.Tensor) else v.contiguous()) for k, v in kwargs.items()})
+    return wrapper
 
 @triton.autotune(
     configs=[
@@ -258,6 +267,7 @@ def chunk_bwd_dqkv_fn(do, q, k, v, h, dh, scale):
 class ChunkRetentionFunction(torch.autograd.Function):
 
     @staticmethod
+    @contiguous
     def forward(ctx, q, k, v, initial_state, output_final_state, scale, checkpoint_level):
         BT = 64
         h, final_state = chunk_fwd_h_fn(k, v, BT, initial_state, output_final_state)
@@ -269,6 +279,7 @@ class ChunkRetentionFunction(torch.autograd.Function):
         return o.to(q.dtype), final_state
 
     @staticmethod
+    @contiguous
     def backward(ctx, do, d_ht=None):
         BT, scale = ctx.BT, ctx.scale
         q, k, v, h, initial_state = ctx.saved_tensors

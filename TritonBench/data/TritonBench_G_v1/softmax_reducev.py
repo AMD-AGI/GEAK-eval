@@ -1,4 +1,3 @@
-
 import triton
 import triton.language as tl
 import torch
@@ -45,7 +44,7 @@ def _fwd_kernel(
         old_scale = tl.exp(e_max - n_e_max)
         p = tl.exp(qk - n_e_max)
         e_sum = e_sum * old_scale + tl.sum(p, 0)
-        v = tl.load(v_ptrs + v_index[:, None] * stride_vbs)
+        v = tl.load(v_ptrs + v_index[:, None] * stride_vh)
         acc = acc * old_scale + tl.sum(p[:, None] * v, 0)
         e_max = n_e_max
 
