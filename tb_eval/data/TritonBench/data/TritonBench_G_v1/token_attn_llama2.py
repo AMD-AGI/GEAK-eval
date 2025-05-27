@@ -69,7 +69,7 @@ def token_att_fwd(q, k, att_out, B_Loc, B_Start_Loc, B_Seqlen, max_input_len):
         B_Loc.stride(0), B_Loc.stride(1),
         q.stride(0), q.stride(1), q.stride(2), q.stride(3),
         k.stride(0), k.stride(1), k.stride(2), k.stride(3),
-        att_out.stride(1), att_out.stride(0),
+        att_out.stride(0), att_out.stride(1),
         kv_group_num=kv_group_num,
         BLOCK_DMODEL=Lk,
         BLOCK_N=BLOCK,

@@ -4,6 +4,7 @@ import triton
 import triton.language as tl
 from torch.amp import custom_bwd, custom_fwd
 import functools
+LOG2E: tl.constexpr = 1.44269504089
 
 def contiguous(fn):
     @functools.wraps(fn)
