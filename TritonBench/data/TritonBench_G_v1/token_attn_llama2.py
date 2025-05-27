@@ -1,4 +1,3 @@
-
 import triton
 import triton.language as tl
 import torch
@@ -8,8 +7,8 @@ def _fwd_kernel_token_att1(
     Q, K, sm_scale, B_Loc, B_Start_Loc, B_Seqlen, max_input_len,
     Att_Out,
     stride_b_loc_b, stride_b_loc_s,
-    stride_qbs, stride_qh, stride_qd,
-    stride_kbs, stride_kh, stride_kd,
+    stride_qb, stride_qh, stride_qs, stride_qd,
+    stride_kb, stride_kh, stride_ks, stride_kd,
     att_stride_h, att_stride_bs,
     kv_group_num,
     BLOCK_DMODEL: tl.constexpr,
@@ -28,7 +27,7 @@ def _fwd_kernel_token_att1(
     cur_batch_start_index = max_input_len - cur_batch_seq_len
     cur_batch_end_index = max_input_len
 
-    off_q = cur_batch * stride_qbs + cur_head * stride_qh + offs_d * stride_qd
+    off_q = cur_batch * stride_qb + cur_head * stride_qh + offs_d * stride_qd
 
     offs_n = start_n * BLOCK_N + tl.arange(0, BLOCK_N)
 
@@ -39,7 +38,7 @@ def _fwd_kernel_token_att1(
         q = tl.load(Q + off_q + start_mark)
         offs_n_new = cur_batch_start_index + offs_n
         k_loc = tl.load(B_Loc + stride_b_loc_b * cur_batch + stride_b_loc_s * offs_n_new, mask=offs_n_new < cur_batch_end_index, other=0)
-        off_k = k_loc[:, None] * stride_kbs + cur_kv_head * stride_kh + offs_d[None, :] * stride_kd
+        off_k = k_loc[:, None] * stride_ks + cur_kv_head * stride_kh + offs_d[None, :] * stride_kd
         k = tl.load(K + off_k, mask=offs_n_new[:, None] < cur_batch_end_index, other=0.0)
         att_value = tl.sum(q[None, :] * k, 1)
         att_value *= sm_scale
@@ -68,8 +67,8 @@ def token_att_fwd(q, k, att_out, B_Loc, B_Start_Loc, B_Seqlen, max_input_len):
         q, k, sm_scale, B_Loc, B_Start_Loc, B_Seqlen, max_input_len,
         att_out,
         B_Loc.stride(0), B_Loc.stride(1),
-        q.stride(0), q.stride(1), q.stride(2),
-        k.stride(0), k.stride(1), k.stride(2),
+        q.stride(0), q.stride(1), q.stride(2), q.stride(3),
+        k.stride(0), k.stride(1), k.stride(2), k.stride(3),
         att_out.stride(0), att_out.stride(1),
         kv_group_num=kv_group_num,
         BLOCK_DMODEL=Lk,

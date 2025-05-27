@@ -40,7 +40,7 @@ def _fwd_kernel_token_att2(
 
     v_loc_off = cur_batch_req_idx * stride_req_to_tokens_b + (cur_batch_start_index + offs_n) * stride_req_to_tokens_s
     p_offs = cur_head * stride_ph + (cur_batch_in_all_start_index + offs_n) * stride_pbs
-    v_offs = cur_kv_head * stride_vh + offs_d[None, :] * stride_vd
+    v_offs = cur_kv_head * stride_vbs + offs_d[None, :] * stride_vd
 
     acc = tl.zeros([BLOCK_DMODEL], dtype=tl.float32)
     for start_n in range(0, cur_batch_seq_len, BLOCK_N):
@@ -52,7 +52,7 @@ def _fwd_kernel_token_att2(
             other=0.0,
         )
         v_value = tl.load(
-            V + v_offs + v_loc[:, None] * stride_vbs, mask=(start_n + offs_n[:, None]) < cur_batch_seq_len, other=0.0
+            V + v_offs + v_loc[:, None] * stride_vh, mask=(start_n + offs_n[:, None]) < cur_batch_seq_len, other=0.0
         )
         acc += tl.sum(p_value[:, None] * v_value, 0)
 

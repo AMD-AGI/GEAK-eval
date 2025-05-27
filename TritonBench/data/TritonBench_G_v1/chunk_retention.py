@@ -4,6 +4,7 @@ import triton
 import triton.language as tl
 from torch.amp import custom_bwd, custom_fwd
 import functools
+LOG2E: tl.constexpr = 1.44269504089
 
 def contiguous(fn):
     @functools.wraps(fn)
@@ -173,9 +174,9 @@ def chunk_retention_bwd_kernel_dh(
 
         b_dh += tl.dot((b_o * d_i[:, None]).to(b_o.dtype), b_v, allow_tf32=False)
 
-    b_dh *= d_b
-    p_dh = tl.make_block_ptr(dh + i_bh * s_h_h + i_k * K * V, (K, V), (s_h_t, 1), (i_v * BV, i_t * BT), (BK, BV), (1, 0))
-    tl.store(p_dh, b_dh.to(p_dh.dtype.element_ty), boundary_check=(0, 1))
+        b_dh *= d_b
+        p_dh = tl.make_block_ptr(dh + i_bh * s_h_h + i_k * K * V, (K, V), (s_h_t, 1), (i_v * BV, i_t * BT), (BK, BV), (1, 0))
+        tl.store(p_dh, b_dh.to(p_dh.dtype.element_ty), boundary_check=(0, 1))
 
 
 @triton.jit
