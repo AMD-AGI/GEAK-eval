@@ -136,7 +136,7 @@ class Performance_Metrics:
             except Exception as e:
                 print(f"Failed to run benchmark for input tensor. Error: {e}")
             input_tensor = None
-        folder_path = "./results"
+        folder_path = "AMD_Instinct_MI300X_VF_golden_metrics"
         file_name = self.op_name + ".json"
         file_path = os.path.join(folder_path, file_name)
         with open(file_path, 'w', encoding='utf8') as f:
