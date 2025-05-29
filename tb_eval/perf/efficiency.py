@@ -60,11 +60,12 @@ class PerformanceEvalTBG(BasePerfEval):
             print("Files written successfully to the performance folder. Running them...")
             cmd = [f"python3 {curr_dir}/run_bench/multiprocess_gpu_run.py --root_dir {gen_perf_folder}"]
             mp_run_status, mp_run_stdout, mp_run_stderr = run_shell(cmd)
-
+            print(f"Multiprocess GPU run status: {mp_run_status}, stdout: {mp_run_stdout}, stderr: {mp_run_stderr}")
             if mp_run_status:
                 print("Multiprocess GPU run completed successfully. Running performance analysis...")
                 cmd = [f"python3 {curr_dir}/2_efficiency.py --gen_folder {gen_perf_folder} --ref_folder {ref_folder}"]
                 perf_status, perf_stdout, perf_stderr = run_shell(cmd)
+                print(f"Performance analysis status: {perf_status}, stdout: {perf_stdout}, stderr: {perf_stderr}")
                 
                 if perf_status:
                     print(f"Performance analysis completed successfully for {exec_folder}.")
