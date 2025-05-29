@@ -136,7 +136,11 @@ class Performance_Metrics:
             except Exception as e:
                 print(f"Failed to run benchmark for input tensor. Error: {e}")
             input_tensor = None
+<<<<<<<< HEAD:tb_eval/perf/performance_utils.py
         folder_path = "amd_o1_seq_regen_50"
+========
+        folder_path = "AMD_Instinct_MI300X_VF_golden_metrics"
+>>>>>>>> 68ce960 (moved TritonBench to a unified data folder):tb_eval/data/TritonBench/performance_metrics/perf_G/performance_utils.py
         file_name = self.op_name + ".json"
         file_path = os.path.join(folder_path, file_name)
         with open(file_path, 'w', encoding='utf8') as f:
