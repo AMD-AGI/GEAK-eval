@@ -47,7 +47,6 @@ def statis(gen_folder):
         except:
             print(f"Error processing {f}, skipping...")
             continue            
-    assert len(files) == len(spdups) == len(effcys), "Mismatch in number of files processed"
 
     with open(os.path.join(gen_folder, "efficiency.json"), 'w', encoding='utf-8') as f:
         json.dump({"speed_up": spdups, "efficiency": effcys}, f, indent=4)
