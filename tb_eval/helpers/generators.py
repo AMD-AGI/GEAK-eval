@@ -1,0 +1,9 @@
+import os
+from random import randint
+
+def get_temp_file(prefix='temp_code'):
+    # Generate a unique temporary file name
+    temp_file_name = f'{prefix}_{randint(999, 999999)}.py'
+    while os.path.exists(temp_file_name):
+        temp_file_name.replace('.py', f'_{randint(999, 999999)}.py')
+    return temp_file_name

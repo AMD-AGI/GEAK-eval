@@ -1,0 +1,14 @@
+*tmp*/
+*log*/
+*output*/
+*.json
+*.log
+*.txt
+*.csv
+*.egg-info/
+*.egg
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+expts/
