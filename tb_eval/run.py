@@ -139,8 +139,12 @@ def eval(args):
                 _log = f"{get_time()} => File: {file}, Call Accuracy: {call_acc}, Exec Accuracy: {exec_acc}"
                 out_f.write(_log + '\n')
         
+        perf_data = None
         ## Do the performance evaluation
-        perf_data = perf_evaluator(exec_root) ## returns (speedup, GPU efficiency) for tbg
+        try:
+            perf_data = perf_evaluator(exec_root) ## returns (speedup, GPU efficiency) for tbg
+        except Exception as e:
+            print(f"Error: {e}")
 
         data_across_passes += eval_data_for_file
         # Save the data for this pass to a file

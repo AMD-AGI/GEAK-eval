@@ -1,0 +1,418 @@
+#Imports 
+import argparse
+import torch
+import sys
+import pytest
+
+import triton
+import triton.language as tl
+
+######################################## HELPERS utils ######################################## 
+def is_cuda():
+    return triton.runtime.driver.active.get_current_target().backend == "cuda"
+
+
+def is_hip():
+    return triton.runtime.driver.active.get_current_target().backend == "hip"
+
+
+def is_cdna():
+    return is_hip() and triton.runtime.driver.active.get_current_target().arch in ('gfx940', 'gfx941', 'gfx942',
+                                                                                   'gfx90a', 'gfx908')
+
+
+def get_cuda_autotune_config():
+    return [
+        triton.Config({}, num_warps=4, num_stages=1),
+        triton.Config({}, num_warps=8, num_stages=1),
+        triton.Config({}, num_warps=16, num_stages=1),
+    ]
+
+
+def get_hip_autotune_config():
+    return [
+        triton.Config({'waves_per_eu': 1}, num_warps=4, num_stages=1),
+        triton.Config({'waves_per_eu': 1}, num_warps=8, num_stages=1),
+        triton.Config({'waves_per_eu': 1}, num_warps=16, num_stages=1),
+        triton.Config({'waves_per_eu': 2}, num_warps=4, num_stages=1),
+        triton.Config({'waves_per_eu': 2}, num_warps=8, num_stages=1),
+        triton.Config({'waves_per_eu': 2}, num_warps=16, num_stages=1),
+        triton.Config({'waves_per_eu': 4}, num_warps=4, num_stages=1),
+        triton.Config({'waves_per_eu': 4}, num_warps=8, num_stages=1),
+        triton.Config({'waves_per_eu': 4}, num_warps=16, num_stages=1),
+    ]
+
+
+def get_autotune_config():
+    if is_cuda():
+        return get_cuda_autotune_config()
+    else:
+        return get_hip_autotune_config()
+
+######################################## HELPERS utils ######################################## 
+
+
+@triton.autotune(configs=get_autotune_config(), key=['n_rows', 'n_cols'], use_cuda_graph=True)
+@triton.jit
+def softmax_kernel_online(output_ptr, input_ptr, input_row_stride, output_row_stride, n_rows, n_cols,
+                          BLOCK_SIZE: tl.constexpr):
+
+    row_start = tl.program_id(0)
+    row_idx = row_start
+
+    #loop 1, find max and sum
+    m = -float('inf')  #Initial value of max
+    row_sum = 0.0
+    row_start_ptr = input_ptr + row_idx * input_row_stride
+    for b in tl.range(0, n_cols, BLOCK_SIZE):
+        col_offsets = b + tl.arange(0, BLOCK_SIZE)
+        input_ptrs = row_start_ptr + col_offsets
+        mask = col_offsets < n_cols
+        row_block = tl.load(input_ptrs, mask=mask, other=-float('inf'), cache_modifier=".cg")  #load block
+        m_p = tl.max(row_block, axis=0)  #find block max
+        m_p = tl.maximum(m, m_p)  #Find new max across all blocks so far
+        row_sum = row_sum * tl.exp(m - m_p)  #Adjust previous sum
+        row_sum += tl.sum(tl.exp(row_block - m_p))  #Add to exponentiated sum of this block
+        m = m_p  #save max
+
+    output_row_start_ptr = output_ptr + row_idx * output_row_stride
+    #Loop 2
+    for b in tl.range(0, n_cols, BLOCK_SIZE):
+        col_offsets = b + tl.arange(0, BLOCK_SIZE)
+        input_ptrs = row_start_ptr + col_offsets
+        mask = col_offsets < n_cols
+        row_block = tl.load(input_ptrs, mask=mask, other=-float('inf'), cache_modifier=".cg")  #load block
+        #subtract, exponentiate and divide by sum
+        softmax_output = tl.exp(row_block - m) / row_sum
+        #store
+        output_ptrs = output_row_start_ptr + col_offsets
+        tl.store(output_ptrs, softmax_output, mask=mask)
+
+##################################################################################################################################################  
+
+
+import numpy as np
+import random
+import torch 
+import os
+
+
+result_gold = {}
+
+######################################## HELPERS for Eval ######################################## 
+CONFIG = {
+  "llama3": {
+    "8B": {
+      "num_attention_heads": 32,
+      "num_key_value_heads": 8,
+      "hidden_size": 4096,
+      "intermediate_size": 14336,
+      "vocab_size": 128256
+    },
+    "70B": {
+      "num_attention_heads": 64,
+      "num_key_value_heads": 8,
+      "hidden_size": 8192,
+      "intermediate_size": 28672,
+      "vocab_size": 128256
+    },
+    "405B": {
+      "num_attention_heads": 128,
+      "num_key_value_heads": 8,
+      "hidden_size": 16384,
+      "intermediate_size": 53248,
+      "vocab_size": 128256
+    }
+  },
+  "mistral": {
+    "7B": {
+      "hidden_size": 4096,
+      "intermediate_size": 14336,
+      "num_attention_heads": 32,
+      "num_key_value_heads": 8,
+      "vocab_size": 32000
+    },
+    "22B": {
+      "hidden_size": 6144,
+      "intermediate_size": 16384,
+      "num_attention_heads": 48,
+      "num_key_value_heads": 8,
+      "vocab_size": 32000
+    }
+
+  }
+}
+
+  
+def get_model_configs(config_path='model_configs.json', model_families=["llama3"], model="all"):  
+    """  
+    Load model names from the configuration file.  
+  
+    Args:  
+        config_path (str): User-provided path to the configuration JSON file.  
+        model_families (list): List of model family names to retrieve.  
+  
+    Returns:  
+        dict: A dictionary of available models and their configurations for the specified families.  
+    """  
+    configs = CONFIG.copy()
+  
+    # Extract models and their configurations for the specified families  
+    filtered_configs = {}  
+  
+    for family in model_families:  
+        if family in configs:  
+            # Check if model filtering is required  
+            if model == "all":  
+                # Include all models in the family  
+                for model_size, model_configs in configs[family].items():  
+                    filtered_configs[f"{family}-{model_size}"] = model_configs  
+            else:  
+                # Parse the model string (e.g., llama3_8B or llama3-8B)  
+                delimiter = "_" if "_" in model else "-"  
+                model_parts = model.split(delimiter)  
+  
+                # Check if the family and size match  
+                if len(model_parts) == 2 and model_parts[0] == family:  
+                    model_size = model_parts[1]  
+                    if model_size in configs[family]:  
+                        filtered_configs[f"{family}-{model_size}"] = configs[family][model_size]  
+  
+    if not filtered_configs:  
+        print(f"Warning: No models selected for families: {model_families} with filter: '{model}'")  
+  
+    return filtered_configs  
+  
+  
+def get_available_models(config_file='model_configs.json', model_families=["llama3"]):  
+    """  
+    Load model names from the configuration file.  
+  
+    Args:  
+        config_file (str): Path to the configuration JSON file.  
+        model_families (list): List of model family names to retrieve.  
+  
+    Returns:  
+        list: A list of available models for the specified families.  
+    """  
+    configs = CONFIG.copy()
+  
+    models = [f"{family}-{model}" for family in model_families if family in configs for model in configs[family]]  
+  
+    return models  
+
+
+def set_seed(seed: int = 42) -> None:
+    """
+    Set the random seed for reproducibility across multiple libraries and configure PyTorch for deterministic behavior.
+
+    Args:
+        seed (int): The seed value to set. Default is 42.
+    """
+    # Set seed for Python's built-in random module
+    random.seed(seed)
+    # Set seed for NumPy
+    np.random.seed(seed)
+    # Set seed for PyTorch on CPU
+    torch.manual_seed(seed)
+    # Set seed for PyTorch on all GPUs (if available)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+    # Ensure deterministic behavior in PyTorch
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    # Set environment variable for hash-based operations
+    os.environ['PYTHONHASHSEED'] = str(seed)
+
+######################################## HELPERS for Eval ######################################## 
+  
+
+def softmax(x):
+    n_rows, n_cols = x.shape
+
+    MAX_FUSED_SIZE = 65536 // x.element_size()
+    BLOCK_SIZE = min(MAX_FUSED_SIZE, triton.next_power_of_2(n_cols))
+    y = torch.empty_like(x)
+
+    num_programs = n_rows
+
+    grid = lambda meta: (num_programs, )
+    softmax_kernel_online[grid](
+        y,
+        x,
+        x.stride(0),
+        y.stride(0),
+        n_rows,
+        n_cols,
+        BLOCK_SIZE,
+    )
+
+    return y
+
+
+def run_softmax(M, N):
+    print(f"Running Softmax on shape ({M},{N})")
+    set_seed()
+    x = torch.randn(M, N, device='cuda')
+    y_triton = softmax(x)
+
+    return y_triton
+
+
+#pytest
+@pytest.mark.parametrize('M, N', [(1823, 781), (1, 1), (128, 1), (1, 128), (8192, 8192), (4096, 8192), (359, 1),
+                                  (1, 359), (1, 131072), (1, 89999)])
+def test_softmax(M, N, request):
+    set_seed()
+    x = torch.randn(M, N, device='cuda')
+    y_triton = softmax(x)
+    y_torch = torch.softmax(x, axis=1)
+    ################### save tri_out in result_gold ###################
+    test_case_name = request.node.name
+    sanitized_key_name = test_case_name.replace("::", "_").replace("[", "_").replace("]", "").replace("-", "_")
+    result_gold[sanitized_key_name] = y_triton.clone().detach().cpu()
+    ###################################################################
+    result_gold['_CALL_SUCCESS_'] = torch.tensor([[1.0]])
+    
+    assert torch.allclose(y_triton, y_torch), (y_triton, y_torch)
+
+
+#Benchmark
+arg_to_torch_dtype = {'fp16': torch.float16, 'bf16': torch.bfloat16, 'fp32': torch.float32}
+
+
+def model_benchmark_configs(args):
+    config_file = args.model_configs
+    configs = get_model_configs(config_path=config_file, model_families=["llama3"], model=args.model)
+
+    x_vals_list = []
+    batch_size = args.b if args.b else 1
+
+    for model_name, config in configs.items():
+        seq_len = args.sq if args.sq else 4096
+        x_vals_list.append((model_name, batch_size * seq_len, config["vocab_size"]))
+
+    return x_vals_list
+
+
+def run_benchmark(args):
+    config = []
+    if (args.M_benchmark):
+        val = args.M_start
+        x_vals_list = []
+        while val <= args.M_end:
+            x_vals_list.append(val)
+            val *= args.M_step
+        mn_args = {'N': args.N_start}
+        plot_name = str("softmax-performance_" + args.dtype + "_N" + str(args.N_start) + "_M" + str(args.M_start) +
+                        "-" + str(args.M_end) + "-" + str(args.M_step))
+        x_names = ['M']
+    else:
+        x_vals_list = [i for i in range(args.N_start, args.N_end, args.N_step)]
+        mn_args = {'M': args.M_start}
+        plot_name = str("softmax-performance_" + args.dtype + "_M" + str(args.M_start) + "_N" + str(args.N_start) +
+                        "-" + str(args.N_end) + "-" + str(args.N_step))
+        x_names = ['N']
+
+    if args.model:
+        assert not args.M_benchmark, \
+            "Trying to provide both -model benchmark and M_benchmark is not supported!"
+        x_names = ['model', 'M', 'N']
+        mn_args = {}
+        plot_name = str("softmax-performance_" + args.dtype)
+        x_vals_list = model_benchmark_configs(args)
+
+    dtype = arg_to_torch_dtype[args.dtype]
+
+    print(plot_name)
+    config.append(
+        triton.testing.Benchmark(
+            x_names=x_names,
+            x_vals=x_vals_list,
+            line_arg='provider',
+            line_vals=['triton', 'torch'],
+            line_names=[
+                "Triton",
+                "Torch",
+            ],
+            styles=[('blue', '-'), ('green', '-')],
+            ylabel="GB/s",
+            plot_name=plot_name,
+            args=mn_args,
+        ))
+
+    @triton.testing.perf_report(config)
+    def benchmark(M, N, provider, model=None):
+        x = torch.randn(M, N, device='cuda', dtype=dtype)
+        stream = torch.cuda.Stream()
+        torch.cuda.set_stream(stream)
+        if provider == 'torch':
+            ms = triton.testing.do_bench(lambda: torch.softmax(x, axis=-1))
+        if provider == 'triton':
+            ms = triton.testing.do_bench(lambda: softmax(x))
+        gbps = lambda ms: 2 * x.nelement() * x.element_size() * 1e-9 / (ms * 1e-3)
+        return gbps(ms)
+
+    benchmark.run(save_path=".", show_plots=True, print_data=True)
+
+######################################## HELPERS for Eval ########################################     
+# --- Pytest hook to save the dictionary at the end of the session ---  
+def test_save_results():  
+    """  
+    Called after whole test run finished, right before returning the exit status to the system.  
+    """
+    print('Inside session finish...')
+    if "_CALL_SUCCESS_" not in result_gold:
+        result_gold['_CALL_SUCCESS_'] = torch.tensor([[0.0]])
+    OUTPUT_FILENAME = __file__.replace('.','_') + '.pt'
+    print(f"\nSaving all y_triton results to {OUTPUT_FILENAME}...")  
+    # Ensure the directory for the output file exists if it's in a subdirectory  
+    output_dir = os.path.dirname(OUTPUT_FILENAME)  
+    if output_dir and not os.path.exists(output_dir):  
+        os.makedirs(output_dir, exist_ok=True)  
+    torch.save(result_gold, OUTPUT_FILENAME)       
+    print(f"Successfully saved {len(result_gold)} y_triton tensors to {OUTPUT_FILENAME}.")  
+
+######################################## HELPERS for Eval ######################################## 
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        prog="Benchmark Softmax",
+        allow_abbrev=False,
+    )
+    parser.add_argument('-model_configs', type=str, default="model_configs.json", help="Model config json file.")
+
+    available_models = get_available_models(model_families=["llama3"])  # Dynamically load model names
+    model_help = (
+        "Model name to benchmark. Select from: [" + ", ".join(available_models) +
+        "]. Use 'all' to benchmark all models. Not providing runs the default benchmark script with custom configs.")
+    parser.add_argument('-model', type=str, default=None, help=model_help)
+    parser.add_argument('-b', type=int, default=0, help="Batch size used together with model.")
+    parser.add_argument('-sq', type=int, default=0, help="Sequence length used together with model.")
+    parser.add_argument('-M', "--M_start", default="1", type=int)
+    parser.add_argument('-Ms', "--M_step", default="2", type=int)
+    parser.add_argument('-Me', "--M_end", default="512", type=int)
+    parser.add_argument('-Mb', "--M_benchmark", default=False, type=bool)
+
+    parser.add_argument('-N', "--N_start", default="1024", type=int)
+    parser.add_argument('-Ns', "--N_step", default="2048", type=int)
+    parser.add_argument('-Ne', "--N_end", default="65536", type=int)
+
+    parser.add_argument('-d', "--dtype", default="fp16")
+    parser.add_argument('-nb', "--no_benchmark", default=False, type=bool)
+
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+
+    if args.no_benchmark:
+        run_softmax(args.M_start, args.N_start)
+    else:
+        run_benchmark(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
