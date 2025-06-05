@@ -4,8 +4,55 @@ import subprocess
 import ast
 
 from ..constants import REPO_ROOT, TMP_ROOT
+import re
 
 DEFAULT_TRITON_BENCH_ROOT = os.path.join(REPO_ROOT, "data", "TritonBench", "data", "TritonBench_G_v1")
+
+
+
+def extract_first_pytest_failure(stderr_string: str) -> str:
+    """
+    Extracts the content of the first pytest failure block from a stderr string.
+
+    Args:
+        stderr_string: The complete stderr output as a string.
+
+    Returns:
+        A string containing the first failure block, or an empty string if
+        no failure blocks are found.
+    """
+    lines = stderr_string.splitlines()
+    
+    # Regex to match the pytest failure start line pattern
+    # e.g., ___________________ test_correctness[...] ___________________
+    failure_start_pattern = re.compile(r'^_{3,} test_.* _{3,}$')
+    
+    first_start_index = -1
+    # Find the index of the first failure marker
+    for i, line in enumerate(lines):
+        if failure_start_pattern.match(line):
+            first_start_index = i
+            break # Found the first one
+
+    if first_start_index == -1:
+        # No failure markers found
+        return ""
+
+    next_start_index = -1
+    # Find the index of the next failure marker *after* the first one
+    for i in range(first_start_index + 1, len(lines)):
+        if failure_start_pattern.match(lines[i]):
+            next_start_index = i
+            break # Found the start of the next one
+
+    # Extract the lines for the first failure block
+    if next_start_index != -1:
+        extracted_lines = lines[first_start_index : next_start_index]
+    else:
+        # If no next failure marker is found, extract till the end
+        extracted_lines = lines[first_start_index :]
+
+    return "\n".join(extracted_lines)
 
 def get_fname_difficulty_from_label(label):
     # triton_root = DEFAULT_TRITON_BENCH_ROOT

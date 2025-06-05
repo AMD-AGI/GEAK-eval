@@ -8,13 +8,13 @@ from tb_eval.constants import Names
 
 torch.set_printoptions(profile="full")
 
-def compare_pt_files(ref_file_pt, gen_file_pt, atol=1e-3, rtol=1e-3, verbose=False):  
+def compare_pt_files(ref_file_pt_path, gen_file_pt_path, atol=1e-3, rtol=1e-3, verbose=False):  
     """  
     Compare two PyTorch dictionaries saved as .pt files and compute execution accuracy.  
       
     Args:  
-        ref_file_pt: Reference dictionary with tensor values  
-        gen_file_pt: Generated dictionary with tensor values to compare  
+        ref_file_pt_path: Reference dictionary path with tensor values  
+        gen_file_pt_path: Generated dictionary path with tensor values to compare  
         atol: Absolute tolerance parameter (default: 1e-3)  
         rtol: Relative tolerance parameter (default: 1e-3)  
         verbose: Whether to print comparison details (default: False)  
@@ -28,11 +28,18 @@ def compare_pt_files(ref_file_pt, gen_file_pt, atol=1e-3, rtol=1e-3, verbose=Fal
     import torch  
       
     # Check if both inputs are valid  
-    if ref_file_pt is None:  
-        return False, None, "Reference dictionary is None"  
-    if gen_file_pt is None:  
-        return False, None, "Generated dictionary is None"  
-      
+    if ref_file_pt_path is None:  
+        return False, None, "Reference dictionary path doesn't exist"  
+    if gen_file_pt_path is None:  
+        return False, None, "Generated dictionary path doesn't exist"  
+    
+    try:
+        gen_file_pt = torch.load(gen_file_pt_path, map_location=torch.device('cpu'))  
+        ref_file_pt = torch.load(ref_file_pt_path, map_location=torch.device('cpu'))
+        del gen_file_pt['_CALL_SUCCESS_'] 
+        del ref_file_pt['_CALL_SUCCESS_'] 
+    except Exception as e:
+        return False, None, f"Error loading PT files: {str(e)}"  
     # Recursive comparison function for nested structures  
     def _compare_tensors(ref, gen, path=""):  
         if isinstance(gen, (list, tuple)):  
@@ -237,7 +244,7 @@ def test_pt_correctness(ref_file, gen_file, atol=1e-3, rtol=1e-3, verbose=False)
     del gen_file_pt['_CALL_SUCCESS_'] 
     del ref_file_pt['_CALL_SUCCESS_'] 
     # Compare PT files  
-    exec_acc, match_stats, error_msg = compare_pt_files(ref_file_pt, gen_file_pt, atol=atol, rtol=rtol, verbose=verbose)  
+    exec_acc, match_stats, error_msg = compare_pt_files(ref_file_pt_path, gen_file_pt_path, atol=atol, rtol=rtol, verbose=verbose)  
       
     if not exec_acc:  
         gen_stderr = error_msg or f"Generated tensors do not match reference tensors for file: {fname}"  
