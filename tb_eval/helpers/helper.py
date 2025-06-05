@@ -8,7 +8,8 @@ from ..constants import REPO_ROOT, TMP_ROOT
 DEFAULT_TRITON_BENCH_ROOT = os.path.join(REPO_ROOT, "data", "TritonBench", "data", "TritonBench_G_v1")
 
 def get_fname_difficulty_from_label(label):
-    triton_root = DEFAULT_TRITON_BENCH_ROOT
+    # triton_root = DEFAULT_TRITON_BENCH_ROOT
+    triton_root = os.path.join(REPO_ROOT, "data", "TritonBench", "data", "TritonBench_G_comp_alpac_v1_fixed_with_difficulty.json")
     with open(triton_root, 'r') as f:
         data = json.load(f)
         for item in data:
