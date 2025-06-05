@@ -118,7 +118,7 @@ def forward(q, k, v, q_scale, k_scale):
         BLOCK_M=BLOCK_M, BLOCK_N=BLOCK_N, HEAD_DIM=HEAD_DIM_K,  
         STAGE=stage,  
         num_warps=8,  
-        num_stages=4)
+        num_stages=1)
     return o
 
 

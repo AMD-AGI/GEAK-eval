@@ -2,7 +2,7 @@
 import torch
 import triton
 import triton.language as tl
-from triton.ops.matmul_perf_model import early_config_prune, estimate_matmul_time
+# from triton.ops.matmul_perf_model import early_config_prune, estimate_matmul_time
 
 
 def get_configs_io_bound():
@@ -57,7 +57,7 @@ def get_configs_io_bound():
         *get_configs_io_bound(),
     ],
     key=["M", "N", "K"],
-    prune_configs_by={"early_config_prune": early_config_prune, "perf_model": estimate_matmul_time, "top_k": 10},
+    # prune_configs_by={"early_config_prune": early_config_prune, "perf_model": estimate_matmul_time, "top_k": 10},
 )
 @triton.heuristics(
     {

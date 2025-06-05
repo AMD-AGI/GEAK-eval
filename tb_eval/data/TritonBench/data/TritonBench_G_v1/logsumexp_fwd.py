@@ -11,7 +11,7 @@ from typing import Optional
         triton.Config({}, num_warps=4),
         triton.Config({}, num_warps=8),
         triton.Config({}, num_warps=16),
-        triton.Config({}, num_warps=32),
+        # triton.Config({}, num_warps=32),
     ],
     key=['D']
 )

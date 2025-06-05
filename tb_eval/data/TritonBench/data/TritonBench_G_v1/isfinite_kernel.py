@@ -4,21 +4,30 @@ import torch
 import triton
 from triton import language as tl
 
-try:
-    from triton.language.extra.cuda.libdevice import isfinited as _isfinited
-except ImportError:
-    try:
-        from triton.language.math import isfinited as _isfinited
-    except ImportError:
-        from triton.language.libdevice import isfinited as _isfinited
+# try:
+#     from triton.language.extra.cuda.libdevice import isfinited as _isfinited
+# except ImportError:
+#     try:
+#         from triton.language.math import isfinited as _isfinited
+#     except ImportError:
+#         from triton.language.libdevice import isfinited as _isfinited
 
-try:
-    from triton.language.extra.cuda.libdevice import finitef as _finitef
-except ImportError:
-    try:
-        from triton.language.math import finitef as _finitef
-    except ImportError:
-        from triton.language.libdevice import finitef as _finitef
+from triton.language.extra.hip.libdevice import isinf, isnan
+
+def _isfinited(x):
+    """Check if a tensor is finite."""
+    return ~isinf(x) & ~isnan(x)
+    # if x.dtype.is_fp64():
+    # else:
+    #     return ~isinf(x.to(tl.float32)) & ~isnan(x.to(tl.float32))
+
+# try:
+#     from triton.language.extra.cuda.libdevice import finitef as _finitef
+# except ImportError:
+#     try:
+#         from triton.language.math import finitef as _finitef
+#     except ImportError:
+#         from triton.language.libdevice import finitef as _finitef
 
 def heuristics_for_tile_size(max_tile_size, *sizes):
     ndim = len(sizes)
@@ -130,7 +139,7 @@ def isfinite_func_wrapper_rank_1(in0: Union[torch.Tensor, StridedBuffer], /, *, 
 
 @triton.jit
 def isfinite_func(x):
-    return _isfinited(x) if x.dtype.is_fp64() else _finitef(x.to(tl.float32))
+    return ~isinf(x) & ~isnan(x) #_isfinited(x) #if x.dtype.is_fp64() else _finitef(x.to(tl.float32))
 
 @triton.jit
 def isfinite_func_kernel_rank_1(

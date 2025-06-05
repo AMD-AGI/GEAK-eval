@@ -11,7 +11,7 @@ import math
         triton.Config({}, num_warps=4),
         triton.Config({}, num_warps=8),
         triton.Config({}, num_warps=16),
-        triton.Config({}, num_warps=32),
+        # triton.Config({}, num_warps=32),
     ],
     key=["N", "HAS_RESIDUAL", "STORE_RESIDUAL_OUT", "IS_RMS_NORM", "HAS_BIAS"],
 )
@@ -103,7 +103,7 @@ def _layer_norm_fwd(
         triton.Config({}, num_warps=4),
         triton.Config({}, num_warps=8),
         triton.Config({}, num_warps=16),
-        triton.Config({}, num_warps=32),
+        # triton.Config({}, num_warps=32),
     ],
     key=["N", "HAS_DRESIDUAL", "STORE_DRESIDUAL", "IS_RMS_NORM", "HAS_BIAS"],
 )

@@ -144,7 +144,7 @@ def triton_f4_to_scaled_bf16_kernel(
 
     # create the scale in bf16
     s_offset = s.to(tl.int16) - e8m0_exponent_bias
-    s_fp = tl.extra.cuda.libdevice.pow(2.0, s_offset).to(tl.bfloat16)
+    s_fp = tl.extra.hip.libdevice.pow(2.0, s_offset).to(tl.bfloat16)
     s_fp = tl.where(s != e8m0_exponent_nan_val, s_fp, float("nan"))
 
     # multiply output by scale

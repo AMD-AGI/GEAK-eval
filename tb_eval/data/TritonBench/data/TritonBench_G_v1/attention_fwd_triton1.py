@@ -66,10 +66,10 @@ class AttentionFunction(torch.autograd.Function):
     def forward(ctx, q, k, v, store=False, ifcond=False):
         batch_size, n_heads, seq_len, d_head = q.shape
         scale = d_head ** -0.5
-        BD = q.shape[-1]
+        BD = q.shape[-1] // 2
         BT = 32
         NT = triton.cdiv(seq_len, BT)
-        num_stages = 3 if d_head <= 64 else 2
+        num_stages = 1 #3 if d_head <= 64 else 2
         num_warps = 4
 
         h = q.new_empty(batch_size, n_heads, NT * BD, BD)

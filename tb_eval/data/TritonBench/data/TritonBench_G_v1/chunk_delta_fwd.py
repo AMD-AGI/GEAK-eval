@@ -10,7 +10,7 @@ import triton.language as tl
         triton.Config({}, num_warps=4),
         triton.Config({}, num_warps=8),
         triton.Config({}, num_warps=16),
-        triton.Config({}, num_warps=32),
+        # triton.Config({}, num_warps=32),
     ],
     key=["BT", "BK", "BV"], 
 )
@@ -77,10 +77,10 @@ def chunk_fwd_h_fn(k, w, u, BT, initial_state, final_state):
 
     BK = triton.next_power_of_2(K)
     assert BK <= 256, "current kernel does not support head dimension larger than 256."
-    BV = 16 if BK > 128 else 32        
-    BV = 64 if BK <= 64 else BV
-    BC = 16 if BK > 128 else 32 
-    BC = 64 if BK <= 64 else BC
+    BV = 16//2 if BK > 128 else 32//2
+    BV = 64//2 if BK <= 64 else BV//2
+    BC = 16//2 if BK > 128 else 32 //2
+    BC = 64//2 if BK <= 64 else BC//2
     BC = min(BT, BC)
     NT, NK, NV = triton.cdiv(T, BT), triton.cdiv(K, BK), triton.cdiv(V, BV)
     assert NK == 1, 'NK > 1 is not supported because it involves time-consuming synchronization'

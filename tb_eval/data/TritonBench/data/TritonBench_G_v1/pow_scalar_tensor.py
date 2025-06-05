@@ -5,7 +5,7 @@ import triton
 from triton import language as tl
 
 try:
-    from triton.language.extra.cuda.libdevice import pow as _pow
+    from triton.language.extra.hip.libdevice import pow as _pow
 except ImportError:
     try:
         from triton.language.math import pow as _pow

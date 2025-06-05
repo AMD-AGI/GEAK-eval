@@ -50,7 +50,7 @@ def _quantize_global_transpose(
     B = B + (rm[:, None] * stride_bm + rn[None, :] * stride_bn)
     mask = (rm < M)[:, None] & (rn < N)[None, :]
 
-    output = tl.extra.cuda.libdevice.llrint(127.0 * (a * absmax_inv))
+    output = tl.extra.hip.libdevice.llrint(127.0 * (a * absmax_inv))
 
     tl.store(B, output, mask=mask)
 

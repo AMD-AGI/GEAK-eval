@@ -6,7 +6,7 @@ import triton
 import triton.language as tl
 from torch.autograd.function import FunctionCtx
 from torch.cuda.amp import custom_fwd
-from triton.ops.matmul_perf_model import early_config_prune, estimate_matmul_time
+# from triton.ops.matmul_perf_model import early_config_prune, estimate_matmul_time
 
 
 sqrt2pi = math.sqrt(2.0 / math.pi)
@@ -16,7 +16,7 @@ sqrt2 = tl.constexpr(math.sqrt(2.0))
 @triton.jit
 def tanh(x):
     """Tanh activation function"""
-    return tl.extra.cuda.libdevice.tanh(x)
+    return tl.extra.hip.libdevice.tanh(x)
 
 
 @triton.jit
@@ -34,7 +34,7 @@ def fast_gelu(x):
 @triton.jit
 def gelu(x):
     """Gaussian Error Linear Unit (GELU)"""
-    return x * 0.5 * (1.0 + tl.extra.cuda.libdevice.erf(x / sqrt2))
+    return x * 0.5 * (1.0 + tl.extra.hip.libdevice.erf(x / sqrt2))
 
 
 def init_to_zero(name):
@@ -87,7 +87,7 @@ def get_configs_io_bound():
     ]
     + get_configs_io_bound(),
     key=["CACHE_KEY_M", "CACHE_KEY_N", "CACHE_KEY_K"],
-    prune_configs_by={"early_config_prune": early_config_prune, "perf_model": estimate_matmul_time, "top_k": 10},
+    # prune_configs_by={"early_config_prune": early_config_prune, "perf_model": estimate_matmul_time, "top_k": 10},
 )
 @triton.heuristics(
     {

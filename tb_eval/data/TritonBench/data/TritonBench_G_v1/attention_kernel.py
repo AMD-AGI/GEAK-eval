@@ -229,7 +229,7 @@ def test_attention_rel_h_rel_w_kernel_aligned_device():
     test_case_results['test_case_3'] = o.clone()
 
     # Test case 4: Change number of stages
-    num_stages = 4  # Arbitrary non-zero value
+    num_stages = 1  # Arbitrary non-zero value
     _attention_rel_h_rel_w_kernel_aligned_device(
         q, k, v, rel_h_w, SM_SCALE, o,
         BLOCK_M=BLOCK_M,

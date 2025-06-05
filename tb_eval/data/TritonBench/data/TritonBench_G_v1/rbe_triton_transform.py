@@ -12,7 +12,7 @@ def get_freq_multi_tokens(offs_cn, starting_idx, theta: tl.constexpr, NB_TOKENS:
     DIM: tl.constexpr = 128  # in model, dim = self.params.dim // self.params.n_heads
     freqs = offs_cn % DIM
     freqs = freqs.to(tl.float32) / DIM
-    freqs = tl.extra.cuda.libdevice.pow(theta, freqs)
+    freqs = tl.extra.hip.libdevice.pow(theta, freqs)
     freqs = (tl.arange(0, NB_TOKENS) + starting_idx)[:, None] / freqs[None, :]
     return tl.cos(freqs), tl.sin(freqs)
 

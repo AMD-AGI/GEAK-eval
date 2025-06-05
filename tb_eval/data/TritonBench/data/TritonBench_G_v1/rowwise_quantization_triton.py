@@ -41,7 +41,7 @@ def _quantize_rowwise(
 
     abs_x = tl.abs(x)
     max_val = tl.max(tl.where(row_mask, abs_x, 0), axis=0)
-    output = tl.extra.cuda.libdevice.llrint(127.0 * (x / max_val))
+    output = tl.extra.hip.libdevice.llrint(127.0 * (x / max_val))
     tl.store(output_ptr + offsets, output, mask=row_mask)
     tl.store(output_maxs + pid, max_val)
 

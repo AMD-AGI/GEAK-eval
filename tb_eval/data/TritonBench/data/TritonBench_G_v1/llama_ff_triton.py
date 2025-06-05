@@ -37,7 +37,7 @@ def ff_llama(
     a_sum = tl.zeros((BLOCK_SIZE_M, BLOCK_SIZE_K), dtype=tl.float32)
     for _ in range(0, tl.cdiv(K, BLOCK_SIZE_K)):
         a = tl.load(a_ptrs)
-        a_sum += tl.extra.cuda.libdevice.pow(a.to(tl.float32), 2)
+        a_sum += tl.extra.hip.libdevice.pow(a.to(tl.float32), 2)
         rms_w = tl.load(rms_w_ptrs)
         if USE_FP8:
             rms_w = rms_w.to(tl.float8e5, bitcast=True)

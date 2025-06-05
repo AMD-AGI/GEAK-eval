@@ -76,7 +76,7 @@ def rms_matmul_rbe(
     x_sum = tl.zeros((BLOCK_SIZE_M, BLOCK_SIZE_K), dtype=tl.float32)
     for _ in range(0, tl.cdiv(K, BLOCK_SIZE_K)):
         x = tl.load(x_ptrs)
-        x_sum += tl.extra.cuda.libdevice.pow(x.to(tl.float32), 2)
+        x_sum += tl.extra.hip.libdevice.pow(x.to(tl.float32), 2)
         rms_w = tl.load(rms_w_ptrs)  # TODO add an assert that rms_w is a multiple of BLOCK SIZE K
         if USE_FP8:
             rms_w = rms_w.to(tl.float8e5, bitcast=True)
