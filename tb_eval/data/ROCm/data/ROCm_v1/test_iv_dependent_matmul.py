@@ -80,6 +80,8 @@ import torch
 import os
 import pytest
 from numpy.random import RandomState
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
 
 
 result_gold = {}
@@ -153,6 +155,136 @@ def test_iv_dependent_matmul(type, request, device='cuda'):
 
     torch.testing.assert_close(torch_output, triton_output, rtol=1e-2, atol=1e-2)
 
+
+# --- Python wrapper for the kernel for benchmarking ---
+def iv_dependent_matmul_triton_wrapper(a_tensor, b_tensor, c_buffer,
+                                       M_dim, N_dim, K_dim,
+                                       block_m_const, block_n_const, block_k_const,
+                                       kernel_type_str, num_stages_launch, num_warps_launch):
+    grid = (triton.cdiv(M_dim, block_m_const) * triton.cdiv(N_dim, block_n_const), )
+    
+    iv_dependent_matmul[grid](
+        a_tensor, b_tensor, c_buffer, M_dim, N_dim, K_dim,
+        a_tensor.stride(0), a_tensor.stride(1),
+        b_tensor.stride(0), b_tensor.stride(1),
+        c_buffer.stride(0), c_buffer.stride(1),
+        BLOCK_SIZE_M=block_m_const, BLOCK_SIZE_N=block_n_const,
+        BLOCK_SIZE_K=block_k_const, type=kernel_type_str,
+        num_stages=num_stages_launch,
+        num_warps=num_warps_launch
+    )
+    return c_buffer
+
+# --- Define TFLOPS and GB/s calculators for GEMM ---
+def calculate_gemm_tflops(params: dict, ms: float) -> float: # Standard GEMM
+    M, N, K = params['M'], params['N'], params['K']
+    flops = 2 * M * N * K 
+    tflops = flops / (ms / 1000) / 1e12
+    return tflops
+
+def calculate_gemm_gbps(params: dict, ms: float) -> float: # Standard GEMM
+    M, N, K = params['M'], params['N'], params['K']
+    dtype_str = params.get('input_dtype_str', 'fp32') # Inputs are fp32 in this test
+    
+    current_dtype = torch.float32
+    if dtype_str == 'fp16': current_dtype = torch.float16
+    elif dtype_str == 'bf16': current_dtype = torch.bfloat16
+    element_size = torch.tensor([], dtype=current_dtype).element_size()
+
+    # Output is fp16
+    out_element_size = torch.tensor([], dtype=torch.float16).element_size()
+
+    bytes_a = M * K * element_size
+    bytes_b = K * N * element_size
+    bytes_c_write = M * N * out_element_size # Output is fp16
+    total_bytes = bytes_a + bytes_b + bytes_c_write
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+OP_NAME_FOR_BENCHMARK = "iv_dependent_matmul_perf"
+
+# --- Pytest parametrize for performance testing ---
+IV_MATMUL_SHAPES_FOR_PERF = [
+    # M,   N,   K
+    (256, 256, 256), (512, 512, 128), (1024, 1024, 64),
+    (2048, 512, 128), (512, 2048, 64)
+]
+IV_MATMUL_BLOCK_CONFIGS_FOR_PERF = [
+    # BM, BN, BK
+    (32, 32, 32), (64, 64, 32), (64, 32, 64), (32, 64, 64),
+    (128, 128, 32), (128, 64, 64), (64, 128, 64) 
+    # Add (128,128,64) if K can be larger for BLOCK_K
+]
+IV_MATMUL_TYPES_FOR_PERF = ["pre_load", "post_load", "post_pre_mixed", "post_load_two_iters", "post_load_three_iters"]
+IV_MATMUL_DTYPES_FOR_PERF = ['fp32', 'fp16'] # Input dtypes for A and B
+# num_stages and num_warps are launch hints
+NUM_STAGES_FOR_PERF = [2, 3, 4]
+NUM_WARPS_FOR_PERF = [4, 8]
+
+
+@pytest.mark.parametrize("m_n_k_shape", IV_MATMUL_SHAPES_FOR_PERF)
+@pytest.mark.parametrize("block_config", IV_MATMUL_BLOCK_CONFIGS_FOR_PERF)
+@pytest.mark.parametrize("kernel_type_str", IV_MATMUL_TYPES_FOR_PERF)
+@pytest.mark.parametrize("input_dtype_str", IV_MATMUL_DTYPES_FOR_PERF)
+@pytest.mark.parametrize("num_stages_launch", NUM_STAGES_FOR_PERF)
+@pytest.mark.parametrize("num_warps_launch", NUM_WARPS_FOR_PERF)
+def test_performance(m_n_k_shape, block_config, kernel_type_str, input_dtype_str, 
+                                         num_stages_launch, num_warps_launch, request):
+    set_seed()
+    M, N, K = m_n_k_shape
+    BLOCK_M, BLOCK_N, BLOCK_K = block_config
+
+    # Skip if BLOCK_K is too large for K (kernel has K-loop)
+    if BLOCK_K > K :
+        pytest.skip(f"BLOCK_K ({BLOCK_K}) > K ({K}) not meaningful for tiled K-loop.")
+    
+    # Shared memory check (approx for one dot A(BM,BK) @ B(BK,BN) -> C(BM,BN))
+    # Max shared mem usage is for A and B blocks in one dot.
+    # Smem elements = BM*BK + BK*BN
+    # This kernel has a K-loop, so BK is a tile size, not full K.
+    if input_dtype_str == 'fp32': current_in_dtype = torch.float32; elem_size = 4
+    elif input_dtype_str == 'bf16': current_in_dtype = torch.bfloat16; elem_size = 2
+    else: current_in_dtype = torch.float16; elem_size = 2
+    
+    # Output is always fp16 by the kernel
+    output_dtype = torch.float16
+
+    smem_elements_needed = (BLOCK_M * BLOCK_K) + (BLOCK_K * BLOCK_N)
+    # num_stages can increase shared memory usage for pipelining
+    # A rough factor could be num_stages, or num_stages/2 + 1 etc.
+    # Let's use a factor of num_stages for a conservative estimate.
+    if smem_elements_needed * elem_size * (num_stages_launch if num_stages_launch > 1 else 1) > 65536:
+        pytest.skip(f"Skipping M{M}N{N}K{K} Blocks({BLOCK_M},{BLOCK_N},{BLOCK_K}) "
+                    f"dtype {input_dtype_str} stages {num_stages_launch} "
+                    f"due to estimated shared memory.")
+
+    a = torch.randn((M, K), device='cuda', dtype=current_in_dtype)
+    b = torch.randn((K, N), device='cuda', dtype=current_in_dtype)
+    # Kernel casts output to tl.float16
+    triton_output_buffer = torch.empty((M, N), device='cuda', dtype=output_dtype)
+
+    op_lambda = lambda: iv_dependent_matmul_triton_wrapper(
+        a, b, triton_output_buffer, M, N, K,
+        BLOCK_M, BLOCK_N, BLOCK_K,
+        kernel_type_str, num_stages_launch, num_warps_launch
+    )
+
+    bench_config = do_bench_config(warm_up=25, repetition=100)
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+    current_params_for_logs_and_calc = {
+        "M": M, "N": N, "K": K,
+        "BLOCK_M": BLOCK_M, "BLOCK_N": BLOCK_N, "BLOCK_K": BLOCK_K,
+        "type": kernel_type_str, "input_dtype_str": input_dtype_str, "output_dtype_str": "fp16",
+        "num_stages": num_stages_launch, "num_warps": num_warps_launch
+    }
+    
+    perf_result = benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                                            gbps_calculator=calculate_gemm_gbps,
+                                            tflops_calculator=calculate_gemm_tflops)
+
+
 ######################################## HELPERS for Eval ########################################     
 # --- Pytest hook to save the dictionary at the end of the session ---  
 def test_save_results():  
@@ -171,7 +303,18 @@ def test_save_results():
     torch.save(result_gold, OUTPUT_FILENAME)       
     print(f"Successfully saved {len(result_gold)} y_triton tensors to {OUTPUT_FILENAME}.")  
 
-def test_get_result():
-    print(result_gold)
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
+
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
+
+
 
 ######################################## HELPERS for Eval ########################################

@@ -56,6 +56,9 @@ import os
 import pytest
 from numpy.random import RandomState
 
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
+
 result_gold = {}
 
 ######################################## HELPERS for Eval ######################################## 
@@ -200,6 +203,125 @@ def test_vecmat(request, device='cuda'):
     result_gold['_CALL_SUCCESS_'] = torch.tensor([[1.0]])
     np.testing.assert_allclose(C_ref, C_tri.cpu().numpy(), rtol=0.01, atol=1e-3)
 
+# --- Define TFLOPS and GB/s calculators for Batched VecMat ---
+def calculate_batched_vecmat_tflops(params: dict, ms: float) -> float:
+    M, N, K = params['M'], params['N'], params['K']
+    # Operation: C[m,n] = sum_k A[m,k] * B[m,n,k]
+    # For each (m,n) pair, K multiplications and K-1 additions. Approx 2*K FLOPs.
+    # There are M*N such pairs.
+    # Total FLOPs = M * N * (2 * K)
+    flops = 2 * M * N * K
+    tflops = flops / (ms / 1000) / 1e12
+    return tflops
+
+def calculate_batched_vecmat_gbps(params: dict, ms: float) -> float:
+    M, N, K = params['M'], params['N'], params['K']
+    dtype_str = params.get('dtype_str', 'fp32') # Original test uses float32
+
+    if dtype_str == 'fp16': current_dtype = torch.float16
+    elif dtype_str == 'bf16': current_dtype = torch.bfloat16
+    else: current_dtype = torch.float32 # Default to float32 as per original test
+    element_size = torch.tensor([], dtype=current_dtype).element_size()
+
+    # Read A (M,K)
+    # Read B (M,N,K)
+    # Write C (M,N)
+    bytes_a = M * K * element_size
+    bytes_b = M * N * K * element_size
+    bytes_c = M * N * element_size
+    total_bytes = bytes_a + bytes_b + bytes_c
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+# --- Python wrapper for the batched_vecmat kernel ---
+def batched_vecmat_triton_wrapper(A_in, B_in, block_m, block_n, block_k):
+    dim_m, dim_k_a = A_in.shape
+    dim_m_b, dim_n, dim_k_b = B_in.shape
+    assert dim_m == dim_m_b, "M dimension must match for A and B"
+    assert dim_k_a == dim_k_b, "K dimension must match for A and B"
+    
+    output_tensor = torch.zeros((dim_m, dim_n), dtype=A_in.dtype, device=A_in.device)
+    
+    grid = (triton.cdiv(dim_m, block_m), triton.cdiv(dim_n, block_n))
+    
+    batched_vecmat[grid](
+        A_in, B_in,
+        dim_m, dim_n, dim_k_a, # Pass runtime dimensions
+        output_tensor,
+        # Strides can be passed if non-contiguous, e.g., A_in.stride(0), A_in.stride(1), ...
+        # For now, assume contiguous and Triton handles it.
+        block_m=block_m, block_n=block_n, block_k=block_k # Pass constexpr block sizes
+        # num_warps, num_stages are not in this kernel's signature directly (would be via @triton.autotune if used)
+    )
+    return output_tensor
+
+# --- Name for the benchmark output JSON file ---
+OP_NAME_FOR_BENCHMARK = "batched_vecmat_triton_perf"
+
+# --- Pytest parametrize for performance testing ---
+# Define shapes and block sizes for performance testing
+BV_SHAPES_FOR_PERF = [
+    # M,  N,   K
+    (128, 128, 128),
+    (256, 256, 256),
+    (512, 64,  1024), # More K
+    (64,  512, 256),  # More N
+    (1024, 32, 512),  # Large M, smaller N
+]
+# Block sizes are constexpr. For a fair benchmark of *this specific kernel version*,
+# we should use fixed block sizes or create different test entries for different block configs.
+# The original test_vecmat uses fixed block_m=16, block_n=32, block_k=64.
+# Let's use these, and optionally add more block configs.
+BV_BLOCK_CONFIGS_FOR_PERF = [
+    # block_m, block_n, block_k
+    (16, 32, 64),
+    (32, 32, 128), # Example alternative block config
+    (16, 64, 64),
+]
+BV_DTYPES_FOR_PERF = ['fp32', 'fp16'] # Original uses fp32, add fp16 for variety
+
+@pytest.mark.parametrize("M, N, K", BV_SHAPES_FOR_PERF)
+@pytest.mark.parametrize("block_m, block_n, block_k", BV_BLOCK_CONFIGS_FOR_PERF)
+@pytest.mark.parametrize("dtype_str", BV_DTYPES_FOR_PERF)
+def test_performance(M, N, K, block_m, block_n, block_k, dtype_str, request):
+    set_seed()
+
+    # Ensure M is divisible by block_m, N by block_n for simpler grid/kernel.
+    # The kernel itself should handle arbitrary M,N with masking.
+    # For performance, often aligned sizes are tested, but let's assume kernel handles it.
+    if M % block_m != 0 or N % block_n != 0:
+        pytest.skip(f"Skipping M={M},N={N} with block_m={block_m},block_n={block_n} due to non-divisibility for perf simplicity.")
+
+    if dtype_str == 'fp16': current_dtype = torch.float16
+    elif dtype_str == 'bf16': current_dtype = torch.bfloat16 # Not in original, but for consistency
+    else: current_dtype = torch.float32
+
+    # Input tensors
+    # Original test used rs.randint(0,4,...).astype('float32')
+    # For perf, torch.randn is more common.
+    A_tri = torch.randn((M, K), dtype=current_dtype, device='cuda')
+    B_tri = torch.randn((M, N, K), dtype=current_dtype, device='cuda')
+    # C_tri (output) will be created by the wrapper
+
+    # --- Create op_lambda for benchmarking ---
+    op_lambda = lambda: batched_vecmat_triton_wrapper(A_tri, B_tri, block_m, block_n, block_k)
+
+    # --- Benchmarking ---
+    bench_config = do_bench_config(warm_up=25, repetition=100)
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+
+    current_params_for_logs_and_calc = {
+        "M": M, "N": N, "K": K,
+        "block_m": block_m, "block_n": block_n, "block_k": block_k,
+        "dtype_str": dtype_str
+    }
+
+    benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                              gbps_calculator=calculate_batched_vecmat_gbps,
+                              tflops_calculator=calculate_batched_vecmat_tflops)
+    
 ######################################## HELPERS for Eval ########################################     
 # --- Pytest hook to save the dictionary at the end of the session ---  
 def test_save_results():  
@@ -218,6 +340,16 @@ def test_save_results():
     torch.save(result_gold, OUTPUT_FILENAME)       
     print(f"Successfully saved {len(result_gold)} y_triton tensors to {OUTPUT_FILENAME}.")  
 
-def test_get_results():
-    print(result_gold)
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
+
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
+
 ######################################## HELPERS for Eval ########################################

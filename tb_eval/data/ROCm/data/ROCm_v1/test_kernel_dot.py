@@ -32,7 +32,8 @@ import shutil
 import tempfile
 import os
 import pytest
-
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
 import triton
 import triton.language as tl
 from triton.backends.compiler import AttrsDescriptor
@@ -128,6 +129,87 @@ def test_compile_kernel_dot_in_forked_subproc(fresh_triton_cache, request) -> No
 
     result_gold[sanitized_key_name] = torch.tensor([[1.0]]).clone().detach().cpu()
 
+
+
+# --- Python wrapper for launching kernel_dot for benchmarking ---
+def kernel_dot_triton_wrapper(Z_tensor, num_warps_launch):
+    # Kernel operates on a 16x16 tile.
+    # Grid is (1,) because the kernel itself doesn't use program_id for tiling.
+    grid = (1,)
+    kernel_dot[grid](Z_tensor, num_warps=num_warps_launch) # Z_tensor is modified in-place
+    return Z_tensor # Return for consistency, though modified in-place
+
+# --- Define TFLOPS and GB/s calculators for the 16x16 dot product ---
+FIXED_DIM_FOR_KERNEL_DOT = 16
+
+def calculate_kernel_dot_tflops(params: dict, ms: float) -> float:
+    M = N = K = FIXED_DIM_FOR_KERNEL_DOT
+    # Operation: Z_out = Z_in @ Z_in
+    flops = 2 * M * N * K 
+    tflops = flops / (ms / 1000) / 1e12
+    return tflops
+
+def calculate_kernel_dot_gbps(params: dict, ms: float) -> float:
+    M = N = K = FIXED_DIM_FOR_KERNEL_DOT
+    dtype_str = params.get('dtype_str', 'fp32') # Original signature was *fp32
+
+    current_dtype = torch.float32
+    if dtype_str == 'fp16': current_dtype = torch.float16
+    elif dtype_str == 'bf16': current_dtype = torch.bfloat16
+    element_size = torch.tensor([], dtype=current_dtype).element_size()
+
+    # Read Z (16,16) twice (as A and B), Write Z (16,16)
+    bytes_read_z1 = M * K * element_size
+    bytes_read_z2 = K * N * element_size 
+    bytes_write_z = M * N * element_size
+    total_bytes = bytes_read_z1 + bytes_read_z2 + bytes_write_z
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+OP_NAME_FOR_BENCHMARK = "kernel_dot_triton_perf"
+
+# --- Pytest parametrize for performance testing ---
+# Kernel is fixed to 16x16. We can vary dtype and num_warps.
+KERNEL_DOT_DTYPES_FOR_PERF = ['fp32', 'fp16'] # bf16 if supported and desired
+KERNEL_DOT_NUM_WARPS_FOR_PERF = [1, 2, 4] 
+
+@pytest.mark.parametrize("dtype_str", KERNEL_DOT_DTYPES_FOR_PERF)
+@pytest.mark.parametrize("num_warps_launch", KERNEL_DOT_NUM_WARPS_FOR_PERF)
+@skip_if_no_target # Use the skip if target not available
+def test_performance(dtype_str, num_warps_launch, request):
+    set_seed()
+    
+    if dtype_str == 'fp32': current_dtype = torch.float32
+    elif dtype_str == 'bf16': current_dtype = torch.bfloat16
+    else: current_dtype = torch.float16
+
+    # Input tensor Z (16x16)
+    # The kernel signature in ASTSource used *fp32. For perf, we might test other dtypes
+    # if the kernel JIT itself is flexible or if we compile variants.
+    # For now, assume the JIT `kernel_dot` can handle the dtype of the passed tensor.
+    Z_tensor = torch.randn((FIXED_DIM_FOR_KERNEL_DOT, FIXED_DIM_FOR_KERNEL_DOT), 
+                           device='cuda', dtype=current_dtype)
+    
+    # --- Create op_lambda for benchmarking ---
+    # The kernel modifies Z_tensor in-place.
+    op_lambda = lambda: kernel_dot_triton_wrapper(Z_tensor, num_warps_launch)
+
+    # --- Benchmarking ---
+    bench_config = do_bench_config(warm_up=100, repetition=1000) # Kernel is tiny, need more reps
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+
+    current_params_for_logs_and_calc = {
+        "DIM": FIXED_DIM_FOR_KERNEL_DOT, # M=N=K=16
+        "dtype_str": dtype_str,
+        "num_warps": num_warps_launch
+    }
+    
+    perf_result = benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                                            gbps_calculator=calculate_kernel_dot_gbps,
+                                            tflops_calculator=calculate_kernel_dot_tflops)
+
 ######################################## HELPERS for Eval ########################################     
 # --- Pytest hook to save the dictionary at the end of the session ---  
 def test_save_results():  
@@ -146,6 +228,17 @@ def test_save_results():
     torch.save(result_gold, OUTPUT_FILENAME)       
     print(f"Successfully saved {len(result_gold)} y_triton tensors to {OUTPUT_FILENAME}.")  
 
-def test_get_results():
-    print(result_gold)
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
+
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
+
+
 ######################################## HELPERS for Eval ########################################

@@ -145,7 +145,8 @@ import sys
 import triton.language as tl # Required for tl.constexpr in quantize_input and other places  
 
 
-
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
 ######################################## HELPERS for Eval ######################################## 
 import numpy as np
 import random
@@ -796,6 +797,119 @@ def test_correctness_int8_w8a8(M: int, N: int, K: int, top_k: int, E: int, route
     # Validate correctness  
     torch.testing.assert_close(tri_out, ref_out, atol=1e-2, rtol=1e-2)  
 
+# --- Define TFLOPS and GB/s calculators for MoE GEMM ---
+def calculate_moe_gemm_tflops(params: dict, ms: float) -> float:
+    M = params['M_orig'] # Original number of tokens before top_k expansion
+    N = params['N']
+    K = params['K']
+    top_k = params['top_k']
+    # Each of M tokens interacts with top_k experts.
+    # For each such interaction, it's an M_slice * K @ K * N GEMM.
+    # Effective operations: M * top_k * (2 * K * N)
+    flops = M * top_k * (2 * K * N)
+    if params.get('routed_weight', False):
+        flops += M * top_k * N # Element-wise multiplication by routing weights
+    tflops = flops / (ms / 1000) / 1e12
+    return tflops
+
+def calculate_moe_gemm_gbps(params: dict, ms: float) -> float:
+    M_orig = params['M_orig']
+    N = params['N']
+    K = params['K']
+    E = params['E']
+    top_k = params['top_k']
+    dtype_str = params.get('dtype_str', 'fp16') # Default if not specified
+
+    if dtype_str == 'fp32': current_dtype = torch.float32
+    elif dtype_str == 'bf16': current_dtype = torch.bfloat16
+    else: current_dtype = torch.float16
+    element_size = torch.tensor([], dtype=current_dtype).element_size()
+
+    # Memory I/O:
+    # Read A: (M_orig, K)
+    # Read B (all expert weights): (E, N, K) - worst case, all loaded
+    # Read routing info: topk_ids (M_orig, top_k), expert_ids (complex, related to padded M), topk_weights (M_orig, top_k)
+    # Write C: (M_orig, top_k, N) -> effectively M_orig * top_k rows of size N are written.
+
+    bytes_a = M_orig * K * element_size
+    bytes_b = E * N * K * element_size # All expert weights
+    # Output c_for_kernel is (EM_padded, N). EM_padded is roughly M_orig * top_k.
+    # Let's use M_orig * top_k for a cleaner estimate of useful data written.
+    bytes_c_written = M_orig * top_k * N * element_size
+
+    # Routing info bytes are usually smaller and sometimes omitted for simplicity,
+    # but can be significant for small M, N, K.
+    # topk_ids: M_orig * top_k * 4 (int32)
+    # expert_ids: (num_blocks_for_kernel) * 4 (int32) - harder to estimate precisely without full alignment logic
+    # topk_weights: M_orig * top_k * element_size (if routed_weight)
+    bytes_routing = M_orig * top_k * 4 # topk_ids
+    if params.get('routed_weight', False):
+        bytes_routing += M_orig * top_k * element_size
+
+    # For MoE, a common simplification is A + B_active + C
+    # B_active = M_orig * top_k * K * N (effectively) but data comes from (E,N,K)
+    # Let's use: Read A, Read all B, Write C_useful
+    total_bytes = bytes_a + bytes_b + bytes_c_written # Add bytes_routing if significant
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+# --- Name for the benchmark output JSON file ---
+OP_NAME_FOR_BENCHMARK = "moe_gemm_triton_perf"
+
+# --- Pytest parametrize for performance testing (based on test_correctness) ---
+MOE_GEMM_PARAMS_FOR_PERF = [
+    # M, N, K, top_k, E
+    (64, 14336, 4096, 2, 8),
+    (256, 7168, 4096, 2, 8), # Example medium size
+    (1024, 14336, 4096, 2, 8), # Example larger M
+    (16, 1024, 512, 1, 4),   # Smaller K, N
+]
+MOE_DTYPES_FOR_PERF = ['fp16', 'bf16'] # Reduced set for faster perf testing
+# Quantization modes are complex to integrate here simply, focus on main dtypes first.
+
+@pytest.mark.parametrize("M_orig, N, K, top_k, E", MOE_GEMM_PARAMS_FOR_PERF)
+@pytest.mark.parametrize('routed_weight', [True, False])
+@pytest.mark.parametrize('dtype_str', MOE_DTYPES_FOR_PERF)
+def test_performance(M_orig, N, K, top_k, E, routed_weight, dtype_str, request):
+    # Determine torch dtype
+    set_seed()
+    if dtype_str == 'fp32': current_dtype = torch.float32
+    elif dtype_str == 'bf16': current_dtype = torch.bfloat16
+    else: current_dtype = torch.float16
+
+    # --- Input Setup using input_helper ---
+    # For performance, we are not testing quantization variants like fp8/int8 here for simplicity.
+    # That would require more parameters for use_fp8_w8a8, etc.
+    a, b, c_for_kernel, metadata = input_helper(
+        M=M_orig, N=N, K=K, top_k=top_k, E=E,
+        routed_weight=routed_weight,
+        use_fp8_w8a8=False, use_int8_w8a16=False, use_int8_w8a8=False,
+        fp8_type=None, dtype=current_dtype
+    )
+
+    # --- Create op_lambda for benchmarking ---
+    op_lambda = lambda: moe_gemm(a, b, c_for_kernel, metadata)
+
+    # --- Benchmarking ---
+    bench_config = do_bench_config(warm_up=10, repetition=50) # MoE can be slower
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+
+    current_params_for_logs_and_calc = {
+        "M_orig": M_orig, "N": N, "K": K, "top_k": top_k, "E": E,
+        "routed_weight": routed_weight, "dtype_str": dtype_str,
+        # Include relevant metadata.config if it affects performance
+        "BLOCK_SIZE_M": metadata.config['BLOCK_SIZE_M'],
+        "BLOCK_SIZE_N": metadata.config['BLOCK_SIZE_N'],
+        "BLOCK_SIZE_K": metadata.config['BLOCK_SIZE_K'],
+        "GROUP_SIZE_M": metadata.config['GROUP_SIZE_M'],
+    }
+
+    benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                              gbps_calculator=calculate_moe_gemm_gbps,
+                              tflops_calculator=calculate_moe_gemm_tflops)
+    
 ######################################## HELPERS for Eval ########################################     
 # --- Pytest hook to save the dictionary at the end of the session ---  
 def test_save_results():  
@@ -814,6 +928,17 @@ def test_save_results():
     torch.save(result_gold, OUTPUT_FILENAME)       
     print(f"Successfully saved {len(result_gold)} tri_out tensors to {OUTPUT_FILENAME}.")  
 
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
+
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
 ######################################## HELPERS for Eval ######################################## 
 
 

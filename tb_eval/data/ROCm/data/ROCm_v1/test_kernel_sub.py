@@ -30,6 +30,8 @@ import shutil
 import tempfile
 import os
 import pytest
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
 
 import triton
 import triton.language as tl
@@ -132,6 +134,89 @@ def test_compile_kernel_sub_in_subproc(fresh_triton_cache, request) -> None: # T
 
     result_gold[sanitized_key_name] = torch.tensor([[1.0]]).clone().detach().cpu()
 
+
+def kernel_sub_triton_wrapper(a_tensor, b_tensor, o_buffer, 
+                              N_val_const, num_warps_launch): # N_val becomes constexpr N
+    grid = (1,) 
+    kernel_sub[grid](
+        a_tensor, b_tensor, o_buffer, 
+        N=N_val_const, 
+        num_warps=num_warps_launch
+    )
+    return o_buffer 
+
+def calculate_kernel_sub_tflops(params: dict, ms: float) -> float:
+    N = params['N_val']
+    flops = 2 * N 
+    tflops = flops / (ms / 1000) / 1e12
+    return tflops
+
+def calculate_kernel_sub_gbps(params: dict, ms: float) -> float:
+    N = params['N_val']
+    dtype_str = params.get('dtype_str', 'fp32') 
+    current_dtype = torch.float32
+    if dtype_str == 'fp16': current_dtype = torch.float16
+    elif dtype_str == 'bf16': current_dtype = torch.bfloat16
+    element_size = torch.tensor([], dtype=current_dtype).element_size()
+    bytes_a_read, bytes_b_read, bytes_o_write = [N * element_size] * 3
+    total_bytes = bytes_a_read + bytes_b_read + bytes_o_write
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+OP_NAME_FOR_BENCHMARK = "kernel_sub_triton_perf"
+
+# --- Pytest parametrize for performance testing ---
+# MODIFIED: N_val significantly reduced to avoid HSA_STATUS_ERROR_OUT_OF_RESOURCES
+# This kernel is not tiled, so N must be small.
+# Max N around 16384 to 32768 might be the limit for a single SM program without tiling.
+# Let's test up to 65536, but expect larger ones might fail.
+KERNEL_SUB_N_VALS_FOR_PERF = [2**i for i in range(10, 17)] # 1024 to 65536
+# KERNEL_SUB_N_VALS_FOR_PERF = [2**i for i in range(10, 21)] # Original problematic range
+
+KERNEL_SUB_DTYPES_FOR_PERF = ['fp32', 'fp16'] 
+KERNEL_SUB_NUM_WARPS_FOR_PERF = [1, 2, 4] 
+
+@pytest.mark.parametrize("N_val", KERNEL_SUB_N_VALS_FOR_PERF)
+@pytest.mark.parametrize("dtype_str", KERNEL_SUB_DTYPES_FOR_PERF)
+@pytest.mark.parametrize("num_warps_launch", KERNEL_SUB_NUM_WARPS_FOR_PERF)
+@skip_if_no_target 
+def test_performance(N_val, dtype_str, num_warps_launch, request):
+    set_seed()
+    
+    # Proactive skip for very large N for this non-tiled kernel
+    # This limit is empirical and might need adjustment based on specific GPU/driver
+    # For ROCm, even 65536 might be too large without tiling for some internal resources.
+    # The error at N=524288 confirms this.
+    if N_val > 65536 * 2 : # A more conservative upper bound for non-tiled kernel
+         pytest.skip(f"Skipping N_val={N_val} as it's too large for this non-tiled kernel_sub.")
+
+    if dtype_str == 'fp32': current_dtype = torch.float32
+    elif dtype_str == 'bf16': current_dtype = torch.bfloat16 
+    else: current_dtype = torch.float16
+
+    a = torch.randn(N_val, device='cuda', dtype=current_dtype)
+    b = torch.randn(N_val, device='cuda', dtype=current_dtype)
+    o_buffer = torch.empty(N_val, device='cuda', dtype=current_dtype) 
+    
+    op_lambda = lambda: kernel_sub_triton_wrapper(
+        a, b, o_buffer, N_val, num_warps_launch
+    )
+
+    bench_config = do_bench_config(warm_up=100, repetition=500) 
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+    current_params_for_logs_and_calc = {
+        "N_val": N_val, 
+        "dtype_str": dtype_str,
+        "num_warps": num_warps_launch
+    }
+    
+    perf_result = benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                                            gbps_calculator=calculate_kernel_sub_gbps,
+                                            tflops_calculator=calculate_kernel_sub_tflops)
+
+
 ######################################## HELPERS for Eval ########################################     
 # --- Pytest hook to save the dictionary at the end of the session ---  
 def test_save_results():  
@@ -150,6 +235,16 @@ def test_save_results():
     torch.save(result_gold, OUTPUT_FILENAME)       
     print(f"Successfully saved {len(result_gold)} y_triton tensors to {OUTPUT_FILENAME}.")  
 
-def test_get_results():
-    print(result_gold)
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
+
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
+
 ######################################## HELPERS for Eval ########################################

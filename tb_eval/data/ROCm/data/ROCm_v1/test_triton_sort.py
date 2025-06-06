@@ -23,6 +23,9 @@ import torch
 import os
 import pytest
 from numpy.random import RandomState
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
+
 
 result_gold = {}
 
@@ -126,6 +129,108 @@ def test_sort(N_rows, M_cols, descending, dtype_str, request, device='cuda'):
         f"Sort mismatch for dtype {dtype_str}, shape ({N_rows}, {M_cols}), descending={descending}.\nReference: {y_ref}\nTriton: {z_triton}"
 
 
+# --- Python wrapper for the kernel for benchmarking ---
+def sort_triton_wrapper(x_tensor, z_buffer, N_const, M_const, descending_const, num_warps_launch):
+    # For benchmarking, we assume the kernel processes one N_const x M_const tile.
+    # The grid will be (1,) as the kernel is not tiled with program_id for larger inputs.
+    grid = (1,) 
+    sort_kernel[grid](
+        x_tensor, z_buffer, 
+        N=N_const, M=M_const, # Pass as constexpr
+        descending=descending_const,
+        num_warps=num_warps_launch # Launch hint
+    )
+    return z_buffer
+
+# --- Define TFLOPS and GB/s calculators ---
+def calculate_sort_tflops(params: dict, ms: float) -> float:
+    # Sorting N_rows * (M_cols * log(M_cols)) comparisons approx.
+    # Each comparison is 1 FLOP. This is a rough lower bound.
+    N_rows = params['N_tile_rows'] 
+    M_cols = params['M_tile_cols']
+    if M_cols <= 1: return 0.0 # No comparisons if 0 or 1 element per row
+    
+    # For tl.sort on each row of M_cols elements
+    flops_per_row = M_cols * np.log2(M_cols) if M_cols > 0 else 0 # O(M log M) comparisons
+    total_flops = N_rows * flops_per_row
+    tflops = total_flops / (ms / 1000) / 1e12
+    return tflops
+
+def calculate_sort_gbps(params: dict, ms: float) -> float:
+    N_rows = params['N_tile_rows'] 
+    M_cols = params['M_tile_cols']
+    dtype_str = params.get('dtype_str', 'fp32') 
+
+    current_torch_dtype = torch_dtype_from_str(dtype_str)
+    element_size = torch.tensor([], dtype=current_torch_dtype).element_size()
+
+    elements_processed = N_rows * M_cols
+    bytes_read = elements_processed * element_size
+    bytes_write = elements_processed * element_size 
+    total_bytes = bytes_read + bytes_write
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+OP_NAME_FOR_BENCHMARK = "triton_sort_perf"
+
+# --- Pytest parametrize for performance testing ---
+# Kernel's N and M are constexpr, defining the tile size it processes.
+SORT_TILE_SHAPES_FOR_PERF = [
+    # N_tile_rows, M_tile_cols (for the single tile processed by kernel)
+    (1, 1024), (1, 4096), (1, 8192), (1, 16384), # Sorting long single rows
+    (8, 512), (8, 1024), (8, 2048),             # Sorting a few medium rows
+    (64, 128), (64, 256),            # Sorting more, shorter rows
+    (256, 64), (256, 128), (256, 256)
+]
+SORT_DTYPES_FOR_PERF = ['int32', 'float16', 'float32', 'bfloat16'] 
+SORT_DESCENDING_FOR_PERF = [False, True]
+# NUM_WARPS_FOR_PERF = [1, 2, 4, 8]
+
+@pytest.mark.parametrize("N_tile_rows, M_tile_cols", SORT_TILE_SHAPES_FOR_PERF)
+@pytest.mark.parametrize("descending_val", SORT_DESCENDING_FOR_PERF)
+@pytest.mark.parametrize("dtype_str", SORT_DTYPES_FOR_PERF)
+# @pytest.mark.parametrize("num_warps_launch", NUM_WARPS_FOR_PERF) # Optional
+def test_performance(N_tile_rows, M_tile_cols, descending_val, dtype_str, request, device='cuda'):
+    # num_warps_launch = 4 # Or from parametrize
+    
+    if dtype_str == 'bfloat16':
+        cap = torch.cuda.get_device_capability()
+        if cap[0] < 8:
+            pytest.skip("bfloat16 requires Ampere+ (arch 80+)")
+    
+    set_seed()
+    current_torch_dtype = torch_dtype_from_str(dtype_str)
+
+    # Input tensor `x_perf` has shape (N_tile_rows, M_tile_cols)
+    # as the kernel is designed to process one such tile.
+    x_np_perf = gen_numpy_array_for_torch_conversion((N_tile_rows, M_tile_cols), dtype_str)
+    x_perf_tensor = torch.from_numpy(x_np_perf).to(dtype=current_torch_dtype, device=device)
+    
+    z_perf_buffer = torch.empty_like(x_perf_tensor)
+    
+    op_lambda = lambda: sort_triton_wrapper(
+        x_perf_tensor, z_perf_buffer, 
+        N_tile_rows, M_tile_cols, descending_val,
+        num_warps_launch=4 # Example, can be parametrized
+    )
+
+    bench_config = do_bench_config(warm_up=50, repetition=200) # Sorting can vary
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+    current_params_for_logs_and_calc = {
+        "N_tile_rows": N_tile_rows, 
+        "M_tile_cols": M_tile_cols,
+        "descending": descending_val,
+        "dtype_str": dtype_str,
+        "num_warps": 4 # Log the fixed num_warps
+    }
+    
+    perf_result = benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                                            gbps_calculator=calculate_sort_gbps,
+                                            tflops_calculator=calculate_sort_tflops)
+
+
 
 ######################################## HELPERS for Eval ########################################     
 # --- Pytest hook to save the dictionary at the end of the session ---  
@@ -145,6 +250,17 @@ def test_save_results():
     torch.save(result_gold, OUTPUT_FILENAME)       
     print(f"Successfully saved {len(result_gold)} y_triton tensors to {OUTPUT_FILENAME}.")  
 
-def test_get_result():
-    print(result_gold)
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
+
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
+
+
 ######################################## HELPERS for Eval ########################################

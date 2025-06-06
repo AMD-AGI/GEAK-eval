@@ -145,6 +145,8 @@ import pytest
 from numpy.random import RandomState
 
 result_gold = {}
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
 
 ######################################## HELPERS for Eval ######################################## 
 def set_seed(seed: int = 42) -> None:
@@ -291,6 +293,219 @@ def test_pipeline_matmul(scale, request, device='cuda'):
     torch.testing.assert_close(ref_out, output, atol=atol, rtol=rtol, equal_nan=scale)
 
 
+# Define these globally so they are accessible by test_matmul_mxfp_performance
+FIXED_BLOCK_M_perf = 64
+FIXED_BLOCK_N_perf = 64
+FIXED_BLOCK_K_tile_perf = 32 # This is BLOCK_K in kernel, for tiling K_eff
+FIXED_NUM_STAGES_perf = 2    
+FIXED_NUM_WARPS_perf = 4     
+
+# --- Python wrapper for the kernel for benchmarking (UNCHANGED from previous corrected version) ---
+def matmul_mxfp_triton_wrapper(a_tensor, scale_a_tensor, b_tensor, output_buffer,
+                               M_dim, N_dim, K_runtime_dim, 
+                               block_m_const, block_n_const, block_k_const_tile, 
+                               num_stages_const, a_type_str, b_type_str,
+                               num_warps_launch): 
+    grid = (triton.cdiv(M_dim, block_m_const) * triton.cdiv(N_dim, block_n_const), 1)
+    stride_sm, stride_sk = (scale_a_tensor.stride(0), scale_a_tensor.stride(1)) \
+                           if scale_a_tensor is not None else (0,0)
+    matmul_kernel[grid](
+        a_tensor, scale_a_tensor, b_tensor, output_buffer,
+        M_dim, N_dim, K_runtime_dim, 
+        a_tensor.stride(0), a_tensor.stride(1),
+        stride_sm, stride_sk,
+        b_tensor.stride(0), b_tensor.stride(1),
+        output_buffer.stride(0), output_buffer.stride(1),
+        BLOCK_M=block_m_const, BLOCK_N=block_n_const, BLOCK_K=block_k_const_tile, 
+        NUM_STAGES=num_stages_const, a_type=a_type_str, b_type=b_type_str,
+        num_warps=num_warps_launch
+    )
+    return output_buffer
+
+# --- CORRECTED TFLOPS and GB/s Calculators ---
+def calculate_mxfp_matmul_tflops(params: dict, ms: float) -> float:
+    M, N = params['M'], params['N']
+    K_for_flops = params['K_for_flops'] # Use the K dim relevant for FLOPs
+    flops = 2 * M * N * K_for_flops
+    tflops = flops / (ms / 1000) / 1e12
+    return tflops
+
+def get_torch_dtype_from_str(dtype_str: str, default_dtype=torch.float16):
+    if dtype_str == 'fp32': return torch.float32
+    if dtype_str == 'bf16': return torch.bfloat16
+    if dtype_str == 'fp16': return torch.float16
+    if dtype_str == 'uint8': return torch.uint8
+    return default_dtype
+
+def calculate_mxfp_matmul_gbps(params: dict, ms: float) -> float:
+    M, N = params['M'], params['N']
+    K_for_A_storage = params['K_for_A_storage'] 
+    K_for_B_storage = params['K_for_B_storage'] 
+    
+    is_scaled = params['is_scaled_mode']
+    
+    if is_scaled:
+        elem_size_a_data = torch.tensor([], dtype=torch.uint8).element_size()
+        elem_size_scale_a = torch.tensor([], dtype=torch.uint8).element_size()
+        elem_size_b_data = torch.tensor([], dtype=torch.uint8).element_size()
+        elem_size_out = torch.tensor([], dtype=torch.bfloat16).element_size()
+        K_mxfp_vectors_for_scale = params['K_MXFP_runtime'] 
+    else: 
+        input_dtype_str_calc = params.get('input_dtype_str', 'fp16')
+        output_dtype_str_calc = params.get('output_dtype_str_actual', 'fp16')
+
+        torch_input_dtype = get_torch_dtype_from_str(input_dtype_str_calc)
+        torch_output_dtype = get_torch_dtype_from_str(output_dtype_str_calc)
+        
+        elem_size_a_data = torch.tensor([], dtype=torch_input_dtype).element_size()
+        elem_size_b_data = torch.tensor([], dtype=torch_input_dtype).element_size()
+        elem_size_out = torch.tensor([], dtype=torch_output_dtype).element_size()
+        elem_size_scale_a = 0 
+        K_mxfp_vectors_for_scale = 0
+
+    bytes_a = M * K_for_A_storage * elem_size_a_data
+    bytes_b = K_for_B_storage * N * elem_size_b_data 
+    bytes_scale_a = M * K_mxfp_vectors_for_scale * elem_size_scale_a if is_scaled and elem_size_scale_a > 0 else 0
+    bytes_out_write = M * N * elem_size_out
+    
+    total_bytes = bytes_a + bytes_b + bytes_scale_a + bytes_out_write
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+OP_NAME_FOR_BENCHMARK = "matmul_mxfp_triton_perf"
+
+MXFP_PERF_CONFIGS = []
+shapes_perf = [(512, 512, 128), (1024, 1024, 64), (2048, 1024, 32)] 
+
+for M_val, N_val, K_actual_val in shapes_perf:
+    for input_dtype_s in ['fp16', 'fp32']: 
+        MXFP_PERF_CONFIGS.append({
+            'M':M_val, 'N':N_val, 'K_param':K_actual_val, 'is_scaled':False, 
+            'a_type':None, 'b_type':None, 'input_dtype':input_dtype_s
+        })
+
+if is_cuda() and torch.cuda.get_device_capability()[0] >=9 : 
+    for M_val, N_val, K_mxfp_val in shapes_perf:
+        if K_mxfp_val == 0 : continue # K_mxfp must be > 0 for scaled mode
+        if K_mxfp_val % (FIXED_BLOCK_K_tile_perf // (32 // 2)) != 0 and K_mxfp_val % (FIXED_BLOCK_K_tile_perf // (32 // 1)) != 0 :
+             # K_MXFP must be such that KA_eff and KB_eff are reasonable for K_tile
+             # This check is complex, for now assume K_mxfp_val is okay.
+             # A simpler check: K_mxfp_val should be multiple of BLOCK_SK_eff (BLOCK_K_tile/32)
+             if FIXED_BLOCK_K_tile_perf % 32 == 0 and K_mxfp_val % (FIXED_BLOCK_K_tile_perf // 32) != 0:
+                 # print(f"Skipping K_mxfp={K_mxfp_val} with BLOCK_K_tile={FIXED_BLOCK_K_tile_perf} due to scale alignment")
+                 continue
+
+        MXFP_PERF_CONFIGS.append({ 
+            'M':M_val, 'N':N_val, 'K_param':K_mxfp_val, 'is_scaled':True, 
+            'a_type':'e2m1', 'b_type':'e4m3', 'input_dtype':'uint8'
+        })
+        if is_hopper(): 
+            MXFP_PERF_CONFIGS.append({ 
+                'M':M_val, 'N':N_val, 'K_param':K_mxfp_val, 'is_scaled':True, 
+                'a_type':'e2m1', 'b_type':'e5m2', 'input_dtype':'uint8'
+            })
+
+@pytest.mark.parametrize("test_cfg_dict", MXFP_PERF_CONFIGS)
+def test_performance(test_cfg_dict, request):
+    check_capabilities() 
+    set_seed()
+    device = 'cuda'
+
+    M = test_cfg_dict['M']
+    N = test_cfg_dict['N']
+    K_param = test_cfg_dict['K_param'] 
+    is_scaled_mode = test_cfg_dict['is_scaled']
+    a_type_kernel_str = test_cfg_dict['a_type'] 
+    b_type_kernel_str = test_cfg_dict['b_type'] 
+    
+    K_MXFP_runtime = 0
+    K_eff_A_storage = 0 
+    K_eff_B_storage = 0 
+    K_for_flops_calc = 0 
+    scale_a_tensor = None 
+    input_dtype_for_calc = test_cfg_dict['input_dtype'] 
+
+    if is_scaled_mode:
+        if not is_cuda(): pytest.skip("Scaled MXFP test part currently CUDA-specific")
+        if a_type_kernel_str is None or b_type_kernel_str is None :
+             pytest.skip("a_type and b_type must be specified for scaled mode")
+
+        K_MXFP_runtime = K_param 
+        DIV_FACTOR = 2 if a_type_kernel_str == "e2m1" else 1
+        
+        K_eff_A_storage = K_MXFP_runtime * (32 // DIV_FACTOR)
+        K_eff_B_storage = K_MXFP_runtime * 32            
+        
+        # For dot(A(M,K1), B(K1,N)), K_for_flops is K1.
+        # Here a is (M, KA_eff) and b is (KB_eff, N) for the kernel's view.
+        # The dot_scaled implies A's K dim must match B's K dim logically.
+        # KA_eff = K_MXFP * (32/DIV_FACTOR), KB_eff = K_MXFP * 32.
+        # These are generally different unless DIV_FACTOR=1.
+        # tl.dot_scaled is flexible: `dot_scaled(a, scale_a, "eXmY", b, scale_b, "eZmQ", acc)`
+        # It handles the internal expansion. The logical K for FLOPs is related to K_MXFP * 32.
+        K_for_flops_calc = K_eff_B_storage # Use the larger effective K from B for FLOPs
+
+        if K_eff_A_storage == 0 or K_eff_B_storage == 0 : pytest.skip("Effective K is zero for scaled mode.")
+
+        a_tensor = torch.randint(256, (M, K_eff_A_storage), device=device, dtype=torch.uint8)
+        scale_a_tensor = torch.randint(74, (M, K_MXFP_runtime), device=device, dtype=torch.uint8)
+        b_tensor = torch.randint(256, (K_eff_B_storage, N), device=device, dtype=torch.uint8)
+        output_buffer = torch.empty((M, N), dtype=torch.bfloat16, device=device)
+        actual_output_dtype_str = "bf16"
+    else: 
+        K_MXFP_runtime = K_param 
+        K_eff_A_storage = K_param
+        K_eff_B_storage = K_param
+        K_for_flops_calc = K_param
+        
+        current_input_torch_dtype = get_torch_dtype_from_str(input_dtype_for_calc)
+        
+        a_tensor = torch.randn(M, K_param, device=device, dtype=current_input_torch_dtype)
+        b_tensor = torch.randn(K_param, N, device=device, dtype=current_input_torch_dtype)
+        output_buffer = torch.empty((M, N), dtype=torch.float16, device=device)
+        actual_output_dtype_str = "fp16"
+
+    # Use globally defined fixed block sizes for performance test
+    block_m_const = FIXED_BLOCK_M_perf
+    block_n_const = FIXED_BLOCK_N_perf
+    block_k_const_tile = FIXED_BLOCK_K_tile_perf 
+    num_stages_const = FIXED_NUM_STAGES_perf
+    num_warps_launch = FIXED_NUM_WARPS_perf
+
+    op_lambda = lambda: matmul_mxfp_triton_wrapper(
+        a_tensor, scale_a_tensor, b_tensor, output_buffer,
+        M, N, K_MXFP_runtime, 
+        block_m_const, block_n_const, block_k_const_tile,
+        num_stages_const, a_type_kernel_str, b_type_kernel_str,
+        num_warps_launch
+    )
+
+    bench_config = do_bench_config(warm_up=10, repetition=50)
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+    current_params_for_logs_and_calc = {
+        "M": M, "N": N, 
+        "K_param_input": K_param, 
+        "K_MXFP_runtime": K_MXFP_runtime,
+        "K_for_flops": K_for_flops_calc, 
+        "K_for_A_storage": K_eff_A_storage, 
+        "K_for_B_storage": K_eff_B_storage, 
+        "is_scaled_mode": is_scaled_mode, 
+        "a_type_str": a_type_kernel_str, "b_type_str": b_type_kernel_str,
+        "input_dtype_str": input_dtype_for_calc, 
+        "output_dtype_str_actual": actual_output_dtype_str, 
+        "BLOCK_M": block_m_const, "BLOCK_N": block_n_const, "BLOCK_K_tile": block_k_const_tile,
+        "NUM_STAGES": num_stages_const, "num_warps": num_warps_launch
+    }
+    
+    perf_result = benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                                            gbps_calculator=calculate_mxfp_matmul_gbps,
+                                            tflops_calculator=calculate_mxfp_matmul_tflops)
+
+
+
+
 ######################################## HELPERS for Eval ########################################     
 # --- Pytest hook to save the dictionary at the end of the session ---  
 def test_save_results():  
@@ -308,5 +523,19 @@ def test_save_results():
         os.makedirs(output_dir, exist_ok=True)  
     torch.save(result_gold, OUTPUT_FILENAME)       
     print(f"Successfully saved {len(result_gold)} y_triton tensors to {OUTPUT_FILENAME}.")  
+
+
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
+
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
+
 
 ######################################## HELPERS for Eval ########################################

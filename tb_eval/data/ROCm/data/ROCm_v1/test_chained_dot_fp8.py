@@ -96,10 +96,15 @@ import numpy as np
 import random
 import torch 
 import os
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
+########################## HELPER utils ##########################
+TORCH_HAS_FP8E4 = hasattr(torch, 'float8_e4m3fnuz')
+float8: tl.constexpr = None if not TORCH_HAS_FP8E4 else torch.float8_e4m3fnuz
+########################## HELPER utils ##########################
 
 
 result_gold = {}
-
 ######################################## HELPERS for Eval ######################################## 
 def set_seed(seed: int = 42) -> None:
     """
@@ -222,7 +227,127 @@ def test_chained_dot(M, N, D, dtype, msize,request):
 
         torch.testing.assert_close(tri_out, ref, atol=1e-2, rtol=0)
 
+# --- Define TFLOPS and GB/s calculators ---
+def calculate_chained_dot_tflops(params: dict, ms: float) -> float:
+    BATCH, M, N_kv, D = params['BATCH'], params['M_seqlen'], params['N_kv_seqlen'], params['D_head']
+    # S = Q(M,D) @ K.T(D,N_kv) -> 2*M*N_kv*D
+    # O = S(M,N_kv) @ V.T(N_kv,D) -> 2*M*N_kv*D (assuming V value dim is D)
+    flops = BATCH * ( (2 * M * N_kv * D) + (2 * M * N_kv * D) )
+    tflops = flops / (ms / 1000) / 1e12
+    return tflops
 
+def calculate_chained_dot_gbps(params: dict, ms: float) -> float:
+    BATCH, M, N_kv, D = params['BATCH'], params['M_seqlen'], params['N_kv_seqlen'], params['D_head']
+    dtype_str = params.get('dtype_str', 'fp16')
+    
+    element_size = 1 if dtype_str == 'fp8' and TORCH_HAS_FP8E4 and float8 is not None else \
+                   (4 if dtype_str == 'fp32' else 2) # Default to 2 bytes for fp16/bf16
+
+    bytes_q = BATCH * M * D * element_size
+    bytes_k = BATCH * N_kv * D * element_size
+    # V is passed as (B,D,N_kv) to kernel, effectively same number of elements as K
+    bytes_v = BATCH * D * N_kv * element_size 
+    bytes_o = BATCH * M * D * element_size # Output O is (B,M,D)
+    total_bytes = bytes_q + bytes_k + bytes_v + bytes_o
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+OP_NAME_FOR_BENCHMARK = "chained_dot_fp8_perf"
+
+# --- Pytest parametrize for performance testing ---
+CHAINED_DOT_PERF_CONFIGS = []
+# M, N_kv, D_head
+base_shapes_perf = [(128, 64, 32), (256, 128, 64), (512, 128, 128), (1024, 256, 128), (2048, 512, 64)]
+dtypes_perf_list = ['fp16']
+if TORCH_HAS_FP8E4 and float8 is not None: # Check if the global float8 (torch.dtype or None) is set
+    dtypes_perf_list.append('fp8')
+msize_args_perf_list = [16, 32] # msize from original test
+
+for shape_cfg in base_shapes_perf:
+    m_val, n_kv_val, d_val = shape_cfg
+    for dtype_s_val in dtypes_perf_list:
+        for msize_val_val in msize_args_perf_list:
+            CHAINED_DOT_PERF_CONFIGS.append({
+                'M':m_val, 'N_kv':n_kv_val, 'D':d_val, 
+                'dtype_str':dtype_s_val, 'msize':msize_val_val
+            })
+
+@pytest.mark.parametrize("test_config", CHAINED_DOT_PERF_CONFIGS)
+def test_performance(test_config, request):
+    set_seed()
+    M_seqlen = test_config['M']
+    N_kv_seqlen = test_config['N_kv']
+    D_head = test_config['D']
+    dtype_str = test_config['dtype_str']
+    msize_arg = test_config['msize']
+
+    BATCH = 2 # Example batch size for performance test
+
+    # Prepare inputs (always start with fp16 for data generation simplicity before potential cast)
+    q_host = torch.empty((BATCH, M_seqlen, D_head), dtype=torch.float16, device="cuda").normal_(mean=0., std=0.5)
+    k_host = torch.empty((BATCH, N_kv_seqlen, D_head), dtype=torch.float16, device="cuda").normal_(mean=0., std=0.5)
+    # V is passed as (B, D, N_kv) to chained_dot call in original test
+    v_host_for_call = torch.empty((BATCH, D_head, N_kv_seqlen), dtype=torch.float16, device="cuda").normal_(mean=0., std=0.5)
+
+    q_for_kernel, k_for_kernel, v_for_kernel_call = q_host, k_host, v_host_for_call
+    # Python floats for scales, matching chained_dot_fn.forward signature
+    q_desc_py, k_desc_py, v_desc_py = 1.0, 1.0, 1.0
+    s_sc_py, s_desc_py, o_sc_py = 1.0, 1.0, 1.0
+
+    if dtype_str == 'fp8':
+        if not (TORCH_HAS_FP8E4 and float8 is not None): # Check global float8
+            pytest.skip("FP8 (e4m3fnuz) not available or global float8 is None.")
+        
+        # to_float8's default dtype is the global `float8` (torch.dtype or None)
+        q_f8, _, q_desc_float = to_float8(q_host) # Returns Python float for scales
+        k_f8, _, k_desc_float = to_float8(k_host)
+        v_f8, _, v_desc_float = to_float8(v_host_for_call)
+        
+        q_for_kernel, k_for_kernel, v_for_kernel_call = q_f8, k_f8, v_f8
+        q_desc_py, k_desc_py, v_desc_py = q_desc_float, k_desc_float, v_desc_float
+
+        # Derive s_sc_py, s_desc_py, o_sc_py using the reference path from original test
+        # Use BATCH=0 for these calculations as original test did
+        s_ref_fp32 = torch._scaled_mm(
+            q_f8[0], k_f8[0].transpose(0, 1), 
+            out_dtype=torch.float32,
+            scale_a=torch.tensor(q_desc_py, dtype=torch.float32, device="cuda"), # _scaled_mm needs tensor scales
+            scale_b=torch.tensor(k_desc_py, dtype=torch.float32, device="cuda")
+        )
+        _s_f8_ref, s_sc_float, s_desc_float = to_float8(s_ref_fp32)
+        
+        # v_f8[0] is (D, N_kv). Transpose to (N_kv, D) for S(M,N_kv) @ V.T(N_kv,D)
+        o_ref_fp32 = torch._scaled_mm(
+            _s_f8_ref, v_f8[0].transpose(0, 1), 
+            out_dtype=torch.float32, 
+            scale_a=torch.tensor(s_desc_float, dtype=torch.float32, device="cuda"), 
+            scale_b=torch.tensor(v_desc_float, dtype=torch.float32, device="cuda")
+        )
+        _o_f8_ref, o_sc_float, _ = to_float8(o_ref_fp32)
+
+        s_sc_py, s_desc_py, o_sc_py = s_sc_float, s_desc_float, o_sc_float
+    
+    # --- Create op_lambda for benchmarking ---
+    op_lambda = lambda: chained_dot( # This is chained_dot_fn.apply
+        q_for_kernel, k_for_kernel, v_for_kernel_call, msize_arg,
+        q_desc_py, k_desc_py, v_desc_py,
+        s_sc_py, s_desc_py, o_sc_py
+    )
+
+    # --- Benchmarking ---
+    bench_config = do_bench_config(warm_up=10, repetition=50) # Adjust reps as needed
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+
+    current_params_for_logs_and_calc = {
+        "BATCH": BATCH, "M_seqlen": M_seqlen, "N_kv_seqlen": N_kv_seqlen, "D_head": D_head,
+        "dtype_str": dtype_str, "msize_arg": msize_arg
+    }
+    benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                              gbps_calculator=calculate_chained_dot_gbps,
+                              tflops_calculator=calculate_chained_dot_tflops)
+    
 ######################################## HELPERS for Eval ########################################     
 # --- Pytest hook to save the dictionary at the end of the session ---  
 def test_save_results():  
@@ -240,5 +365,19 @@ def test_save_results():
         os.makedirs(output_dir, exist_ok=True)  
     torch.save(result_gold, OUTPUT_FILENAME)       
     print(f"Successfully saved {len(result_gold)} y_triton tensors to {OUTPUT_FILENAME}.") 
+
+
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
+
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
+
 
 ######################################## HELPERS for Eval ######################################## 

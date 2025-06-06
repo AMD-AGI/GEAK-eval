@@ -21,6 +21,8 @@ import torch
 import os
 import pytest
 from numpy.random import RandomState
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
 
 result_gold = {}
 
@@ -77,6 +79,110 @@ def test_swizzle2d(size_i, size_j, size_g, request, device='cuda'):
     assert (output == expected_order).all(), (output, expected_order)
 
 
+# --- Python wrapper for the kernel for benchmarking ---
+def swizzle2d_triton_wrapper(output_buffer, size_i_k, size_j_k, size_g_k, num_warps_launch):
+    grid = (1,) # Kernel is sequential, not tiled by program_id
+    swizzle2d_kernel[grid](
+        output_buffer, 
+        size_i_k, size_j_k, size_g_k, # Runtime args to kernel
+        num_warps=num_warps_launch # Launch hint
+    )
+    return output_buffer
+
+# --- Define TFLOPS and GB/s calculators ---
+def calculate_swizzle2d_tflops(params: dict, ms: float) -> float:
+    # tl.swizzle2d involves bitwise ops (shifts, xors, ands) and some arithmetic.
+    # A rough estimate might be ~10-20 simple ops per (i,j) pair.
+    # Number of pairs = size_i * size_j
+    size_i = params['size_i_kernel']
+    size_j = params['size_j_kernel']
+    ops_per_swizzle = 15 # Rough estimate
+    total_ops = size_i * size_j * ops_per_swizzle
+    tflops = total_ops / (ms / 1000) / 1e12 # These are integer ops, not float ops
+    return tflops # Reporting "integer TOPS" effectively
+
+def calculate_swizzle2d_gbps(params: dict, ms: float) -> float:
+    size_i = params['size_i_kernel']
+    size_j = params['size_j_kernel']
+    dtype_str = params.get('output_dtype_str', 'int32') # Kernel stores integers
+
+    current_dtype = torch.int32 # Default
+    if dtype_str == 'int64': current_dtype = torch.int64
+    # Add other int types if parametrized
+    element_size = torch.tensor([], dtype=current_dtype).element_size()
+
+    # Writes size_i * size_j elements to output. No global memory reads for input data.
+    elements_written = size_i * size_j
+    total_bytes = elements_written * element_size
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+OP_NAME_FOR_BENCHMARK = "triton_swizzle2d_perf"
+
+# --- Pytest parametrize for performance testing ---
+# Kernel processes one tile of size_i x size_j sequentially.
+SWIZZLE_SHAPES_FOR_PERF = [
+    # size_i_kernel, size_j_kernel, size_g_kernel
+    (32, 32, 4), (64, 64, 8), (128, 128, 16),
+    (256, 256, 16), (256, 256, 32),
+    (512, 512, 32), #(512, 512, 64) -> size_g should be < size_i, size_j for typical swizzle
+    (512, 64, 8), (64, 512, 8)
+]
+SWIZZLE_DTYPES_FOR_PERF = ['int32', 'int64'] # Output tensor dtype
+# NUM_WARPS_FOR_PERF = [1, 2, 4] # Kernel is sequential, num_warps might not have big impact
+
+@pytest.mark.parametrize("size_i_k, size_j_k, size_g_k", SWIZZLE_SHAPES_FOR_PERF)
+@pytest.mark.parametrize("output_dtype_str", SWIZZLE_DTYPES_FOR_PERF)
+# @pytest.mark.parametrize("num_warps_launch", NUM_WARPS_FOR_PERF)
+def test_performance(size_i_k, size_j_k, size_g_k, output_dtype_str, request, device='cuda'):
+    # num_warps_launch = 4 # Or from parametrize
+    set_seed()
+    
+    # Ensure size_g is valid for swizzle2d (typically power of 2, < size_i, size_j)
+    # tl.swizzle2d doesn't strictly require power of 2 for size_g but it's common.
+    # It does require size_g > 0.
+    if not (size_g_k > 0 and size_g_k <= size_i_k and size_g_k <= size_j_k):
+        pytest.skip(f"Invalid size_g={size_g_k} for tile ({size_i_k}, {size_j_k})")
+
+    if output_dtype_str == 'int64': current_out_dtype = torch.int64
+    else: current_out_dtype = torch.int32
+        
+    # Output buffer. Kernel stores original flattened indices (integers).
+    output_buffer = torch.empty((size_i_k * size_j_k,), dtype=current_out_dtype, device=device)
+    # The kernel writes to output_ptr + new_i * size_j + new_j.
+    # If output_ptr is 1D, this is fine. If output_ptr is 2D, strides are needed.
+    # The original test passed a 2D tensor to kernel. Let's match that.
+    # Kernel expects output_ptr to be a flat pointer essentially, and calculates 2D offsets.
+    # So, a 1D buffer for output_ptr is fine if kernel does `output_ptr + flat_offset`.
+    # The kernel does `output_ptr + new_i * size_j + new_j`. This implies `output_ptr` is base of 2D array.
+    # So, `output_buffer` should be 2D for the kernel call.
+    output_buffer_2d = torch.empty((size_i_k, size_j_k), dtype=current_out_dtype, device=device)
+
+
+    op_lambda = lambda: swizzle2d_triton_wrapper(
+        output_buffer_2d, # Pass the 2D buffer
+        size_i_k, size_j_k, size_g_k,
+        num_warps_launch=4 
+    )
+
+    # This kernel is very fast for small sizes, might need many reps.
+    bench_config = do_bench_config(warm_up=100, repetition=1000 if size_i_k*size_j_k < 256*256 else 200) 
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+    current_params_for_logs_and_calc = {
+        "size_i_kernel": size_i_k, 
+        "size_j_kernel": size_j_k,
+        "size_g_kernel": size_g_k,
+        "output_dtype_str": output_dtype_str,
+        "num_warps": 4 
+    }
+    
+    perf_result = benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                                            gbps_calculator=calculate_swizzle2d_gbps,
+                                            tflops_calculator=calculate_swizzle2d_tflops)
+
+
 ######################################## HELPERS for Eval ########################################     
 # --- Pytest hook to save the dictionary at the end of the session ---  
 def test_save_results():  
@@ -96,6 +202,17 @@ def test_save_results():
     print(f"Successfully saved {len(result_gold)} y_triton tensors to {OUTPUT_FILENAME}.")  
 
 
-def test_get_result():
-    print(result_gold)
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
+
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
+
+
 ######################################## HELPERS for Eval ########################################

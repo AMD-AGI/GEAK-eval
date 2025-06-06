@@ -143,6 +143,8 @@ import torch
 import os
 import pytest
 from numpy.random import RandomState
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
 
 result_gold = {}
 
@@ -258,6 +260,81 @@ def test_op(Z, H, N_CTX, D_HEAD, request, dtype=torch.float16):
     # compare
     torch.testing.assert_close(ref_out, tri_out, atol=1e-2, rtol=0)
 
+def calculate_flash_attention_fwd_tflops(params: dict, ms: float) -> float:
+    Z, H, N_CTX, D_HEAD = params['Z'], params['H'], params['N_CTX'], params['D_HEAD']
+    flops = 2 * Z * H * N_CTX * N_CTX * D_HEAD 
+    tflops = flops / (ms / 1000) / 1e12
+    return tflops
+
+def calculate_flash_attention_fwd_gbps(params: dict, ms: float) -> float:
+    Z, H, N_CTX, D_HEAD = params['Z'], params['H'], params['N_CTX'], params['D_HEAD']
+    dtype_str = params.get('dtype_str', 'fp16') 
+    current_dtype = torch.float16
+    if dtype_str == 'fp32': current_dtype = torch.float32
+    # bf16 was removed from perf test, but keep for completeness if added back
+    elif dtype_str == 'bf16': current_dtype = torch.bfloat16 
+    element_size = torch.tensor([], dtype=current_dtype).element_size()
+    bytes_q, bytes_k, bytes_v, bytes_o_write = [Z * H * N_CTX * D_HEAD * element_size] * 4
+    bytes_L_write, bytes_M_write = [Z * H * N_CTX * 4] * 2
+    total_bytes = bytes_q + bytes_k + bytes_v + bytes_o_write + bytes_L_write + bytes_M_write
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+OP_NAME_FOR_BENCHMARK = "flash_attention_fwd_triton_perf"
+
+# --- NEW Performance Test Function using original test_op's parametrization ---
+# It mirrors test_op's parametrize for Z, H, N_CTX, D_HEAD.
+# It adds its own parametrize for dtype_str, EXCLUDING bf16 for now.
+@pytest.mark.parametrize('Z, H, N_CTX, D_HEAD', [
+    (4, 48, 128, 64), (4, 48, 256, 64), (4, 48, 512, 64),
+    (4, 48, 1024, 64), (4, 48, 2048, 64), (4, 48, 4096, 64),
+    # (2, 12, 1024, 64), (1, 8, 2048, 32) # Example additional shapes if desired
+])
+@pytest.mark.parametrize('dtype_str', ['fp16']) # MODIFIED: Only fp16 for now to avoid bf16 JIT errors
+# @pytest.mark.parametrize('dtype_str', ['fp16', 'fp32']) # Can add fp32 if it works
+def test_performance(Z, H, N_CTX, D_HEAD, dtype_str, request): 
+    
+    cap = torch.cuda.get_device_capability()
+    if cap[0] < 9: 
+         pytest.skip("Original test requires arch 90+ for this flash attention kernel version.")
+    # No bf16 specific skip needed as bf16 is removed from parametrize for this function
+
+    # Shared memory OOM skip for D_HEAD=128 (if such cases were added)
+    # This logic relies on knowing the hardcoded BLOCK and num_stages in _attention.forward
+    hardcoded_block_in_wrapper = 128 
+    hardcoded_num_stages_in_wrapper = 2
+    if D_HEAD == 128 and \
+       hardcoded_block_in_wrapper == 128 and \
+       hardcoded_num_stages_in_wrapper == 2:
+        pytest.skip(f"Skipping D_HEAD={D_HEAD} with BLOCK=128, num_stages=2 due to high shared memory demand.")
+    
+    set_seed()
+    
+    if dtype_str == 'fp32': current_dtype = torch.float32
+    # elif dtype_str == 'bf16': current_dtype = torch.bfloat16 # bf16 removed
+    else: current_dtype = torch.float16 
+
+    q = torch.empty((Z, H, N_CTX, D_HEAD), dtype=current_dtype, device="cuda").normal_(mean=0.1, std=0.2).requires_grad_(False)
+    k = torch.empty((Z, H, N_CTX, D_HEAD), dtype=current_dtype, device="cuda").normal_(mean=0.4, std=0.2).requires_grad_(False)
+    v = torch.empty((Z, H, N_CTX, D_HEAD), dtype=current_dtype, device="cuda").normal_(mean=0.3, std=0.2).requires_grad_(False)
+    sm_scale = 0.2 
+
+    op_lambda = lambda: attention(q, k, v, sm_scale)
+
+    bench_config = do_bench_config(warm_up=10, repetition=50) 
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+    current_params_for_logs_and_calc = {
+        "Z": Z, "H": H, "N_CTX": N_CTX, "D_HEAD": D_HEAD,
+        "dtype_str": dtype_str, "sm_scale": sm_scale
+    }
+    
+    perf_result = benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                                            gbps_calculator=calculate_flash_attention_fwd_gbps,
+                                            tflops_calculator=calculate_flash_attention_fwd_tflops)
+
+
 ######################################## HELPERS for Eval ########################################     
 # --- Pytest hook to save the dictionary at the end of the session ---  
 def test_save_results():  
@@ -275,6 +352,18 @@ def test_save_results():
         os.makedirs(output_dir, exist_ok=True)  
     torch.save(result_gold, OUTPUT_FILENAME)       
     print(f"Successfully saved {len(result_gold)} y_triton tensors to {OUTPUT_FILENAME}.")  
+
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
+
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
 
 ######################################## HELPERS for Eval ########################################
 

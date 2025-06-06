@@ -157,7 +157,10 @@ from itertools import product
 
 import triton
 import triton.language as tl
-  
+
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
+
 ######################################## HELPERS for Eval ######################################## 
 import numpy as np
 import random
@@ -402,6 +405,99 @@ def test_rmsnorm(M, N, ZERO_CENTERED_GAMMA, in_dtype_str, out_dtype_str, request
     assert torch.allclose(rsigma, rsigma_torch, atol=atol, rtol=rtol), \
         f"Mismatch in 'rsigma' (in={in_dtype_str}, out={out_dtype_str})"
 
+# --- Define TFLOPS and GB/s calculators for RMSNorm Forward (Same as before) ---
+def calculate_rmsnorm_fwd_gbps(params: dict, ms: float) -> float:
+    M, N = params['M'], params['N']
+    dtype_str = params.get('dtype_str', 'fp16')
+    if dtype_str == 'fp32': current_dtype = torch.float32
+    elif dtype_str == 'bf16': current_dtype = torch.bfloat16
+    else: current_dtype = torch.float16
+    element_size = torch.tensor([], dtype=current_dtype).element_size()
+    bytes_read_x = M * N * element_size
+    bytes_read_g = N * element_size # g is (N) or (1,N)
+    bytes_write_y = M * N * element_size
+    bytes_write_rsigma = M * 4
+    total_bytes = bytes_read_x + bytes_read_g + bytes_write_y + bytes_write_rsigma
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+def calculate_rmsnorm_fwd_tflops(params: dict, ms: float) -> float:
+    M, N = params['M'], params['N']
+    flops_per_row = 4 * N + 5
+    if params.get('ZERO_CENTERED_GAMMA', False): flops_per_row += N
+    total_flops = M * flops_per_row
+    tflops = total_flops / (ms / 1000) / 1e12
+    return tflops
+
+# --- Name for the benchmark output JSON file ---
+OP_NAME_FOR_BENCHMARK = "rmsnorm_fwd_triton_perf" # Distinct name
+
+
+@pytest.mark.parametrize("in_dtype_str", ["fp16", "bf16", "fp32"]) # Added fp32 back for perf
+@pytest.mark.parametrize("out_dtype_str", ["fp16", "bf16", "fp32"])
+@pytest.mark.parametrize('ZERO_CENTERED_GAMMA', [True, False])
+@pytest.mark.parametrize('M, N', [
+    (256, 4096), (2048, 2048), (4096, 8192), (8192, 8192),
+    (1, 31744), (1, 131072), (512, 10240),
+    # (1, 4), (873, 1245), # Smaller/odd shapes can be added back if desired
+])
+def test_performance(M, N, ZERO_CENTERED_GAMMA, in_dtype_str, out_dtype_str, request):
+    # Ensure in_dtype and out_dtype are compatible for RMSNorm (usually they are the same for x and y)
+    # For benchmarking, let's assume in_dtype is the primary type for x and g, and y.
+    if in_dtype_str != out_dtype_str:
+         pytest.skip(f"Skipping perf test where in_dtype {in_dtype_str} != out_dtype {out_dtype_str} for simplicity.")
+
+    current_dtype = arg_to_torch_dtype[in_dtype_str]
+    eps = 1e-5 # Standard epsilon
+    set_seed()
+
+    # Prepare inputs and output buffers
+    x = torch.randn(M, N, device='cuda', dtype=current_dtype)
+    g = torch.rand(N, device='cuda', dtype=current_dtype) # Kernel expects g_ptr + col_offsets, so 1D is fine.
+    y_buffer = torch.empty_like(x) # Output buffer for forward
+    rsigma_buffer = torch.empty(M, device='cuda', dtype=torch.float32)
+
+    # Dummy buffers for backward context (RMSNorm.apply signature expects them)
+    # These are not used by the forward pass logic being benchmarked.
+    dx_dummy = torch.empty(0, device='cuda') # Can be empty if not used
+    dg_dummy = torch.empty(0, device='cuda')
+    dg_tmp_dummy = torch.empty(0, device='cuda')
+
+    # Kernel launch parameters (from original test_rmsnorm)
+    n_rows, n_cols = x.shape
+    MAX_FUSED_SIZE = 65536 // x.element_size()
+    blk_size_fwd = min(MAX_FUSED_SIZE, triton.next_power_of_2(n_cols if n_cols > 0 else 1))
+    if blk_size_fwd == 0: blk_size_fwd = 1
+    
+    USE_BLOCKED_fwd = n_cols > blk_size_fwd
+    num_sms_val = get_num_sms()
+    NUM_PRGMS_fwd = min(n_rows, num_sms_val) if n_rows > 0 and num_sms_val > 0 else 1
+
+    # --- Create op_lambda for benchmarking the forward pass ---
+    op_lambda = lambda: rmsnorm(
+        x, g, y_buffer, rsigma_buffer,
+        dx_dummy, dg_dummy, dg_tmp_dummy, # Pass dummies
+        n_rows, n_cols, ZERO_CENTERED_GAMMA,
+        blk_size_fwd, USE_BLOCKED_fwd, NUM_PRGMS_fwd, eps
+    )
+
+    # --- Benchmarking ---
+    bench_config = do_bench_config(warm_up=25, repetition=100)
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+
+    current_params_for_logs_and_calc = {
+        "M": M, "N": N, "ZERO_CENTERED_GAMMA": ZERO_CENTERED_GAMMA,
+        "dtype_str": in_dtype_str, # Use in_dtype_str as the primary dtype for logging
+        "eps": eps,
+        "blk_size_fwd": blk_size_fwd, "USE_BLOCKED_fwd": USE_BLOCKED_fwd, "NUM_PRGMS_fwd": NUM_PRGMS_fwd
+    }
+
+    benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                              gbps_calculator=calculate_rmsnorm_fwd_gbps,
+                              tflops_calculator=calculate_rmsnorm_fwd_tflops)
+    
 ######################################## HELPERS for Eval ########################################     
 # --- Pytest hook to save the dictionary at the end of the session ---  
 def test_save_results():  
@@ -420,6 +516,17 @@ def test_save_results():
     torch.save(result_gold, OUTPUT_FILENAME)       
     print(f"Successfully saved {len(result_gold)} y_triton tensors to {OUTPUT_FILENAME}.")  
 
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
+
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
 ######################################## HELPERS for Eval ########################################
 
 

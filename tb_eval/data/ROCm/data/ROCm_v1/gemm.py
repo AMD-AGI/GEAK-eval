@@ -245,7 +245,8 @@ import sys
 import argparse  
 import pytest  
 import re  
-  
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict  
 ######################################## HELPERS for Eval ######################################## 
 import numpy as np
 import random
@@ -377,6 +378,44 @@ def set_seed(seed: int = 42) -> None:
     torch.backends.cudnn.benchmark = False
     # Set environment variable for hash-based operations
     os.environ['PYTHONHASHSEED'] = str(seed)
+
+# --- Define TFLOPS and GB/s calculators for GEMM ---
+def calculate_gemm_tflops(params: dict, ms: float) -> float:
+    M = params['M']
+    N = params['N']
+    K = params['K']
+    # For GEMM: 2 * M * N * K FLOPs
+    flops = 2 * M * N * K
+    tflops = flops / (ms / 1000) / 1e12
+    return tflops
+
+def calculate_gemm_gbps(params: dict, ms: float) -> float:
+    M = params['M']
+    N = params['N']
+    K = params['K']
+    # Dtypes are needed for element size
+    # Assuming params will contain 'in_dtype_a_str' and 'in_dtype_b_str'
+    # or we can infer from the created tensors if passed differently.
+    # For simplicity, let's assume fp16/bf16 for now if not specified.
+    # A more robust way is to pass tensor objects or precise dtype info.
+    try:
+        dtype_a = name_to_torch_types[params['in_dtype_a_str']]
+        dtype_b = name_to_torch_types[params['in_dtype_b_str']]
+        # dtype_c = name_to_torch_types[params['out_dtype_str']] # If C is different
+    except KeyError:
+        print("Warning: Dtype strings not found in params for GB/s calc, assuming float16.")
+        dtype_a = torch.float16
+        dtype_b = torch.float16
+        # dtype_c = torch.float16
+
+    bytes_a = M * K * torch.tensor([], dtype=dtype_a).element_size()
+    bytes_b = K * N * torch.tensor([], dtype=dtype_b).element_size()
+    bytes_c = M * N * torch.tensor([], dtype=dtype_a).element_size() # Assuming C is same type as A for this calc
+
+    # Read A, Read B, Write C
+    total_bytes = bytes_a + bytes_b + bytes_c
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
 
 ######################################## HELPERS for Eval ######################################## 
    
@@ -557,68 +596,64 @@ def test_correctness(M, N, K, col_a, col_b, in_dtype_a, in_dtype_b, out_dtype, r
         ###################################################################
         # torch.testing.assert_close(c, torch_output.to(torch_out_dtype), atol=5e-3, rtol=1e-2)  
   
-  
-# # yapf: disable  
-# @pytest.mark.parametrize(  
-#     "M, N, K, in_dtype_a, in_dtype_b, out_dtype, col_a, col_b",  
-#     [(*shape, in_dtype_a, in_dtype_b, out_dtype, col_a, col_b)  
-#      for shape in get_x_vals()  
-#      for in_dtype_a, in_dtype_b, out_dtype in [  
-#         ('fp8e4', 'fp8e4', 'fp16'), ('fp8e5', 'fp8e5', 'fp16'), ('fp16', 'fp8e4', 'fp16'),  
-#         ('fp16', 'fp8e5', 'fp16'),  ('bf16', 'fp8e4', 'bf16'),  ('bf16', 'fp8e5', 'bf16')]  
-#      # Defines if a matrix is row or column major.  
-#      for col_a in [True, False]  
-#      for col_b in [True, False]])  
-# # yapf: enable  
-# def test_correctness_block_scaling(M, N, K, col_a, col_b, in_dtype_a, in_dtype_b, out_dtype, request):  
-#     if (N % SCALE_BLOCK_SIZE != 0) or (K % SCALE_BLOCK_SIZE != 0):  
-#         pytest.skip("Skip N/K sizes not aligned to SCALE_BLOCK_SIZE")  
-#     # Generate Inputs  
-#     torch_in_dtype_a = name_to_torch_types[in_dtype_a]  
-#     torch_in_dtype_b = name_to_torch_types[in_dtype_b]  
-#     a, a_fp32, a_scale = gen_input(M, K, torch_in_dtype_a, col_a, seed=1, fp8_scaling_mode='token', device='cuda')  
-#     b, b_fp32, b_scale = gen_input(K, N, torch_in_dtype_b, col_b, seed=2, fp8_scaling_mode='block', device='cuda')  
-#     # Create output tensor  
-#     torch_out_dtype = name_to_torch_types[out_dtype]  
-#     c = torch.empty((M, N), device=a.device, dtype=torch_out_dtype)  
-#     # For 8-bit, we have scaled to the dynamic range of the data type.  
-#     # This requires us to compute in fp32 because for e5m2, the range is same as fp16 (e5m10).  
-#     # If we use fp16 it is possible to return infs from the torch.matmul call.  
-#     matmul(a, b, c, a_scale, b_scale, scale_a8_b8='block', activation="")  
-#     # Reference Implementation  
-#     block_k = SCALE_BLOCK_SIZE  
-#     block_n = SCALE_BLOCK_SIZE  
-#     k_tiles = triton.cdiv(K, block_k)  
-#     n_tiles = triton.cdiv(N, block_n)  
-#     c_ref = torch.zeros((M, N), device=a_fp32.device, dtype=torch.float32)  
-  
-#     A_tiles = [a_fp32[:, i * block_k:min((i + 1) * block_k, K)] for i in range(k_tiles)]  
-#     B_tiles = [[  
-#         b_fp32[  
-#             i * block_k:min((i + 1) * block_k, K),  
-#             j * block_n:min((j + 1) * block_n, N),  
-#         ] for j in range(n_tiles)  
-#     ] for i in range(k_tiles)]  
-#     C_tiles = [c_ref[:, j * block_n:min((j + 1) * block_n, N)] for j in range(n_tiles)]  
-#     As_tiles = [a_scale[:, i:i + 1] for i in range(k_tiles)] if (a_scale is not None) else None  
-  
-#     for i in range(k_tiles):  
-#         for j in range(n_tiles):  
-#             a_tile = A_tiles[i]  
-#             b_tile = B_tiles[i][j]  
-#             c_tile = C_tiles[j]  
-#             s_tile = (As_tiles[i] * b_scale[i][j]) if dtype_is_8_bit(torch_in_dtype_a) else b_scale[i][j]  
-#             c_tile[:, :] += torch.matmul(a_tile, b_tile) * s_tile  
-    
-#     result_gold['_CALL_SUCCESS_'] = torch.tensor([[1.0]])
-#     ################### save c in result_gold ###################
-#     test_case_name = request.node.name
-#     sanitized_key_name = test_case_name.replace("::", "_").replace("[", "_").replace("]", "").replace("-", "_")
-#     result_gold[sanitized_key_name] = c.clone().detach().cpu()
-#     ###################################################################
-    
-#     torch.testing.assert_close(c, c_ref.to(torch_out_dtype), atol=5e-3, rtol=1e-2)  
-  
+OP_NAME_FOR_BENCHMARK = "gemm_triton_perf"
+
+@pytest.mark.parametrize(
+    "M, N, K, in_dtype_a_str, in_dtype_b_str, out_dtype_str, col_a, col_b",
+    [(*shape, ida, idb, od, ca, cb)
+     for shape in get_x_vals() # Uses the reduced get_x_vals for faster testing
+     for ida, idb, od in [
+        ('fp16', 'fp16', 'fp16'), ('bf16', 'bf16', 'bf16'), ('fp32', 'fp32', 'fp32'),
+        # ('fp8e4', 'fp8e4', 'fp16'), ('fp8e5', 'fp8e5', 'fp16'), # FP8 needs careful scale handling
+        # ('int8', 'int8', 'int32') # Int8 also needs care
+        ]
+     for ca in [False] # Simplified: only row-major A for now
+     for cb in [False]] # Simplified: only row-major B for now
+)
+def test_performance(M, N, K, col_a, col_b, in_dtype_a_str, in_dtype_b_str, out_dtype_str, request):
+    set_seed() # Consistent seed for input data generation
+    torch_in_dtype_a = name_to_torch_types[in_dtype_a_str]
+    torch_in_dtype_b = name_to_torch_types[in_dtype_b_str]
+    torch_out_dtype = name_to_torch_types[out_dtype_str]
+
+    # --- Input Generation (from original test_correctness) ---
+    # Determine fp8_scaling_mode based on dtypes, or make it a parameter
+    fp8_mode_a = 'tensor' if dtype_is_8_bit(torch_in_dtype_a) else None
+    fp8_mode_b = 'tensor' if dtype_is_8_bit(torch_in_dtype_b) else None
+
+    a, a_fp32_ref, a_scale = gen_input(M, K, torch_in_dtype_a, col_a, seed=1, fp8_scaling_mode=fp8_mode_a or 'tensor', device='cuda')
+    b, b_fp32_ref, b_scale = gen_input(K, N, torch_in_dtype_b, col_b, seed=2, fp8_scaling_mode=fp8_mode_b or 'tensor', device='cuda')
+    c = torch.empty((M, N), device=a.device, dtype=torch_out_dtype)
+
+    # Determine scale_a8_b8 and activation for matmul wrapper
+    current_scale_a8_b8 = None
+    current_activation = "" # No activation for pure GEMM perf
+    if dtype_is_8_bit(torch_in_dtype_a) or dtype_is_8_bit(torch_in_dtype_b):
+        current_scale_a8_b8 = 'tensor' # Or make this part of parametrize if testing block/token scaling perf
+
+    # --- Create op_lambda for benchmarking ---
+    # This lambda will call the matmul wrapper
+    op_lambda = lambda: matmul(a, b, c, a_scale, b_scale,
+                               scale_a8_b8=current_scale_a8_b8,
+                               activation=current_activation)
+
+    # --- Benchmarking ---
+    bench_config = do_bench_config(warm_up=10, repetition=100) # Adjust for GEMM complexity
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+
+    current_params_for_logs_and_calc = {
+        "M": M, "N": N, "K": K,
+        "in_dtype_a_str": in_dtype_a_str, "in_dtype_b_str": in_dtype_b_str, "out_dtype_str": out_dtype_str,
+        "col_a": col_a, "col_b": col_b,
+        "fp8_scaling_a": fp8_mode_a, "fp8_scaling_b": fp8_mode_b,
+        "triton_scale_mode": current_scale_a8_b8, "activation": current_activation
+    }
+
+    benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                              gbps_calculator=calculate_gemm_gbps,
+                              tflops_calculator=calculate_gemm_tflops)
   
 def get_type(provider):  
     res = re.findall(r'\(.*?\)', provider)  
@@ -698,7 +733,17 @@ def test_save_results():
     torch.save(result_gold, OUTPUT_FILENAME)       
     print(f"Successfully saved {len(result_gold)} c_triton_dot tensors to {OUTPUT_FILENAME}.")  
 
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
 
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
 ######################################## HELPERS for Eval ######################################## 
   
 def parse_args():  

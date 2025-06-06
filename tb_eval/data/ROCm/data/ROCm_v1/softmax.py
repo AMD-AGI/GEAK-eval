@@ -95,6 +95,8 @@ import numpy as np
 import random
 import torch 
 import os
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
 
 
 result_gold = {}
@@ -281,6 +283,95 @@ def test_softmax(M, N, request):
 #Benchmark
 arg_to_torch_dtype = {'fp16': torch.float16, 'bf16': torch.bfloat16, 'fp32': torch.float32}
 
+# --- Define TFLOPS and GB/s calculators for Softmax Forward ---
+def calculate_softmax_fwd_gbps(params: dict, ms: float) -> float:
+    M, N = params['M'], params['N']
+    dtype_str = params.get('dtype_str', 'fp16')
+    if dtype_str == 'fp32': current_dtype = torch.float32
+    elif dtype_str == 'bf16': current_dtype = torch.bfloat16
+    else: current_dtype = torch.float16
+    element_size = torch.tensor([], dtype=current_dtype).element_size()
+    
+    # Read x (M,N), Write y (M,N)
+    # Intermediate m (M) and row_sum (M) are usually kept in registers/SRAM per row,
+    # not necessarily global memory traffic unless spilled, which is hard to model simply.
+    # For online softmax, data is read twice effectively (once for max/sum, once for normalization).
+    bytes_read_x_pass1 = M * N * element_size
+    bytes_read_x_pass2 = M * N * element_size # Or just once if fully fused and data stays in cache
+    bytes_write_y = M * N * element_size
+
+    # A common simplification for bandwidth: 2*M*N (one read, one write)
+    # More accurate for online: read_pass1 + read_pass2 + write
+    # Let's use 2 reads, 1 write for online softmax
+    total_bytes = bytes_read_x_pass1 + bytes_read_x_pass2 + bytes_write_y
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+def calculate_softmax_fwd_tflops(params: dict, ms: float) -> float:
+    M, N = params['M'], params['N']
+    # FLOPs for Softmax forward (per row):
+    # 1. Find max: N-1 comparisons (approx N ops)
+    # 2. Subtract max: N subtractions (N ops)
+    # 3. Exp: N exponentials (N * ~5-10 ops, say N*5)
+    # 4. Sum exps: N-1 additions (approx N ops)
+    # 5. Divide by sum: N divisions (N ops)
+    # Total per row approx: N + N + 5N + N + N = 9N ops
+    flops_per_row = 9 * N 
+    total_flops = M * flops_per_row
+    tflops = total_flops / (ms / 1000) / 1e12
+    return tflops
+
+# --- Name for the benchmark output JSON file ---
+OP_NAME_FOR_BENCHMARK = "softmax_triton_perf"
+
+# --- Pytest test_softmax function MODIFIED for performance benchmarking ---
+# Original parametrization is kept.
+SOFTMAX_SHAPES_FOR_PERF = [
+    (2048, 2048), (4096, 4096), (8192, 8192), # Square
+    (1, 32000), (1, 131072),                 # Typical vocab sizes (batch 1)
+    (1024, 8192), (512, 32000),              # Batch > 1
+    # (1,4), (1823, 781) # Smaller/odd shapes
+]
+SOFTMAX_DTYPES_FOR_PERF = ['fp16', 'bf16', 'fp32']
+
+
+@pytest.mark.parametrize('M, N', SOFTMAX_SHAPES_FOR_PERF)
+@pytest.mark.parametrize('dtype_str', SOFTMAX_DTYPES_FOR_PERF)
+def test_performance(M, N, dtype_str, request): # Renamed from test_softmax
+    set_seed()
+    
+    if dtype_str == 'fp32': current_dtype = torch.float32
+    elif dtype_str == 'bf16': current_dtype = torch.bfloat16
+    else: current_dtype = torch.float16
+
+    x = torch.randn(M, N, device='cuda', dtype=current_dtype)
+
+    # --- Create op_lambda for benchmarking ---
+    op_lambda = lambda: softmax(x)
+
+    # --- Benchmarking ---
+    bench_config = do_bench_config(warm_up=25, repetition=100)
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+
+    # Determine BLOCK_SIZE as it's done in the softmax_triton_wrapper for logging
+    # This is for logging consistency, the actual kernel uses autotuned block size.
+    # The BLOCK_SIZE passed to kernel is a key for autotuning.
+    MAX_FUSED_SIZE_log = 65536 // x.element_size()
+    BLOCK_SIZE_log = min(MAX_FUSED_SIZE_log, triton.next_power_of_2(N if N > 0 else 1))
+    if BLOCK_SIZE_log == 0: BLOCK_SIZE_log = 1
+
+
+    current_params_for_logs_and_calc = {
+        "M": M, "N": N, "dtype_str": dtype_str,
+        "LOGGED_BLOCK_SIZE_heuristic": BLOCK_SIZE_log # Log the heuristic block size
+    }
+
+    benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                              gbps_calculator=calculate_softmax_fwd_gbps,
+                              tflops_calculator=calculate_softmax_fwd_tflops)
+
 
 def model_benchmark_configs(args):
     config_file = args.model_configs
@@ -373,6 +464,18 @@ def test_save_results():
         os.makedirs(output_dir, exist_ok=True)  
     torch.save(result_gold, OUTPUT_FILENAME)       
     print(f"Successfully saved {len(result_gold)} y_triton tensors to {OUTPUT_FILENAME}.")  
+
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
+
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
 
 ######################################## HELPERS for Eval ######################################## 
 

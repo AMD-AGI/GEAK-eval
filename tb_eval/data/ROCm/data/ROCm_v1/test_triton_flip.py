@@ -24,6 +24,9 @@ import torch
 import os
 import pytest
 from numpy.random import RandomState
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
+
 
 result_gold = {}
 
@@ -119,6 +122,88 @@ def test_flip(N_rows, M_cols, dtype_str, request, device='cuda'):
 
 
 
+# --- Python wrapper for the kernel for benchmarking ---
+def flip_triton_wrapper(in_tensor, out_buffer, N_const, M_const, num_warps_launch):
+    # For benchmarking, we assume the kernel processes one NxM tile.
+    # The grid will be (1,) as the kernel is not tiled with program_id.
+    grid = (1,) 
+    flip_kernel[grid](
+        in_tensor, out_buffer, 
+        N=N_const, M=M_const, # Pass N, M as constexpr
+        num_warps=num_warps_launch # Launch hint
+    )
+    return out_buffer
+
+# --- Define TFLOPS and GB/s calculators ---
+def calculate_flip_tflops(params: dict, ms: float) -> float:
+    return 0.0 # Memory operation
+
+def calculate_flip_gbps(params: dict, ms: float) -> float:
+    N_rows = params['N_rows_const'] # Kernel's N constexpr (number of rows in the tile)
+    M_cols = params['M_cols_const'] # Kernel's M constexpr (number of columns in the tile)
+    dtype_str = params.get('dtype_str', 'fp32') 
+
+    current_dtype = torch_dtype_from_str(dtype_str) # Use existing helper
+    element_size = torch.tensor([], dtype=current_dtype).element_size()
+
+    elements_processed = N_rows * M_cols
+    bytes_read = elements_processed * element_size
+    bytes_write = elements_processed * element_size 
+    total_bytes = bytes_read + bytes_write
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+OP_NAME_FOR_BENCHMARK = "triton_flip_perf"
+
+# --- Pytest parametrize for performance testing ---
+# Kernel's N and M are constexpr. We will parametrize these.
+FLIP_TILE_SHAPES_FOR_PERF = [
+    # N_rows_const, M_cols_const (for the single tile processed by kernel)
+    (128, 512), (1024, 64)
+]
+FLIP_DTYPES_FOR_PERF = ['int32', 'float16', 'float32', 'bfloat16'] 
+FLIP_NUM_WARPS_FOR_PERF = [1, 2, 4] 
+
+@pytest.mark.parametrize("N_const, M_const", FLIP_TILE_SHAPES_FOR_PERF)
+@pytest.mark.parametrize("dtype_str", FLIP_DTYPES_FOR_PERF)
+@pytest.mark.parametrize("num_warps_launch", FLIP_NUM_WARPS_FOR_PERF)
+def test_performance(N_const, M_const, dtype_str, num_warps_launch, request, device='cuda'):
+    set_seed()
+    
+    if dtype_str == 'bfloat16':
+        cap = torch.cuda.get_device_capability()
+        if cap[0] < 8:
+            pytest.skip("bfloat16 requires Ampere+ (arch 80+)")
+    
+    current_torch_dtype = torch_dtype_from_str(dtype_str)
+
+    # Input tensor `x_perf` has shape (N_const, M_const)
+    x_perf = gen_numpy_array_for_torch_conversion((N_const, M_const), dtype_str)
+    x_perf_tensor = torch.from_numpy(x_perf).to(dtype=current_torch_dtype, device=device)
+    
+    # Output buffer `z_perf_buffer` has shape (N_const, M_const)
+    z_perf_buffer = torch.empty_like(x_perf_tensor)
+    
+    op_lambda = lambda: flip_triton_wrapper(
+        x_perf_tensor, z_perf_buffer, N_const, M_const, num_warps_launch
+    )
+
+    bench_config = do_bench_config(warm_up=100, repetition=1000) # Simple kernel
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+    current_params_for_logs_and_calc = {
+        "N_rows_const": N_const, 
+        "M_cols_const": M_const,
+        "dtype_str": dtype_str,
+        "num_warps": num_warps_launch
+    }
+    
+    perf_result = benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                                            gbps_calculator=calculate_flip_gbps,
+                                            tflops_calculator=calculate_flip_tflops)
+
+
 ######################################## HELPERS for Eval ########################################     
 # --- Pytest hook to save the dictionary at the end of the session ---  
 def test_save_results():  
@@ -136,5 +221,19 @@ def test_save_results():
         os.makedirs(output_dir, exist_ok=True)  
     torch.save(result_gold, OUTPUT_FILENAME)       
     print(f"Successfully saved {len(result_gold)} y_triton tensors to {OUTPUT_FILENAME}.")  
+
+
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
+
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
+
 
 ######################################## HELPERS for Eval ########################################

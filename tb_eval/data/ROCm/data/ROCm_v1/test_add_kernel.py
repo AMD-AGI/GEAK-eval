@@ -44,9 +44,12 @@ import os
 from numpy.random import RandomState
 import pytest
 from torch.testing import assert_close
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
 
 import triton
 import triton.language as tl
+
 dtype_mapping = {
     'float16': torch.float16,
     'float32': torch.float32,
@@ -55,6 +58,30 @@ dtype_mapping = {
 result_gold = {}
 
 ######################################## HELPERS for Eval ######################################## 
+# Helper function to define GB/s for add_kernel
+def calculate_add_gbps(params: Dict, ms: float) -> float:
+    # params will contain 'SIZE', 'dtype_str'
+    size = params['SIZE']
+    dtype = dtype_mapping[params['dtype_str']]
+    # For add: read x, read y, write output
+    # If x, y, output are torch.Tensor objects passed to this calculator:
+    # total_bytes = (x.numel() * x.element_size() +
+    #                y.numel() * y.element_size() +
+    #                output.numel() * output.element_size())
+    # If only params are available:
+    bytes_per_element = torch.tensor([], dtype=dtype).element_size()
+    total_bytes = 3 * size * bytes_per_element # 2 reads, 1 write
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+# Helper function to define TFLOPS for add_kernel
+def calculate_add_tflops(params: Dict, ms: float) -> float:
+    size = params['SIZE']
+    # For add: N operations (N additions)
+    flops = size
+    tflops = flops / (ms / 1000) / 1e12
+    return tflops
+
 def set_seed(seed: int = 42) -> None:
     """
     Set the random seed for reproducibility across multiple libraries and configure PyTorch for deterministic behavior.
@@ -112,7 +139,49 @@ def test_add(SIZE, BLOCK_SIZE, dtype_str, request):
     assert_close(output, output_torch, rtol=1e-2, atol=1e-3, check_dtype=False)
 
 
+OP_NAME_FOR_BENCHMARK = "add_kernel_perf"
 
+@pytest.mark.parametrize('SIZE,BLOCK_SIZE_ARG,dtype_str', # BLOCK_SIZE_ARG is the pytest param name
+                         [(98432, 1024, dtype_str) for dtype_str in ['float16', 'float32']] +
+                         [(1048576, 2048, dtype_str) for dtype_str in ['float16', 'float32']]
+                        )
+def test_performance(SIZE, BLOCK_SIZE_ARG, dtype_str, request): # Function accepts BLOCK_SIZE_ARG
+    set_seed()
+    dtype = dtype_mapping[dtype_str]
+    x = torch.randn(SIZE, device='cuda', dtype=dtype)
+    y = torch.randn(SIZE, device='cuda', dtype=dtype)
+    output = torch.empty(SIZE, device='cuda', dtype=dtype)
+
+    # Kernel launch grid
+    # The 'meta' dict passed to the grid lambda by Triton contains the constexpr arguments
+    # that were passed to the kernel launch.
+    # When we call `add_kernel[grid](..., BLOCK_SIZE=BLOCK_SIZE_ARG)`,
+    # the `meta` dict will have a key 'BLOCK_SIZE' (the name of the constexpr in the kernel signature)
+    # and its value will be the runtime `BLOCK_SIZE_ARG`.
+    grid = lambda meta: (triton.cdiv(SIZE, meta['BLOCK_SIZE']),) # ***** CORRECTED HERE *****
+
+    kernel_args = [x, y, output, SIZE]
+    
+    # The op_lambda passes BLOCK_SIZE_ARG (runtime value) as the kernel's `BLOCK_SIZE` (constexpr name)
+    op_lambda = lambda: add_kernel[grid](*kernel_args, BLOCK_SIZE=BLOCK_SIZE_ARG)
+
+    bench_config = do_bench_config(warm_up=25, repetition=100) # Smaller for faster debug
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+
+    # The dictionary passed to calculators should use consistent keys
+    current_params_for_calculators = {"SIZE": SIZE, "BLOCK_SIZE_RUNTIME": BLOCK_SIZE_ARG, "dtype_str": dtype_str}
+    # Note: I used "BLOCK_SIZE_RUNTIME" here to be explicit that it's the value from parametrize,
+    # not necessarily the same as the constexpr name if they differed.
+    # If your calculators expect 'BLOCK_SIZE', then use that:
+    # current_params_for_calculators = {"SIZE": SIZE, "BLOCK_SIZE": BLOCK_SIZE_ARG, "dtype_str": dtype_str}
+
+
+    benchmarker.run_benchmark(current_params_dict=current_params_for_calculators,
+                              gbps_calculator=calculate_add_gbps,
+                              tflops_calculator=calculate_add_tflops)
+    
 ######################################## HELPERS for Eval ########################################     
 # --- Pytest hook to save the dictionary at the end of the session ---  
 def test_save_results():  
@@ -130,5 +199,19 @@ def test_save_results():
         os.makedirs(output_dir, exist_ok=True)  
     torch.save(result_gold, OUTPUT_FILENAME)       
     print(f"Successfully saved {len(result_gold)} y_triton tensors to {OUTPUT_FILENAME}.")  
+
+
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
+
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
+
 
 ######################################## HELPERS for Eval ########################################

@@ -154,6 +154,8 @@ import torch
 from torch import Tensor  
 import triton  
 import triton.language as tl  
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
 
 result_gold = {}
 
@@ -283,7 +285,20 @@ def gen_input(M: int, N: int, K: int, use_bias: bool, device: str = "cuda") -> t
   
     return a, b, bias  
 
-    
+def gen_input_benchmark(M: int, N: int, K: int, use_bias: bool, device: str = "cuda", dtype=torch.float16) -> tuple[Tensor, Tensor, Optional[Tensor]]:
+    set_seed()
+    # Original gen_input had M <= 8 assertion, which might be too restrictive for general benchmarks.
+    # Let's remove it for performance testing, assuming M can be larger.
+    # assert M > 0, "M for input generation must be positive."
+    # assert M <= 8, "M for input generation must be less or equal to 8." # Removed for perf
+    # assert N > 0, "N for input generation must be positive."
+    # assert K > 0, "K for input generation must be positive."
+    a: Tensor = torch.randn((M, K), dtype=dtype, device=device)
+    # Original b was (N,K).T. For GEMM A(M,K) @ B(K,N), b should be (K,N)
+    b: Tensor = torch.randn((K, N), dtype=a.dtype, device=a.device) # Corrected shape for B
+    bias: Optional[Tensor] = torch.randn(M, dtype=a.dtype, device=a.device) if use_bias else None
+    return a, b, bias
+
 def get_target_shapes() -> list[tuple[int, int, int]]:  
     # yapf: disable  
     return [  
@@ -322,6 +337,83 @@ def test_matmul(M: int, N: int, K: int, use_bias: bool,request) -> None:
     
     assert allclose(c_torch, c_triton_dot), "PyTorch and Triton Dot results don't match."  
 
+
+# --- Define TFLOPS and GB/s calculators for GEMM ---
+def calculate_gemm_tflops(params: dict, ms: float) -> float:
+    M, N, K = params['M'], params['N'], params['K']
+    use_bias = params.get('use_bias', False)
+    flops = 2 * M * N * K
+    if use_bias: flops += M * N # Add M*N for bias addition
+    tflops = flops / (ms / 1000) / 1e12
+    return tflops
+
+def calculate_gemm_gbps(params: dict, ms: float) -> float:
+    M, N, K = params['M'], params['N'], params['K']
+    use_bias = params.get('use_bias', False)
+    dtype_str = params.get('dtype_str', 'fp16')
+
+    if dtype_str == 'fp32': current_dtype = torch.float32
+    elif dtype_str == 'bf16': current_dtype = torch.bfloat16
+    else: current_dtype = torch.float16
+    element_size = torch.tensor([], dtype=current_dtype).element_size()
+
+    bytes_a = M * K * element_size
+    bytes_b = K * N * element_size
+    bytes_c = M * N * element_size
+    total_bytes = bytes_a + bytes_b + bytes_c
+    if use_bias: total_bytes += M * element_size # Read bias
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+def get_target_shapes_for_perf() -> list[tuple[int, int, int]]: # Renamed for clarity
+    return [
+        (128, 8192, 4096),   # Larger M
+        (512, 4096, 4096),
+        (1024, 1024, 1024),  # Square
+        (4096, 512, 2048),   # Different aspect ratios
+        (1, 4096, 3078),     # Uneven K from original
+        (16, 2048, 2048),    # Smaller M, larger N/K
+        # (1, 23, 31),       # Very small shapes might not be ideal for peak perf
+        # (1, 23, 128),
+    ]
+
+# --- Name for the benchmark output JSON file ---
+OP_NAME_FOR_BENCHMARK = "multreduce_matmul_dot_perf"
+
+# --- Pytest parametrize for performance testing ---
+GEMM_DTYPES_FOR_PERF = ['fp16', 'bf16'] # 'fp32' can be added
+
+@pytest.mark.parametrize("use_bias", [False, True])
+@pytest.mark.parametrize("M, N, K", get_target_shapes_for_perf())
+@pytest.mark.parametrize("dtype_str", GEMM_DTYPES_FOR_PERF)
+def test_performance(M: int, N: int, K: int, use_bias: bool, dtype_str: str, request) -> None:
+    set_seed()
+    if dtype_str == 'fp32': current_dtype = torch.float32
+    elif dtype_str == 'bf16': current_dtype = torch.bfloat16
+    else: current_dtype = torch.float16
+
+    a, b, bias = gen_input_benchmark(M, N, K, use_bias, dtype=current_dtype)
+
+    # --- Create op_lambda for benchmarking ---
+    # We want to benchmark the triton_dot_matmul_kernel directly via its triton_matmul wrapper
+    op_lambda = lambda: triton_matmul("triton-dot", a, b, bias)
+
+    # --- Benchmarking ---
+    bench_config = do_bench_config(warm_up=25, repetition=100)
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+
+    current_params_for_logs_and_calc = {
+        "M": M, "N": N, "K": K, "use_bias": use_bias, "dtype_str": dtype_str,
+        "provider": "triton-dot"
+    }
+
+    benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                              gbps_calculator=calculate_gemm_gbps,
+                              tflops_calculator=calculate_gemm_tflops)
+
+
 ######################################## HELPERS for Eval ########################################     
 # --- Pytest hook to save the dictionary at the end of the session ---  
 def test_save_results():  
@@ -340,9 +432,18 @@ def test_save_results():
     torch.save(result_gold, OUTPUT_FILENAME)       
     print(f"Successfully saved {len(result_gold)} c_triton_dot tensors to {OUTPUT_FILENAME}.")  
 
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
 
-def test_get_results():
-    print(result_gold)
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
+
 ######################################## HELPERS for Eval ######################################## 
   
 # Benchmark Triton GEMM, comparing it to PyTorch GEMM reference implementation:  

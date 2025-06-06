@@ -119,6 +119,8 @@ import numpy as np
 import random
 import torch 
 import os
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
 
 
 result_gold = {}
@@ -342,6 +344,103 @@ def test_layernorm(M, N, request, eps=1e-5):
     y_ref.backward(dy, retain_graph=True)
 
 
+# --- Define TFLOPS and GB/s calculators for LayerNorm Forward ---
+def calculate_layernorm_gbps(params: dict, ms: float) -> float:
+    M = params['M']
+    N = params['N']
+    # Assuming params contains dtype_str for x, w, b or we infer.
+    # For layernorm:
+    # Read x (M*N), w (N), b (N)
+    # Write y (M*N), mean (M), rstd (M)
+    try:
+        # Assuming x, y, w, b, mean, rstd are of similar precision for byte counting
+        # A more precise calculation would use actual dtypes if they vary significantly.
+        dtype = torch.float16 # Default assumption if not in params
+        if 'dtype_str' in params:
+            if params['dtype_str'] == 'fp32': dtype = torch.float32
+            elif params['dtype_str'] == 'bf16': dtype = torch.bfloat16
+        element_size = torch.tensor([], dtype=dtype).element_size()
+    except KeyError:
+        element_size = 2 # Default to 2 bytes (fp16)
+
+    bytes_read_x = M * N * element_size
+    bytes_read_w = N * element_size
+    bytes_read_b = N * element_size
+    bytes_write_y = M * N * element_size
+    bytes_write_mean = M * 4 # Mean/rstd often float32
+    bytes_write_rstd = M * 4
+
+    total_bytes = bytes_read_x + bytes_read_w + bytes_read_b + \
+                  bytes_write_y + bytes_write_mean + bytes_write_rstd
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+def calculate_layernorm_tflops(params: dict, ms: float) -> float:
+    M = params['M']
+    N = params['N']
+    # FLOPs for LayerNorm forward:
+    # 1. Mean: N additions + 1 division per row  (N ops)
+    # 2. Variance: N subtractions, N squares, N additions, 1 division per row (3N+1 ops, approx 3N)
+    # 3. rsqrt: (approx ~5-10 ops, let's say 5)
+    # 4. Normalize: N subtractions, N multiplications per row (2N ops)
+    # 5. Scale/shift: N multiplications, N additions per row (2N ops)
+    # Total per row: N + 3N + 5 + 2N + 2N = 8N + 5 ops
+    # Total FLOPs: M * (8*N + 5)
+    flops = M * (8 * N + 5) # Simplified, actual can vary by rsqrt implementation etc.
+    tflops = flops / (ms / 1000) / 1e12
+    return tflops
+
+# --- Name for the benchmark output JSON file ---
+OP_NAME_FOR_BENCHMARK = "layernorm_triton_fwd_perf"
+
+# --- Pytest parametrize for performance testing ---
+# Using the same parameters as the original test_layernorm
+LAYERNORM_SHAPES_FOR_PERF = [
+    (1823, 781), (2048, 2048), (8192, 8192), # Some medium to large
+    (4096, 10240), # LLM typical
+    (1, 131072), (1, 89999), # Long sequence, batch 1
+    (128, 2048), (512, 4096)
+]
+# Dtypes to test for performance
+DTYPES_FOR_PERF = ['fp16', 'bf16', 'fp32']
+
+
+@pytest.mark.parametrize('M, N', LAYERNORM_SHAPES_FOR_PERF)
+@pytest.mark.parametrize('dtype_str', DTYPES_FOR_PERF)
+def test_performance(M, N, dtype_str, request):
+    set_seed()
+    eps = 1e-5
+
+    # Determine torch dtype
+    if dtype_str == 'fp32': current_dtype = torch.float32
+    elif dtype_str == 'bf16': current_dtype = torch.bfloat16
+    else: current_dtype = torch.float16 # Default to fp16
+
+    # Input tensors
+    x = torch.randn(M, N, device='cuda', dtype=current_dtype)
+    normalized_shape_arg = (N,) # For torch.nn.functional.layer_norm and our LayerNorm.apply
+    w = torch.rand(N, device='cuda', dtype=current_dtype)
+    b = torch.rand(N, device='cuda', dtype=current_dtype)
+
+    # --- Create op_lambda for benchmarking the forward pass ---
+    op_lambda = lambda: layernorm(x, normalized_shape_arg, w, b, eps)
+
+    # --- Benchmarking ---
+    # Autotuned kernels might benefit from fewer reps if tuning takes time,
+    # but do_bench needs enough reps for stable measurement AFTER tuning.
+    bench_config = do_bench_config(warm_up=25, repetition=100)
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+
+    current_params_for_logs_and_calc = {
+        "M": M, "N": N, "eps": eps, "dtype_str": dtype_str
+    }
+
+    benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                              gbps_calculator=calculate_layernorm_gbps,
+                              tflops_calculator=calculate_layernorm_tflops)
+    
 ######################################## HELPERS for Eval ########################################     
 # --- Pytest hook to save the dictionary at the end of the session ---  
 def test_save_results():  
@@ -360,4 +459,15 @@ def test_save_results():
     torch.save(result_gold, OUTPUT_FILENAME)       
     print(f"Successfully saved {len(result_gold)} y_triton tensors to {OUTPUT_FILENAME}.")  
 
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
+
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
 ######################################## HELPERS for Eval ######################################## 

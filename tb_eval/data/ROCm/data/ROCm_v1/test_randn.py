@@ -40,6 +40,8 @@ import scipy.stats
 import triton.language as tl
 
 result_gold = {}
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
 BLOCK: tl.constexpr = 1024
 ######################################## HELPERS for Eval ######################################## 
 def set_seed(seed: int = 42) -> None:
@@ -203,6 +205,95 @@ def test_rand(size, seed, dtype, const_seed,  request, device='cuda'):
 # tl.rand() should never produce >=1.0
 
 
+def randn_triton_wrapper(X_buffer, N_elements, seed_val, 
+                         is_const_seed: bool, tl_dtype_for_kernel_arg, # This is the tl.dtype 
+                         num_warps_launch):
+    grid = (triton.cdiv(N_elements, PYTHON_BLOCK_SIZE_CONST),)
+    
+    if is_const_seed:
+        randn_kernel_const_seed[grid](
+            X_buffer, N_elements, 
+            seed=seed_val, 
+            dtype=tl_dtype_for_kernel_arg, # *** CORRECTED: Use 'dtype' as keyword arg ***
+            num_warps=num_warps_launch
+        )
+    else:
+        randn_kernel_runtime_seed[grid](
+            X_buffer, N_elements, 
+            seed_val, 
+            dtype=tl_dtype_for_kernel_arg, # *** CORRECTED: Use 'dtype' as keyword arg ***
+            num_warps=num_warps_launch
+        )
+    return X_buffer
+
+# --- TFLOPS and GB/s calculators (Unchanged from previous correct version) ---
+def calculate_randn_tflops(params: dict, ms: float) -> float:
+    N = params['N_elements']
+    ops_per_rand = 75 
+    flops = N * ops_per_rand
+    tflops = flops / (ms / 1000) / 1e12
+    return tflops
+
+def calculate_randn_gbps(params: dict, ms: float) -> float:
+    N = params['N_elements']
+    element_size = torch.tensor([], dtype=torch.float32).element_size() # tl.rand output is float
+    bytes_x_write = N * element_size
+    total_bytes = bytes_x_write
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+OP_NAME_FOR_BENCHMARK = "triton_rand_perf"
+
+# --- Pytest parametrize for performance testing (Unchanged from previous correct version) ---
+KERNEL_SUB_N_VALS_FOR_PERF = [2**i for i in range(10, 21)] # 1024 to 1,048,576 (original had KERNEL_SUB_... this should be RAND_...)
+RAND_SIZES_FOR_PERF = [2**i for i in range(10, 23)] # Up to 4M elements, adjust if too slow/large
+RAND_SEEDS_FOR_PERF = [0, 42] 
+RAND_OFFSET_DTYPES_FOR_PERF = ['int32', 'int64'] 
+RAND_CONST_SEED_BOOL_FOR_PERF = [True, False]
+# NUM_WARPS_FOR_PERF = [4, 8] 
+PYTHON_BLOCK_SIZE_CONST = 1024
+
+@pytest.mark.parametrize("size_val", RAND_SIZES_FOR_PERF)
+@pytest.mark.parametrize("seed_val", RAND_SEEDS_FOR_PERF)
+@pytest.mark.parametrize("offset_tl_dtype_str", RAND_OFFSET_DTYPES_FOR_PERF)
+@pytest.mark.parametrize("const_seed_bool", RAND_CONST_SEED_BOOL_FOR_PERF)
+# @pytest.mark.parametrize("num_warps_val", NUM_WARPS_FOR_PERF) # Can add back if desired
+def test_performance(size_val, seed_val, offset_tl_dtype_str, const_seed_bool, request, device='cuda'):
+    # num_warps_val = 4 # Or from parametrize
+    set_seed() 
+    
+    x_output_buffer = torch.empty(size_val, dtype=torch.float32, device=device)
+    N_elements = x_output_buffer.numel()
+    
+    if offset_tl_dtype_str == 'int64':
+        tl_dtype_for_offset_arg = tl.int64
+    else: 
+        tl_dtype_for_offset_arg = tl.int32
+        
+    op_lambda = lambda: randn_triton_wrapper(
+        x_output_buffer, N_elements, seed_val,
+        const_seed_bool, tl_dtype_for_offset_arg, # Pass the tl.dtype object
+        num_warps_launch=4 
+    )
+
+    bench_config = do_bench_config(warm_up=25, repetition=100) 
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+    current_params_for_logs_and_calc = {
+        "N_elements": N_elements, 
+        "seed": seed_val,
+        "offset_dtype": offset_tl_dtype_str, # Log the string
+        "const_seed": const_seed_bool,
+        "output_dtype_str": "float32",
+        "num_warps": 4 # Log the fixed num_warps
+    }
+    
+    perf_result = benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                                            gbps_calculator=calculate_randn_gbps,
+                                            tflops_calculator=calculate_randn_tflops)
+
+
 ######################################## HELPERS for Eval ########################################     
 # --- Pytest hook to save the dictionary at the end of the session ---  
 def test_save_results():  
@@ -224,6 +315,16 @@ def test_save_results():
     print(f"Successfully saved {len(result_gold)} y_triton tensors to {OUTPUT_FILENAME}.")  
 
 
-def test_get_results():
-    print(result_gold)
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
+
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
+
 ######################################## HELPERS for Eval ########################################

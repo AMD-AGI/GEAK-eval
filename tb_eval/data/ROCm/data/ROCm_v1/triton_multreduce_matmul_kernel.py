@@ -155,6 +155,8 @@ import torch
 from torch import Tensor  
 import triton  
 import triton.language as tl  
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
 
 result_gold = {}
 
@@ -324,6 +326,193 @@ def test_matmul(M: int, N: int, K: int, use_bias: bool, request) -> None:
     assert allclose(c_torch, c_triton_multreduce), "PyTorch and Triton Multreduce results don't match."  
   
 
+def gen_input_for_perf(M: int, N: int, K: int, use_bias: bool, dtype_str: str = "float16", device: str = "cuda") -> tuple[Tensor, Tensor, Optional[Tensor]]:  
+    if dtype_str == 'fp32': current_dtype = torch.float32
+    elif dtype_str == 'bf16': current_dtype = torch.bfloat16
+    else: current_dtype = torch.float16 
+    set_seed(42) 
+    a: Tensor = torch.randn((M, K), dtype=current_dtype, device=device)  
+    b: Tensor = torch.randn((K, N), dtype=current_dtype, device=device) 
+    bias: Optional[Tensor] = torch.randn(M, dtype=current_dtype, device=device) if use_bias else None  
+    return a, b, bias  
+
+def multreduce_matmul_triton_wrapper(a_tensor, b_tensor, c_buffer, bias_tensor,
+                                     M_dim, N_dim, K_dim, 
+                                     block_m_const, block_n_const, block_k_const_tile, # block_k_const_tile is K-tile for kernel
+                                     use_bias_flag, num_warps_launch, num_stages_launch): # num_stages for launch
+    grid = (triton.cdiv(M_dim, block_m_const) * triton.cdiv(N_dim, block_n_const), )
+    even_k_flag = (K_dim % block_k_const_tile == 0)
+
+    # Call the CORE kernel directly, not the autotuned one, to avoid meta-param conflict
+    triton_matmul_kernel[grid]( # Calling the non-autotuned version
+        a_tensor, b_tensor, c_buffer, bias_tensor,
+        M_dim, N_dim, K_dim,
+        a_tensor.stride(0), a_tensor.stride(1),
+        b_tensor.stride(0), b_tensor.stride(1),
+        c_buffer.stride(0), c_buffer.stride(1),
+        bias_tensor.stride(0) if use_bias_flag and bias_tensor is not None else 0,
+        BLOCK_SIZE_M=block_m_const, 
+        BLOCK_SIZE_N=block_n_const, 
+        BLOCK_SIZE_K=block_k_const_tile, # This is the K-tile size
+        USE_BIAS=use_bias_flag, 
+        USE_DOT=False, # Explicitly set for "multreduce" behavior
+        EVEN_K=even_k_flag,
+        num_warps=num_warps_launch,
+        num_stages=num_stages_launch # Pass num_stages
+    )
+    return c_buffer
+
+def calculate_gemm_tflops(params: dict, ms: float) -> float:
+    M, N, K = params['M'], params['N'], params['K']
+    flops = 2 * M * N * K 
+    if params.get('use_bias', False): flops += M * N 
+    tflops = flops / (ms / 1000) / 1e12
+    return tflops
+
+def get_torch_dtype_from_str(dtype_str: str, default_dtype=torch.float16) -> torch.dtype:
+    if dtype_str == 'fp32': return torch.float32
+    if dtype_str == 'bf16': return torch.bfloat16
+    if dtype_str == 'fp16': return torch.float16
+    return default_dtype
+
+def calculate_gemm_gbps(params: dict, ms: float) -> float:
+    M, N, K = params['M'], params['N'], params['K']
+    use_bias = params.get('use_bias', False)
+    dtype_str = params.get('dtype_str', 'fp16') 
+    current_dtype = get_torch_dtype_from_str(dtype_str)
+    element_size = torch.tensor([], dtype=current_dtype).element_size()
+    bytes_a, bytes_b, bytes_c_write = [dim * element_size for dim in [M*K, K*N, M*N]]
+    total_bytes = bytes_a + bytes_b + bytes_c_write
+    if use_bias: total_bytes += M * element_size 
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+OP_NAME_FOR_BENCHMARK = "triton_multreduce_matmul_perf"
+
+GEMM_PERF_SHAPES = [
+    (512, 512, 512), (1024, 1024, 512), (2048, 1024, 256), 
+]
+
+# --- REVISED BLOCK CONFIGS focusing on BM * BN <= 4096 (for fp16 inputs, fp32 acc) ---
+# And also BM * BK_tile + BK_tile * BN for the tl.load part.
+GEMM_PERF_BLOCK_CONFIGS = []
+# Target BM * BN <= 4096 (for fp32 acc, if 4 temp buffers of this size are needed)
+# Target BM * BN <= 2048 (for fp32 acc, if 2 temp buffers of this size, plus A and B inputs)
+
+# Small BM * BN products
+for bk_tile in [32, 64]: # K-tile size
+    # BM * BN approx 1024
+    for bm, bn in [(32,32), (16,64), (64,16)]:
+        GEMM_PERF_BLOCK_CONFIGS.append((bm,bn,bk_tile))
+    # BM * BN approx 2048
+    for bm, bn in [(32,64), (64,32), (16,128), (128,16)]:
+        GEMM_PERF_BLOCK_CONFIGS.append((bm,bn,bk_tile))
+    # BM * BN approx 4096
+    for bm, bn in [(64,64), (32,128), (128,32)]:
+        GEMM_PERF_BLOCK_CONFIGS.append((bm,bn,bk_tile))
+
+# Try some original autotune-like configs for multreduce (BM=1)
+for bk_tile in [128, 256, 512]:
+    GEMM_PERF_BLOCK_CONFIGS.append((1, 64, bk_tile))
+
+
+# Remove duplicates and ensure K_tile is not too large for shared mem of A, B load
+unique_block_configs = []
+seen_block_configs_str = set()
+for bm, bn, bk_tile in GEMM_PERF_BLOCK_CONFIGS:
+    # Check initial load shared memory: (bm * bk_tile + bk_tile * bn) * elem_size_input
+    # Assume fp16 inputs (2 bytes) for this pre-filter
+    smem_load_fp16_elements = bm * bk_tile + bk_tile * bn
+    if smem_load_fp16_elements * 2 > 65536 * 0.8 : # Check against 80% of 64KB
+        continue
+
+    cfg_str = f"bm{bm}bn{bn}bk{bk_tile}"
+    if cfg_str not in seen_block_configs_str:
+        unique_block_configs.append((bm,bn,bk_tile))
+        seen_block_configs_str.add(cfg_str)
+GEMM_PERF_BLOCK_CONFIGS = unique_block_configs
+print(f"Generated {len(GEMM_PERF_BLOCK_CONFIGS)} unique block configurations for multreduce matmul.")
+
+
+GEMM_PERF_DTYPES = ['fp16'] # Start with fp16, as fp32 inputs will double shared mem for A/B
+GEMM_PERF_BIAS = [False]    # Start simple
+GEMM_PERF_NUM_STAGES = [1]  # Start with num_stages=1 to minimize shared memory
+GEMM_PERF_NUM_WARPS = [4]   # Start with 4 warps
+
+@pytest.mark.parametrize("m_n_k_shape", GEMM_PERF_SHAPES)
+@pytest.mark.parametrize("block_config", GEMM_PERF_BLOCK_CONFIGS)
+@pytest.mark.parametrize("use_bias_flag", GEMM_PERF_BIAS)
+@pytest.mark.parametrize("dtype_str", GEMM_PERF_DTYPES)
+@pytest.mark.parametrize("num_stages_val", GEMM_PERF_NUM_STAGES)
+@pytest.mark.parametrize("num_warps_val", GEMM_PERF_NUM_WARPS)
+def test_performance(m_n_k_shape, block_config, use_bias_flag, dtype_str, 
+                                       num_stages_val, num_warps_val, request):
+    set_seed()
+    M, N, K = m_n_k_shape
+    BLOCK_M_const, BLOCK_N_const, BLOCK_K_tile_const = block_config
+
+    if K % BLOCK_K_tile_const != 0 : pytest.skip(f"K={K} not multiple of BLOCK_K_tile={BLOCK_K_tile_const}")
+    if M % BLOCK_M_const !=0 : pytest.skip(f"M={M} not multiple of BLOCK_M={BLOCK_M_const}")
+    
+    current_dtype = get_torch_dtype_from_str(dtype_str)
+    elem_size = torch.tensor([], dtype=current_dtype).element_size()
+    
+    # More refined shared memory check for the USE_DOT=False path
+    # Acc (BM, BN) is fp32 (4 bytes)
+    # A_casted (BM, BK_tile) is fp32
+    # B_casted (BK_tile, BN) is fp32
+    # If intermediate product P(BM, BK_tile, BN) is materialized, that's the main issue.
+    # Let's assume Triton tiles the sum over K_tile.
+    # The critical part might be holding one (BM,BN) slice of P in fp32, plus A and B.
+    # Required fp32 elements for this slice: BM*BN
+    # Required fp32 elements for A_casted tile: BM*BK_tile
+    # Required fp32 elements for B_casted tile: BK_tile*BN
+    # Total_fp32_elements_approx = BM*BN + BM*BK_tile + BK_tile*BN
+    # This must be an underestimate if the error is 131072 bytes for BM=64,BN=128,BK=32
+    # (64*128) + (64*32) + (32*128) = 8192 + 2048 + 4096 = 14336 fp32 elements.
+    # 14336 * 4 bytes = 57344 bytes. This *should* fit if num_stages=1.
+
+    # The error 131072 bytes = 32768 fp32 elements.
+    # If BM=64, BN=128, then BM*BN = 8192.
+    # 32768 / 8192 = 4. This implies 4 buffers of size (BM,BN) in fp32.
+    # (e.g. accumulator, one slice of P, and perhaps two more for some reason).
+    # So, the constraint is roughly: 4 * BLOCK_M * BLOCK_N * sizeof(fp32) <= 65536
+    # BLOCK_M * BLOCK_N <= 65536 / 16 = 4096
+    if BLOCK_M_const * BLOCK_N_const > 4096 :
+         pytest.skip(f"Skipping BM={BLOCK_M_const}, BN={BLOCK_N_const} as BM*BN > 4096, likely OOM for USE_DOT=False path.")
+
+
+    a, b, bias = gen_input_for_perf(M, N, K, use_bias_flag, dtype_str=dtype_str)
+    # Output C is always fp16 or fp32 (based on input), acc is fp32. Kernel casts final acc.
+    # The kernel itself casts output to c_ptr.type.element_ty.
+    # Let's match input dtype for c_buffer for simplicity, kernel handles final cast.
+    c_buffer = torch.empty((M, N), device='cuda', dtype=current_dtype)
+
+
+    op_lambda = lambda: multreduce_matmul_triton_wrapper(
+        a, b, c_buffer, bias, M, N, K,
+        BLOCK_M_const, BLOCK_N_const, BLOCK_K_tile_const,
+        use_bias_flag, num_warps_val, num_stages_val
+    )
+
+    bench_config = do_bench_config(warm_up=10, repetition=50)
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+    current_params_for_logs_and_calc = {
+        "M": M, "N": N, "K": K,
+        "BLOCK_M": BLOCK_M_const, "BLOCK_N": BLOCK_N_const, "BLOCK_K_tile": BLOCK_K_tile_const,
+        "use_bias": use_bias_flag, "dtype_str": dtype_str,
+        "num_stages": num_stages_val, "num_warps": num_warps_val,
+        "USE_DOT": False 
+    }
+    
+    perf_result = benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                                            gbps_calculator=calculate_gemm_gbps,
+                                            tflops_calculator=calculate_gemm_tflops)
+
+
+
 ######################################## HELPERS for Eval ########################################     
 # --- Pytest hook to save the dictionary at the end of the session ---  
 def test_save_results():  
@@ -342,9 +531,19 @@ def test_save_results():
     torch.save(result_gold, OUTPUT_FILENAME)       
     print(f"Successfully saved {len(result_gold)} c_triton_multreduce tensors to {OUTPUT_FILENAME}.")  
 
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
 
-def test_get_results():
-    print(result_gold)
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
+
+
 ######################################## HELPERS for Eval ######################################## 
 
 

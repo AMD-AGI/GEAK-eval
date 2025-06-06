@@ -89,7 +89,8 @@ import itertools
 import re
 
 from torch.testing import assert_close
-
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
 import triton
 import triton.language as tl
 
@@ -202,6 +203,134 @@ def test_gemm_no_scf(M, N, K, NUM_CTAS, NUM_WARPS, TRANS_A, TRANS_B, OUTPUT_TYPE
     assert_close(c, golden, rtol=1e-2, atol=1e-3, check_dtype=False)
 
 
+def gemm_no_scf_triton_wrapper(a_tensor, b_tensor, c_buffer, 
+                               M_dim, N_dim, K_dim, 
+                               num_warps_launch, float16_out_flag, use_tma_flag):
+    grid = (1,) 
+    matmul_no_scf_kernel[grid](
+        a_ptr=a_tensor, b_ptr=b_tensor, c_ptr=c_buffer,
+        M=M_dim, N=N_dim, K=K_dim,
+        stride_am=a_tensor.stride(0), stride_ak=a_tensor.stride(1),
+        stride_bk=b_tensor.stride(0), stride_bn=b_tensor.stride(1),
+        stride_cm=c_buffer.stride(0), stride_cn=c_buffer.stride(1),
+        BLOCK_M=M_dim, BLOCK_N=N_dim, BLOCK_K=K_dim, 
+        FLOAT16_OUTPUT=float16_out_flag,
+        USE_TMA_EPILOGUE=use_tma_flag,
+        num_warps=num_warps_launch
+    )
+    return c_buffer
+
+def calculate_gemm_no_scf_tflops(params: dict, ms: float) -> float:
+    M, N, K = params['M'], params['N'], params['K']
+    flops = 2 * M * N * K 
+    tflops = flops / (ms / 1000) / 1e12
+    return tflops
+
+
+def calculate_gemm_no_scf_gbps(params: dict, ms: float) -> float:
+    M, N, K = params['M'], params['N'], params['K']
+    
+    input_dtype_str = params.get('input_dtype_str', 'fp16') 
+    output_dtype_str = params['OUTPUT_TYPE'] 
+
+    # Convert dtype strings to torch.dtype objects
+    current_input_dtype = torch.float16 
+    if input_dtype_str == 'fp32': current_input_dtype = torch.float32
+    elif input_dtype_str == 'bf16': current_input_dtype = torch.bfloat16
+
+    current_output_dtype = torch.float16 
+    if output_dtype_str == 'fp32': current_output_dtype = torch.float32
+    elif output_dtype_str == 'bf16': current_output_dtype = torch.bfloat16
+    
+    # Get element sizes by creating dummy tensors
+    in_element_size = torch.tensor([], dtype=current_input_dtype).element_size()
+    out_element_size = torch.tensor([], dtype=current_output_dtype).element_size()
+    
+    bytes_a = M * K * in_element_size
+    bytes_b = K * N * in_element_size 
+    bytes_c_write = M * N * out_element_size
+    total_bytes = bytes_a + bytes_b + bytes_c_write
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+OP_NAME_FOR_BENCHMARK = "gemm_no_scf_triton_perf"
+
+# --- NEW Performance Test Function using original test_gemm_no_scf's parametrization ---
+@pytest.mark.parametrize(
+    'M,N,K,NUM_CTAS,NUM_WARPS,TRANS_A,TRANS_B,OUTPUT_TYPE,USE_TMA_EPILOGUE',
+    # Using a smaller, more targeted subset for performance to avoid excessive shared memory issues
+    # and long runtimes. The original parametrize is very extensive.
+    # Focus on K values that are likely to fit for a single-block kernel.
+    itertools.chain(*[[
+        # K=16
+        [64, 64, 16, 1, 4, False, False, "float16", USE_TMA_EPILOGUE], # A(M,K), B(K,N)
+        [64, 64, 16, 1, 4, False, False, "float32", USE_TMA_EPILOGUE],
+        [128, 128, 16, 1, 4, False, False, "float16", USE_TMA_EPILOGUE],
+        # K=32
+        [64, 64, 32, 1, 4, False, False, "float16", USE_TMA_EPILOGUE],
+        [64, 64, 32, 1, 4, False, False, "float32", USE_TMA_EPILOGUE],
+        [128, 64, 32, 1, 4, False, False, "float16", USE_TMA_EPILOGUE], # M=128, N=64, K=32
+        # K=64
+        [32, 32, 64, 1, 4, False, False, "float16", USE_TMA_EPILOGUE], # M=32, N=32, K=64
+        [64, 64, 64, 1, 4, False, False, "float16", USE_TMA_EPILOGUE],
+        [64, 64, 64, 1, 4, False, False, "float32", USE_TMA_EPILOGUE],
+        # K=128 - starts to get large for single block shared mem
+        [32, 32, 128, 1, 4, False, False, "float16", USE_TMA_EPILOGUE],
+        # [64, 64, 128, 1, 4, False, False, "float16", USE_TMA_EPILOGUE], # (32*128+128*32)*2 = 16384. Ok.
+                                                                        # (64*128+128*64)*2 = 32768. Ok.
+    ] for USE_TMA_EPILOGUE in [True, False]]))
+# @pytest.mark.skipif(torch.cuda.get_device_capability()[0] < 9, reason="Requires compute capability >= 9")
+def test_performance(M, N, K, NUM_CTAS, NUM_WARPS, TRANS_A, TRANS_B, OUTPUT_TYPE, USE_TMA_EPILOGUE, request):
+    cap = torch.cuda.get_device_capability()
+    if cap[0] < 9:
+        pytest.skip("Requires compute capability >= 9 (as per original test)")
+    if is_hip() and NUM_CTAS > 1: 
+        pytest.skip("NUM_CTAS > 1 is not supported in HIP for this test (as per original)")
+
+    # Shared memory check (for fp16 inputs)
+    input_element_size = 2 # Assuming fp16 inputs
+    smem_elements_needed = (M * K) + (K * N)
+    if smem_elements_needed * input_element_size > 65536: # 64KB limit
+        pytest.skip(f"Skipping M{M}N{N}K{K} due to estimated shared memory for inputs: "
+                    f"{smem_elements_needed * input_element_size} > 65536")
+
+    set_seed()
+    
+    input_torch_dtype = torch.float16 # Original test uses fp16 for a and b
+
+    # Input setup: Ensure a is (M,K) and b is (K,N) before passing to wrapper
+    a_shape_before_trans = (K, M) if TRANS_A else (M, K)
+    b_shape_before_trans = (N, K) if TRANS_B else (K, N)
+    
+    a_host = torch.randn(a_shape_before_trans, device='cuda', dtype=input_torch_dtype)
+    if TRANS_A: a_host = a_host.T 
+    
+    b_host = torch.randn(b_shape_before_trans, device='cuda', dtype=input_torch_dtype)
+    if TRANS_B: b_host = b_host.T 
+
+    c_out_torch_dtype = torch.float16 if OUTPUT_TYPE == "float16" else torch.float32
+    c_buffer = torch.empty((M, N), device=a_host.device, dtype=c_out_torch_dtype)
+
+    op_lambda = lambda: gemm_no_scf_triton_wrapper(
+        a_host, b_host, c_buffer, M, N, K, 
+        NUM_WARPS, (OUTPUT_TYPE == "float16"), USE_TMA_EPILOGUE
+    )
+
+    bench_config = do_bench_config(warm_up=25, repetition=100)
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+    current_params_for_logs_and_calc = {
+        "M": M, "N": N, "K": K, "NUM_CTAS": NUM_CTAS, "NUM_WARPS": NUM_WARPS,
+        "TRANS_A": TRANS_A, "TRANS_B": TRANS_B, 
+        "OUTPUT_TYPE": OUTPUT_TYPE, "USE_TMA_EPILOGUE": USE_TMA_EPILOGUE,
+        "input_dtype_str": "fp16" # Hardcoded based on original test's a,b creation
+    }
+    
+    perf_result = benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                                            gbps_calculator=calculate_gemm_no_scf_gbps,
+                                            tflops_calculator=calculate_gemm_no_scf_tflops)
+
 
 ######################################## HELPERS for Eval ########################################     
 # --- Pytest hook to save the dictionary at the end of the session ---  
@@ -220,5 +349,18 @@ def test_save_results():
         os.makedirs(output_dir, exist_ok=True)  
     torch.save(result_gold, OUTPUT_FILENAME)       
     print(f"Successfully saved {len(result_gold)} y_triton tensors to {OUTPUT_FILENAME}.")  
+
+
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
+
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
 
 ######################################## HELPERS for Eval ########################################

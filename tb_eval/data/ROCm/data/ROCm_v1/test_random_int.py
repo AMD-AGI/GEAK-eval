@@ -37,6 +37,8 @@ import pytest
 from numpy.random import RandomState
 import triton
 import triton.language as tl
+from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from typing import Dict
 
 result_gold = {}
 BLOCK: tl.constexpr = 1024
@@ -214,6 +216,102 @@ def test_randint(size, seed, dtype, const_seed, request, device='cuda'):
         assert len(out_tri) == 0 # If N is 0, out_tri should be empty
 
 
+
+
+# --- Python wrapper for launching randint kernels ---
+def randint_triton_wrapper(X_buffer, N_elements, seed_val, 
+                           is_const_seed: bool, 
+                           num_warps_launch):
+    grid = (triton.cdiv(N_elements, PYTHON_BLOCK_SIZE_CONST_randint),)
+    
+    if is_const_seed:
+        randint_kernel_const_seed[grid](
+            X_buffer, N_elements, 
+            seed_val=seed_val, # Passed as constexpr
+            num_warps=num_warps_launch
+        )
+    else:
+        randint_kernel_runtime_seed[grid](
+            X_buffer, N_elements, 
+            seed_val=seed_val, # Passed as runtime arg
+            num_warps=num_warps_launch
+        )
+    return X_buffer
+
+# --- Define TFLOPS and GB/s calculators ---
+def calculate_randint_tflops(params: dict, ms: float) -> float:
+    N = params['N_elements']
+    # Philox RNG involves ~10 rounds, each with integer ops.
+    # Very rough estimate, similar to tl.rand.
+    ops_per_rand_int = 75 
+    flops = N * ops_per_rand_int # Treat integer ops as "FLOP-equivalents" for this metric
+    tflops = flops / (ms / 1000) / 1e12
+    return tflops
+
+def calculate_randint_gbps(params: dict, ms: float) -> float:
+    N = params['N_elements']
+    dtype_str = params.get('output_dtype_str', 'int32') 
+
+    current_dtype = torch.int32 # Default
+    if dtype_str == 'int64': current_dtype = torch.int64
+    # Add other int types if parametrized (e.g. int8, int16)
+    
+    element_size = torch.tensor([], dtype=current_dtype).element_size()
+    bytes_x_write = N * element_size
+    total_bytes = bytes_x_write # Only considering output write bandwidth
+    gbps = total_bytes / (ms / 1000) / 1e9
+    return gbps
+
+OP_NAME_FOR_BENCHMARK = "triton_randint_perf"
+
+# --- Pytest parametrize for performance testing ---
+RANDINT_SIZES_FOR_PERF = [2**i for i in range(16, 24)] # 65536 to 8,388,608 elements
+RANDINT_SEEDS_FOR_PERF = [0, 42] 
+RANDINT_OUTPUT_DTYPES_FOR_PERF = ['int32', 'int64'] 
+RANDINT_CONST_SEED_BOOL_FOR_PERF = [True, False]
+# NUM_WARPS_FOR_PERF = [4, 8] 
+PYTHON_BLOCK_SIZE_CONST_randint = 1024
+
+@pytest.mark.parametrize("size_val", RANDINT_SIZES_FOR_PERF)
+@pytest.mark.parametrize("seed_val", RANDINT_SEEDS_FOR_PERF)
+@pytest.mark.parametrize("output_dtype_str", RANDINT_OUTPUT_DTYPES_FOR_PERF)
+@pytest.mark.parametrize("const_seed_bool", RANDINT_CONST_SEED_BOOL_FOR_PERF)
+# @pytest.mark.parametrize("num_warps_val", NUM_WARPS_FOR_PERF)
+def test_performance(size_val, seed_val, output_dtype_str, const_seed_bool, request, device='cuda'):
+    # num_warps_val = 4 # Or from parametrize
+    set_seed() 
+    
+    if output_dtype_str == 'int64':
+        current_out_dtype = torch.int64
+    else: # Default to int32
+        current_out_dtype = torch.int32
+        
+    x_output_buffer = torch.empty(size_val, dtype=current_out_dtype, device=device)
+    N_elements = x_output_buffer.numel()
+        
+    op_lambda = lambda: randint_triton_wrapper(
+        x_output_buffer, N_elements, seed_val,
+        const_seed_bool,
+        num_warps_launch=4 
+    )
+
+    bench_config = do_bench_config(warm_up=25, repetition=100) 
+    benchmarker = PytestBenchmarker(op_callable=op_lambda,
+                                    op_name=OP_NAME_FOR_BENCHMARK,
+                                    config=bench_config)
+    current_params_for_logs_and_calc = {
+        "N_elements": N_elements, 
+        "seed": seed_val,
+        "output_dtype_str": output_dtype_str, # Dtype of the output tensor X
+        "const_seed": const_seed_bool,
+        "num_warps": 4 
+    }
+    
+    perf_result = benchmarker.run_benchmark(current_params_dict=current_params_for_logs_and_calc,
+                                            gbps_calculator=calculate_randint_gbps,
+                                            tflops_calculator=calculate_randint_tflops)
+
+
 ######################################## HELPERS for Eval ########################################     
 # --- Pytest hook to save the dictionary at the end of the session ---  
 def test_save_results():  
@@ -235,6 +333,17 @@ def test_save_results():
     print(f"Successfully saved {len(result_gold)} y_triton tensors to {OUTPUT_FILENAME}.")  
 
 
-# def test_get_results():
-#     print(result_gold)
+def test_save_performance_results():
+    """
+    Called after the test_performance function finishes.
+    This is a separate hook to ensure performance results are saved.
+    """
+    print('\nPytest session finishing... Saving benchmark results...')
+
+    output_directory = os.path.dirname(__file__) # Save next to the test file
+    
+    save_all_benchmark_results(output_directory)
+    print(f"All benchmark results attempted to save to: {output_directory}")
+
+
 ######################################## HELPERS for Eval ########################################
