@@ -211,10 +211,16 @@ class TestAllCloseEvaluatorROCm(TestAllCloseEvaluatorTBG):
             else:
                 if verbose:
                     print(f"Success in generated code: {stdout}")
-                call_status, exec_status, gen_stdout, gen_stderr = stdout.split(Names.PYTEST_SEPARATOR)[-1].split(Names.RET_SEPERATOR)
-                call_status = call_status.replace('\n', '').strip()
-                exec_status = call_status and exec_status
-                exec_status = exec_status.strip().lower() == str(True).lower()
+                call_status_str, exec_status_str, gen_stdout, gen_stderr = stdout.split(Names.PYTEST_SEPARATOR)[-1].split(Names.RET_SEPERATOR)
+                call_status = call_status_str.replace('\n', '').strip().lower() == str(True).lower()
+                
+                # Original logic for exec_status, ensure it depends on the boolean call_status
+                # If call_status is False, exec_status should also be False.
+                # If call_status is True, then exec_status depends on its own string value.
+                if call_status:
+                    exec_status = exec_status_str.strip().lower() == str(True).lower()
+                else:
+                    exec_status = False
 
                 if exec_status:
                     ## The generated code executed successfully, save the file in exec folder
@@ -223,6 +229,7 @@ class TestAllCloseEvaluatorROCm(TestAllCloseEvaluatorTBG):
                     with open(exec_fpath, 'w') as f:
                         f.write(code)
 
+                
                 return call_status, exec_status, gen_stdout, gen_stderr
 
         except Exception as e:

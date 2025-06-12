@@ -314,7 +314,6 @@ def test_save_results():
     torch.save(result_gold, OUTPUT_FILENAME)       
     print(f"Successfully saved {len(result_gold)} y_triton tensors to {OUTPUT_FILENAME}.")  
 
-
 def test_save_performance_results():
     """
     Called after the test_performance function finishes.
@@ -322,9 +321,9 @@ def test_save_performance_results():
     """
     print('\nPytest session finishing... Saving benchmark results...')
 
-    output_directory = os.path.dirname(__file__) # Save next to the test file
+    output_directory = os.path.join(os.path.dirname(__file__), "perf")  # Save in a "perf" subdirectory next to the test file
+    os.makedirs(output_directory, exist_ok=True)
     
     save_all_benchmark_results(output_directory)
     print(f"All benchmark results attempted to save to: {output_directory}")
-
 ######################################## HELPERS for Eval ########################################

@@ -17,7 +17,7 @@ from .helpers.helper import get_fname_difficulty_from_label
 from .metrics.passk import PassK
 from .perf.efficiency import get_perf_evaluators
 
-from .initializations import initialize_performance_eval_tb
+from .initializations import initialize_performance_eval_tb, initialize_performance_eval_rocm
 from .constants import Names
 
 def get_parser():
@@ -53,9 +53,11 @@ def main():
     return args.func(args)
 
 def setup(args):
-    if args.dataset in ['all', 'tbg']:
+    if args.dataset in ['tbg']:
         initialize_performance_eval_tb()
-
+    else:
+        # initialize_performance_eval_rocm()
+        pass
 def eval(args):
     ## instantiate objects
     evaluator = get_evaluators[args.dataset]()
@@ -158,6 +160,7 @@ def eval(args):
     # Save the data across passes to a file
     with open(froot +  "_all_passes.json", 'w') as out_f:
         json.dump(data_across_passes, out_f, indent=4)
+
     # Save the data across passes to a CSV file
     df = pd.DataFrame(data_across_passes)
 

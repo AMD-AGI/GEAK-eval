@@ -220,21 +220,19 @@ def test_pt_correctness(ref_file, gen_file, atol=1e-3, rtol=1e-3, verbose=False)
     try:  
         gen_file_pt = torch.load(gen_file_pt_path, map_location=torch.device('cpu'))  
         if verbose:  
-            print(f"Successfully loaded generated PT file: {gen_file_pt_path}")   
-        gen_call_acc = True  
+            print(f"Successfully loaded generated PT file: {gen_file_pt_path}")     
     except Exception as e:  
         gen_stderr = f"Error loading generated PT file: {str(e)}"  
-        return gen_call_acc, False, None, gen_stderr  
+        return False, False, None, gen_stderr  
       
     # Load reference file  
     try:  
         ref_file_pt = torch.load(ref_file_pt_path, map_location=torch.device('cpu'))  
         if verbose:  
-            print(f"Successfully loaded reference PT file: {ref_file_pt_path}")  
-        ref_call_acc = True  
+            print(f"Successfully loaded reference PT file: {ref_file_pt_path}")   
     except Exception as e:  
         ref_stderr = f"Error loading reference PT file: {str(e)}"  
-        return gen_call_acc, False, None, ref_stderr  
+        return False, False, None, ref_stderr  
 
     if gen_file_pt['_CALL_SUCCESS_'].item():
         gen_call_acc = True
@@ -255,8 +253,9 @@ def test_pt_correctness(ref_file, gen_file, atol=1e-3, rtol=1e-3, verbose=False)
 
 
 def test_correctness_rocm(ref_file, gen_file, var_name='result_gold', atol=1e-3, rtol=1e-3, verbose=False):
-    ref_result_call = subprocess.run([f'python3 -m pytest --capture=sys {ref_file}'], capture_output=True, text=True, shell=True)
-    gen_result_call = subprocess.run([f'python3 -m pytest --capture=sys {gen_file}'], capture_output=True, text=True, shell=True)
+    ref_result_call = subprocess.run([f'python3 -m pytest --capture=sys -k "not test_performance and not test_save_performance_results" {ref_file}'], capture_output=True, text=True, shell=True)
+    gen_result_call = subprocess.run([f'python3 -m pytest --capture=sys -k "not test_performance and not test_save_performance_results" {gen_file}'], capture_output=True, text=True, shell=True)
+
 
     gen_call_acc, exec_acc, match_stats, gen_stderr = test_pt_correctness(ref_file, gen_file, atol=atol, rtol=rtol, verbose=verbose)  
 
