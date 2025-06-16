@@ -3,10 +3,9 @@ import subprocess
 from shutil import copyfile
 from .base import BaseEvaluator
 from ..helpers import get_temp_file, get_rocm_temp_file
-from ..helpers.helper import run_shell, process_code
+from ..helpers.helper import run_shell, process_code, extract_errors
 from ..processors.llm import LLMOutputProcessor
 from ..constants import REPO_ROOT, TMP_ROOT, TBG_DATA_ROOT, ROCm_DATA_ROOT, Names
-
 _MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class TestAllCloseEvaluatorTBG(BaseEvaluator):
@@ -176,6 +175,7 @@ class TestAllCloseEvaluatorROCm(TestAllCloseEvaluatorTBG):
         with open(gen_fpath+".stdout", 'w') as f:
             f.write(stdout)
 
+        stderr += extract_errors(stdout.split(Names.PYTEST_SEPARATOR)[0])
         with open(gen_fpath+".stderr", 'w') as f:
             f.write(stderr)
         return status, stdout, stderr
@@ -207,11 +207,13 @@ class TestAllCloseEvaluatorROCm(TestAllCloseEvaluatorTBG):
             if not match_status:
                 if verbose:
                     print(f"Error in generated code: {stderr}")
+                stderr += "Error in generate triton-kernel code :\n " + extract_errors(stdout.split(Names.PYTEST_SEPARATOR)[0])
                 return call_status, False, stdout, stderr
             else:
                 if verbose:
                     print(f"Success in generated code: {stdout}")
                 call_status_str, exec_status_str, gen_stdout, gen_stderr = stdout.split(Names.PYTEST_SEPARATOR)[-1].split(Names.RET_SEPERATOR)
+                gen_stderr += extract_errors(stdout.split(Names.PYTEST_SEPARATOR)[0])
                 call_status = call_status_str.replace('\n', '').strip().lower() == str(True).lower()
                 
                 # Original logic for exec_status, ensure it depends on the boolean call_status

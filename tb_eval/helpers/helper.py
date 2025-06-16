@@ -9,6 +9,36 @@ import re
 DEFAULT_TRITON_BENCH_ROOT = os.path.join(REPO_ROOT, "data", "TritonBench", "data", "TritonBench_G_v1")
 
 
+def extract_collection_error(stderr_string: str) -> str:
+    """
+    Extracts the content of a pytest collection error block from a stderr string.
+
+    This is designed for errors that happen during test discovery (e.g.,
+    syntax errors), which are reported in an "ERRORS" block.
+
+    Args:
+        stderr_string: The complete stderr output as a string.
+
+    Returns:
+        A string containing the collection error block, or an empty string if
+        the specific block is not found.
+    """
+    # Use a regular expression to find the content between the ERRORS
+    # and "short test summary" markers.
+    # re.DOTALL makes the '.' special character match any character, including newlines.
+    pattern = re.compile(
+        r"={10,}\s+ERRORS\s+={10,}(.*?)\n={10,}\s+short test summary info\s+={10,}",
+        re.DOTALL
+    )
+
+    match = pattern.search(stderr_string)
+
+    if match:
+        # group(1) contains the text captured by (.*?)
+        # .strip() removes leading/trailing whitespace and newlines.
+        return match.group(1).strip()
+    else:
+        return ""
 
 def extract_first_pytest_failure(stderr_string: str) -> str:
     """
@@ -54,6 +84,35 @@ def extract_first_pytest_failure(stderr_string: str) -> str:
 
     return "\n".join(extracted_lines)
 
+def extract_errors(stderr_string: str) -> str:
+    """
+    Extracts the primary error from a pytest stderr output, acting as an
+    abstraction layer.
+
+    It first checks for a fatal collection error. If none is found, it
+    falls back to extracting the first runtime test failure.
+
+    Args:
+        stderr_string: The complete stderr output from a pytest run.
+
+    Returns:
+        A string containing the most relevant error block, or an empty string
+        if no errors are found.
+    """
+    # Priority 1: Check for collection errors, as they are fatal and
+    # prevent tests from running.
+    collection_error = extract_collection_error(stderr_string)
+    if collection_error:
+        return collection_error
+
+    # Priority 2: If no collection errors, check for standard runtime failures.
+    runtime_failure = extract_first_pytest_failure(stderr_string)
+    if runtime_failure:
+        return runtime_failure
+        
+    # If neither type of error is found, return an empty string.
+    return ""
+    
 def get_fname_difficulty_from_label(label):
     # triton_root = DEFAULT_TRITON_BENCH_ROOT
     triton_root = os.path.join(REPO_ROOT, "data", "TritonBench", "data", "TritonBench_G_comp_alpac_v1_fixed_with_difficulty.json")
