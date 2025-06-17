@@ -1,0 +1,110 @@
+[
+    {
+        "params": {
+            "N_processed": 512,
+            "dtype_str": "fp32",
+            "num_warps": 1
+        },
+        "ms": 0.0071,
+        "min_ms": 0.0075,
+        "max_ms": 0.0067,
+        "GB/s": 0.58,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_processed": 512,
+            "dtype_str": "fp16",
+            "num_warps": 1
+        },
+        "ms": 0.0062,
+        "min_ms": 0.0067,
+        "max_ms": 0.0061,
+        "GB/s": 0.33,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_processed": 512,
+            "dtype_str": "bf16",
+            "num_warps": 1
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0067,
+        "max_ms": 0.0061,
+        "GB/s": 0.33,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_processed": 512,
+            "dtype_str": "fp32",
+            "num_warps": 2
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0067,
+        "max_ms": 0.0062,
+        "GB/s": 0.65,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_processed": 512,
+            "dtype_str": "fp16",
+            "num_warps": 2
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0067,
+        "max_ms": 0.0061,
+        "GB/s": 0.33,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_processed": 512,
+            "dtype_str": "bf16",
+            "num_warps": 2
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0067,
+        "max_ms": 0.0062,
+        "GB/s": 0.32,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_processed": 512,
+            "dtype_str": "fp32",
+            "num_warps": 4
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0067,
+        "max_ms": 0.0062,
+        "GB/s": 0.65,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_processed": 512,
+            "dtype_str": "fp16",
+            "num_warps": 4
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0067,
+        "max_ms": 0.0061,
+        "GB/s": 0.33,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_processed": 512,
+            "dtype_str": "bf16",
+            "num_warps": 4
+        },
+        "ms": 0.0062,
+        "min_ms": 0.0066,
+        "max_ms": 0.0061,
+        "GB/s": 0.33,
+        "TFLOPS": 0.0
+    }
+]
