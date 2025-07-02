@@ -196,7 +196,7 @@ def test_sgmv_expand_slice():
     _sgmv_expand_slice(
         inputs,
         lora_b_weights,
-        output_tensor.clone(),
+        output_tensor,
         b_seq_start_loc,
         seq_len_tensor,
         lora_indices_tensor,
@@ -207,13 +207,14 @@ def test_sgmv_expand_slice():
         slice_size,
         False  # add_inputs
     )
-    results["test_case_1"] = output_tensor.clone()
+    results["test_case_1"] = output_tensor
 
     # Test case 2: add_inputs is True
+    output_tensor = torch.zeros(token_nums, slice_size, dtype=torch.float16, device='cuda').contiguous()
     _sgmv_expand_slice(
         inputs,
         lora_b_weights,
-        output_tensor.clone(),
+        output_tensor,
         b_seq_start_loc,
         seq_len_tensor,
         lora_indices_tensor,
@@ -224,13 +225,14 @@ def test_sgmv_expand_slice():
         slice_size,
         True  # add_inputs
     )
-    results["test_case_2"] = output_tensor.clone()
+    results["test_case_2"] = output_tensor
 
     # Test case 3: Different slice_offset
+    output_tensor = torch.zeros(token_nums, slice_size, dtype=torch.float16, device='cuda').contiguous()
     _sgmv_expand_slice(
         inputs,
         lora_b_weights,
-        output_tensor.clone(),
+        output_tensor,
         b_seq_start_loc,
         seq_len_tensor,
         lora_indices_tensor,
@@ -241,7 +243,7 @@ def test_sgmv_expand_slice():
         slice_size,
         False  # add_inputs
     )
-    results["test_case_3"] = output_tensor.clone()
+    results["test_case_3"] = output_tensor
 
     # Test case 4: Different slice size
     slice_size = 16
@@ -253,7 +255,7 @@ def test_sgmv_expand_slice():
     _sgmv_expand_slice(
         inputs,
         lora_b_weights,
-        output_tensor.clone(),
+        output_tensor,
         b_seq_start_loc,
         seq_len_tensor,
         lora_indices_tensor,
@@ -264,7 +266,7 @@ def test_sgmv_expand_slice():
         slice_size,
         False  # add_inputs
     )
-    results["test_case_4"] = output_tensor.clone()
+    results["test_case_4"] = output_tensor
 
     return results
 

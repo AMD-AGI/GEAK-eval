@@ -144,6 +144,8 @@ def _attention_rel_h_rel_w_kernel_aligned_device(q, k, v, rel_h_w, sm_scale, o,
         num_warps=num_warps,
         num_stages=num_stages)
 
+    return o
+
 
 
 
