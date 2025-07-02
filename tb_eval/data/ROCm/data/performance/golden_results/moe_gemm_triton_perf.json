@@ -1,0 +1,322 @@
+[
+    {
+        "params": {
+            "M_orig": 64,
+            "N": 14336,
+            "K": 4096,
+            "top_k": 2,
+            "E": 8,
+            "routed_weight": true,
+            "dtype_str": "fp16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 0.4002,
+        "min_ms": 0.404,
+        "max_ms": 0.3961,
+        "GB/s": 2358.36,
+        "TFLOPS": 37.57
+    },
+    {
+        "params": {
+            "M_orig": 256,
+            "N": 7168,
+            "K": 4096,
+            "top_k": 2,
+            "E": 8,
+            "routed_weight": true,
+            "dtype_str": "fp16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 0.3517,
+        "min_ms": 0.3547,
+        "max_ms": 0.3482,
+        "GB/s": 1362.49,
+        "TFLOPS": 85.49
+    },
+    {
+        "params": {
+            "M_orig": 1024,
+            "N": 14336,
+            "K": 4096,
+            "top_k": 2,
+            "E": 8,
+            "routed_weight": true,
+            "dtype_str": "fp16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 1.3715,
+        "min_ms": 1.3876,
+        "max_ms": 1.3514,
+        "GB/s": 733.96,
+        "TFLOPS": 175.39
+    },
+    {
+        "params": {
+            "M_orig": 16,
+            "N": 1024,
+            "K": 512,
+            "top_k": 1,
+            "E": 4,
+            "routed_weight": true,
+            "dtype_str": "fp16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 0.0628,
+        "min_ms": 0.0645,
+        "max_ms": 0.0619,
+        "GB/s": 67.59,
+        "TFLOPS": 0.27
+    },
+    {
+        "params": {
+            "M_orig": 64,
+            "N": 14336,
+            "K": 4096,
+            "top_k": 2,
+            "E": 8,
+            "routed_weight": false,
+            "dtype_str": "fp16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 0.3976,
+        "min_ms": 0.4021,
+        "max_ms": 0.3946,
+        "GB/s": 2373.81,
+        "TFLOPS": 37.81
+    },
+    {
+        "params": {
+            "M_orig": 256,
+            "N": 7168,
+            "K": 4096,
+            "top_k": 2,
+            "E": 8,
+            "routed_weight": false,
+            "dtype_str": "fp16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 0.3489,
+        "min_ms": 0.3529,
+        "max_ms": 0.3457,
+        "GB/s": 1373.53,
+        "TFLOPS": 86.17
+    },
+    {
+        "params": {
+            "M_orig": 1024,
+            "N": 14336,
+            "K": 4096,
+            "top_k": 2,
+            "E": 8,
+            "routed_weight": false,
+            "dtype_str": "fp16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 1.3705,
+        "min_ms": 1.3877,
+        "max_ms": 1.3544,
+        "GB/s": 734.52,
+        "TFLOPS": 175.5
+    },
+    {
+        "params": {
+            "M_orig": 16,
+            "N": 1024,
+            "K": 512,
+            "top_k": 1,
+            "E": 4,
+            "routed_weight": false,
+            "dtype_str": "fp16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 0.0619,
+        "min_ms": 0.0634,
+        "max_ms": 0.061,
+        "GB/s": 68.57,
+        "TFLOPS": 0.27
+    },
+    {
+        "params": {
+            "M_orig": 64,
+            "N": 14336,
+            "K": 4096,
+            "top_k": 2,
+            "E": 8,
+            "routed_weight": true,
+            "dtype_str": "bf16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 0.3979,
+        "min_ms": 0.4019,
+        "max_ms": 0.3952,
+        "GB/s": 2372.02,
+        "TFLOPS": 37.79
+    },
+    {
+        "params": {
+            "M_orig": 256,
+            "N": 7168,
+            "K": 4096,
+            "top_k": 2,
+            "E": 8,
+            "routed_weight": true,
+            "dtype_str": "bf16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 0.3488,
+        "min_ms": 0.3527,
+        "max_ms": 0.3459,
+        "GB/s": 1373.69,
+        "TFLOPS": 86.2
+    },
+    {
+        "params": {
+            "M_orig": 1024,
+            "N": 14336,
+            "K": 4096,
+            "top_k": 2,
+            "E": 8,
+            "routed_weight": true,
+            "dtype_str": "bf16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 1.3331,
+        "min_ms": 1.3502,
+        "max_ms": 1.3241,
+        "GB/s": 755.13,
+        "TFLOPS": 180.45
+    },
+    {
+        "params": {
+            "M_orig": 16,
+            "N": 1024,
+            "K": 512,
+            "top_k": 1,
+            "E": 4,
+            "routed_weight": true,
+            "dtype_str": "bf16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 0.0632,
+        "min_ms": 0.0646,
+        "max_ms": 0.0623,
+        "GB/s": 67.16,
+        "TFLOPS": 0.27
+    },
+    {
+        "params": {
+            "M_orig": 64,
+            "N": 14336,
+            "K": 4096,
+            "top_k": 2,
+            "E": 8,
+            "routed_weight": false,
+            "dtype_str": "bf16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 0.396,
+        "min_ms": 0.3999,
+        "max_ms": 0.3927,
+        "GB/s": 2383.42,
+        "TFLOPS": 37.97
+    },
+    {
+        "params": {
+            "M_orig": 256,
+            "N": 7168,
+            "K": 4096,
+            "top_k": 2,
+            "E": 8,
+            "routed_weight": false,
+            "dtype_str": "bf16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 0.3476,
+        "min_ms": 0.3514,
+        "max_ms": 0.3446,
+        "GB/s": 1378.76,
+        "TFLOPS": 86.5
+    },
+    {
+        "params": {
+            "M_orig": 1024,
+            "N": 14336,
+            "K": 4096,
+            "top_k": 2,
+            "E": 8,
+            "routed_weight": false,
+            "dtype_str": "bf16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 1.3225,
+        "min_ms": 1.344,
+        "max_ms": 1.3061,
+        "GB/s": 761.16,
+        "TFLOPS": 181.87
+    },
+    {
+        "params": {
+            "M_orig": 16,
+            "N": 1024,
+            "K": 512,
+            "top_k": 1,
+            "E": 4,
+            "routed_weight": false,
+            "dtype_str": "bf16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 0.0619,
+        "min_ms": 0.0632,
+        "max_ms": 0.0608,
+        "GB/s": 68.51,
+        "TFLOPS": 0.27
+    }
+]

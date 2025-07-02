@@ -4,7 +4,9 @@ import torch
 class Names:
     GEN_FOLDER = "gen"
     GEN_SUFFIX = "_gen_triton_code"
+    REF_SUFFIX = "_ref_triton_code"
     RET_SEPERATOR = "*#*#"
+    PYTEST_SEPARATOR = "&"*100
     GPU = torch.cuda.get_device_name(0).replace(" ", "_") if torch.cuda.is_available() else None
 
     PASS_NUM = 'pass_num'
@@ -29,4 +31,5 @@ TBG_PERF_GOLD_ROOT = os.path.join(TBG_ROOT, "performance_metrics", "perf_G", f"{
 NATIVE_PERF_GOLD_ROOT = os.path.join(TBG_ROOT, "performance_metrics", "perf_G", "golden_metrics")
 TBG_PERF_GOLD_DATA_ROOT = os.path.join(TBG_ROOT, "performance_metrics", "perf_G", f"{Names.GPU}_golden_results")
 ROCm_ROOT = os.path.join(REPO_ROOT, "data", "ROCm")
-
+ROCm_DATA_ROOT=  os.path.join(ROCm_ROOT, "data", "ROCm_v1")
+ROCM_PERF_GOLD_DATA_ROOT = os.path.join(ROCm_ROOT, "data", "performance", "golden_results") 

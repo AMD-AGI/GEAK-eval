@@ -17,7 +17,7 @@ from .helpers.helper import get_fname_difficulty_from_label
 from .metrics.passk import PassK
 from .perf.efficiency import get_perf_evaluators
 
-from .initializations import initialize_performance_eval_tb
+from .initializations import initialize_performance_eval_tb, initialize_performance_eval_rocm
 from .constants import Names
 
 def get_parser():
@@ -53,9 +53,11 @@ def main():
     return args.func(args)
 
 def setup(args):
-    if args.dataset in ['all', 'tbg']:
+    if args.dataset in ['tbg']:
         initialize_performance_eval_tb()
-
+    else:
+        # initialize_performance_eval_rocm()
+        pass
 def eval(args):
     ## instantiate objects
     evaluator = get_evaluators[args.dataset]()
@@ -139,8 +141,12 @@ def eval(args):
                 _log = f"{get_time()} => File: {file}, Call Accuracy: {call_acc}, Exec Accuracy: {exec_acc}"
                 out_f.write(_log + '\n')
         
+        perf_data = None
         ## Do the performance evaluation
-        perf_data = perf_evaluator(exec_root) ## returns (speedup, GPU efficiency) for tbg
+        try:
+            perf_data = perf_evaluator(exec_root) ## returns (speedup, GPU efficiency) for tbg
+        except Exception as e:
+            print(f"Error: {e}")
 
         data_across_passes += eval_data_for_file
         # Save the data for this pass to a file
@@ -154,6 +160,7 @@ def eval(args):
     # Save the data across passes to a file
     with open(froot +  "_all_passes.json", 'w') as out_f:
         json.dump(data_across_passes, out_f, indent=4)
+
     # Save the data across passes to a CSV file
     df = pd.DataFrame(data_across_passes)
 
