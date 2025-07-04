@@ -1,3 +1,4 @@
+# Copyright(C) [2025] Advanced Micro Devices, Inc. All rights reserved.
 import os
 from .perf.efficiency import PerformanceEvalTBG, PerformanceEvalROCm
 from .constants import TBG_PERF_GOLD_ROOT, TBG_DATA_ROOT, ROCm_DATA_ROOT, NATIVE_PERF_GOLD_ROOT, ROCM_PERF_GOLD_DATA_ROOT

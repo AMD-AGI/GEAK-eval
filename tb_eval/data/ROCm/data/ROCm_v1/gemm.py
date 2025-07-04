@@ -1,4 +1,4 @@
-# Usage Instruction: python3 -m pytest gemm.py
+# Copyright(C) [2025] Advanced Micro Devices, Inc. All rights reserved.
 
 import torch
 import triton

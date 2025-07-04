@@ -1,4 +1,4 @@
-# 2_efficiency_pytest_adapted.py
+# Copyright(C) [2025] Advanced Micro Devices, Inc. All rights reserved.
 
 import os
 import json

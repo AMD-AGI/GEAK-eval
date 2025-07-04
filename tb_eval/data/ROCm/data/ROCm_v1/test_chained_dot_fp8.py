@@ -1,3 +1,4 @@
+# Copyright(C) [2025] Advanced Micro Devices, Inc. All rights reserved.
 """
 Testing the (FP8) case of a dot op that consumes the output (MFMA) of
 another dot op as an input.
