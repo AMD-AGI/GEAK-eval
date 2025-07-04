@@ -1,4 +1,4 @@
-#Usage Instruction: python3 -m pytest -v moe-gemm-TB.py  
+# Copyright(C) [2025] Advanced Micro Devices, Inc. All rights reserved.
 import triton  
 import triton.language as tl  
 
