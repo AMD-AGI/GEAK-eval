@@ -1,4 +1,4 @@
-# performance_utils_for_pytest.py
+# Copyright(C) [2025] Advanced Micro Devices, Inc. All rights reserved.
 import torch
 import triton
 from typing import Callable, List, Union, Tuple, Dict

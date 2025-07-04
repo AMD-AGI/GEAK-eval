@@ -1,3 +1,5 @@
+# Modifications Copyright(C)[2025] Advanced Micro Devices, Inc. All rights reserved.
+# https://github.com/thunlp/TritonBench - Apache License 2.0
 import triton
 import torch
 from triton import language as tl

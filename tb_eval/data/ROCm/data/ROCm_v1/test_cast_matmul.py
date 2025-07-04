@@ -1,4 +1,4 @@
-# Usage Instruction: python3 -m pytest test_cast_matmul.py
+# Copyright(C) [2025] Advanced Micro Devices, Inc. All rights reserved.
 
 """
 Mixed precision tests for matmul (tl.dot) with cast (tl.to)
