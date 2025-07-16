@@ -33,4 +33,5 @@ NATIVE_PERF_GOLD_ROOT = os.path.join(TBG_ROOT, "performance_metrics", "perf_G", 
 TBG_PERF_GOLD_DATA_ROOT = os.path.join(TBG_ROOT, "performance_metrics", "perf_G", f"{Names.GPU}_golden_results")
 ROCm_ROOT = os.path.join(REPO_ROOT, "data", "ROCm")
 ROCm_DATA_ROOT=  os.path.join(ROCm_ROOT, "data", "ROCm_v1")
+ROCm_DATA_AUTOTUNE_ROOT=  os.path.join(ROCm_ROOT, "data", "ROCm_v1_autotune")
 ROCM_PERF_GOLD_DATA_ROOT = os.path.join(ROCm_ROOT, "data", "performance", "golden_results") 
