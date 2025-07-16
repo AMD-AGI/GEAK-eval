@@ -1,5 +1,5 @@
 # Copyright(C) [2025] Advanced Micro Devices, Inc. All rights reserved.
-import os
+import os, sys
 import subprocess
 from shutil import copyfile
 from .base import BaseEvaluator
@@ -69,7 +69,7 @@ class TestAllCloseEvaluatorTBG(BaseEvaluator):
             f.write(stderr)
         return status, stdout, stderr
 
-    def execute(self, code :str, log_root:str, exec_root:str, fname:str, atol :float=1e-3, rtol:float=1e-1, timeout :int =2*60, verbose :bool =False) -> tuple[bool, bool, str, str]:
+    def execute(self, code :str, log_root:str, exec_root:str, fname:str, atol :float=1e-3, rtol:float=1e-1, timeout :int =2*60, verbose :bool =False, custom_tests_path=None) -> tuple[bool, bool, str, str]:
         
         triton_file = self.get_ground_truth_fpath(fname) 
 
@@ -181,7 +181,7 @@ class TestAllCloseEvaluatorROCm(TestAllCloseEvaluatorTBG):
             f.write(stderr)
         return status, stdout, stderr
     
-    def execute(self, code :str, log_root:str, exec_root:str, fname:str, atol :float=1e-3, rtol:float=1e-1, timeout :int =2*60, verbose :bool =False) -> tuple[bool, bool, str, str]:
+    def execute(self, code :str, log_root:str, exec_root:str, fname:str, atol :float=1e-3, rtol:float=1e-1, timeout :int =2*60, custom_tests_path=None, verbose :bool =False) -> tuple[bool, bool, str, str]:
         
         triton_file = self.get_ground_truth_fpath(fname) 
 
@@ -192,6 +192,14 @@ class TestAllCloseEvaluatorROCm(TestAllCloseEvaluatorTBG):
         copyfile(triton_file,ref_file)
     
         test_code_lines_procs = self.get_tests_code(triton_file)
+
+        if custom_tests_path is not None:
+            custom_tests_file = os.path.join(custom_tests_path, fname)
+            if os.path.exists(custom_tests_file):
+                test_code_lines_procs = self.get_tests_code(custom_tests_file)
+            else:
+                if verbose:
+                    print(f"Custom tests file {custom_tests_file} does not exist. Skipping custom tests.", file=sys.stderr)
 
         code = process_code(code)
         code = self.format_gen_code(gen_file, code, test_code_lines_procs)

@@ -19,7 +19,7 @@ from .metrics.passk import PassK
 from .perf.efficiency import get_perf_evaluators
 
 from .initializations import initialize_performance_eval_tb, initialize_performance_eval_rocm
-from .constants import Names
+from .constants import Names, ROCm_DATA_AUTOTUNE_ROOT
 
 def get_parser():
     parser = argparse.ArgumentParser(prog="tb_eval", description="Check correctness of the code.")
@@ -34,12 +34,15 @@ def get_parser():
     main_parser.add_argument('--file_pat', '-p', type=str, default="*", help='Folder to run eval on')
     main_parser.add_argument('--k_vals', '-k', type=str, default=None, help='k values in case of parallel runs, this will be ignored if single file is provided. Comma separated values, e.g. 1,2,3,5,10,15')
 
+    main_parser.add_argument('--run_on_code', '-c', action='store_true', help='Directly run on code files instead of json files. This is useful for running on a generated code files directly.')
+    main_parser.add_argument('--custom_tests_path', '-tp', type=str, default=None, help='Path to custom tests to run on the code files. This is useful for running on a generated code files directly.')
+
     main_parser.add_argument('--debug', '-d', type=int, default=0, help='Folder to check')
     main_parser.set_defaults(func=eval)
 
     ## setup parser
     setup_parser = subparsers.add_parser('setup', help='Setup the evaluation environment')
-    setup_parser.add_argument('--dataset', '-ds', type=str, choices=['all', 'tbg', 'rocm'], default="all", help='Which dataset to use for eval [TritonBench-G-v1: tbg, ROCm: rocm].')
+    setup_parser.add_argument('--dataset', '-ds', type=str, choices=['all', 'tbg', 'rocm'], default="all", help='Which dataset to run setup for: [TritonBench-G-v1: tbg, ROCm: rocm].')
     setup_parser.set_defaults(func=setup)
 
     if len(sys.argv) == 1 or sys.argv[1] not in {'eval', 'setup'}:
@@ -65,14 +68,18 @@ def eval(args):
     perf_evaluator = get_perf_evaluators[args.dataset]()
     llm_output_processor = LLMOutputProcessor()
     passk = PassK()
-
+    EXT = ".json" if not args.run_on_code else ".py"
     ## sanity checks
-    is_folder = os.path.isdir(args.folder_or_file)
+    is_folder = os.path.isdir(args.folder_or_file.strip())
     if is_folder:
-        files = glob(os.path.join(args.folder_or_file, f'{args.file_pat}.json'), recursive=True)
-        assert len(files) > 0, f"No files found in {args.folder_or_file} with pattern {args.file_pat}.json"
+        if not args.run_on_code:
+            files = glob(os.path.join(args.folder_or_file, f'{args.file_pat}.json'), recursive=True)
+            assert len(files) > 0, f"No files found in {args.folder_or_file} with pattern {args.file_pat}.json"
+        else:
+            files = glob(os.path.join(args.folder_or_file, f'{args.file_pat}.py'), recursive=True)
+            assert len(files) > 0, f"No files found in {args.folder_or_file} with pattern {args.file_pat}.py"
     else:
-        files = [args.folder_or_file]
+        files = [args.folder_or_file.strip()]
 
     data_across_passes = []
     total_passes = len(files)
@@ -82,41 +89,46 @@ def eval(args):
         if args.debug > 0:
             if pass_num > 2:
                 break
-        log_root = os.path.abspath(os.path.join(file.replace(".json",""), 'tmp'))
+        log_root = os.path.abspath(os.path.join(file.replace(EXT, ""), 'tmp'))
         os.makedirs(log_root, exist_ok=True)
 
-        exec_root = os.path.abspath(os.path.join(file.replace(".json",""), 'exec'))
+        exec_root = os.path.abspath(os.path.join(file.replace(EXT, ""), 'exec'))
         os.makedirs(exec_root, exist_ok=True)
 
-        out_file = os.path.join(file.replace(".json",""), args.outfile)
+        out_file = os.path.join(file.replace(EXT, ""), args.outfile)
         logs = []
         call_acc, exec_acc = 0, 0
         eval_data_for_file = []
         pass_num += 1
         with open(file, 'r') as f:
-            data = json.load(f)
+            data = json.load(f) if not args.run_on_code else range(1)
             num_files = 0
             for item in tqdm(data, desc="Processing file", unit="item"):
                 if args.debug > 0:
                     if num_files >4:
                         break
                     num_files += 1
-                response = item[Names.PREDICT]
-                code = llm_output_processor(response)
-                if "file" in item:
-                    fname = item[Names.FILE]
-                    difficulty = item.get(Names.DIFFICULTY, -1)
+                if not args.run_on_code:
+                    response = item[Names.PREDICT]
+                    code = llm_output_processor(response)
+                    if "file" in item:
+                        fname = item[Names.FILE]
+                        difficulty = item.get(Names.DIFFICULTY, -1)
+                    else:
+                        fname, difficulty = get_fname_difficulty_from_label(item[Names.LABEL])
+                    
+                    assert fname is not None, f"File name is None for {item[Names.LABEL]}"
+                    assert difficulty is not None, f"Difficulty is None for {item[Names.LABEL]}"
+                    # assert code is not None, f"Code is None for {item['label']}" 
+                    ## FIXED: Actually if the code is None just for a few prompts, then other prompts should be evaluated
                 else:
-                    fname, difficulty = get_fname_difficulty_from_label(item[Names.LABEL])
-                
-                assert fname is not None, f"File name is None for {item[Names.LABEL]}"
-                assert difficulty is not None, f"Difficulty is None for {item[Names.LABEL]}"
-                # assert code is not None, f"Code is None for {item['label']}" 
-                ## FIXED: Actually if the code is None just for a few prompts, then other prompts should be evaluated
+                    code = open(file, 'r').read().strip()
+                    fname = os.path.basename(file)
+                    difficulty = -1  # No difficulty for code files
                 if code is None:
                     call_status, exec_status, stdout, stderr = False, False, "", "Code is empty"
                 else:
-                    call_status, exec_status, stdout, stderr = evaluator(code, log_root, exec_root, fname, atol=1e-2, rtol=1e-1)
+                    call_status, exec_status, stdout, stderr = evaluator(code, log_root, exec_root, fname, atol=1e-2, rtol=1e-1, custom_tests_path=args.custom_tests_path)
 
                 eval_data = {
                     Names.PASS_NUM : pass_num,
@@ -157,7 +169,7 @@ def eval(args):
         with open(out_file + f"_perf_{pass_num}.json", 'w') as out_f:
             json.dump(perf_data, out_f, indent=4)
 
-    froot = os.path.join(args.folder_or_file.replace(".json", ""), args.outfile)
+    froot = os.path.join(args.folder_or_file.replace(EXT, ""), args.outfile)
     # Save the data across passes to a file
     with open(froot +  "_all_passes.json", 'w') as out_f:
         json.dump(data_across_passes, out_f, indent=4)
