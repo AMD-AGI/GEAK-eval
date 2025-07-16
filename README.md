@@ -52,6 +52,13 @@ You can contribute in the following ways:
 2. You can add new metrics for evaluator to work with in `tb_eval.metrics`.
 3. You can add new performance eval metrics for your (or existing) dataset under `tb_eval.perf`.
 
+### Updates
+* [2025-07-16] Added autotune compatible ROCm kernels and naive softmax, use `-tp` argument with path to this folder as below:
+    - `tb_eval eval -f PATH_TO_EVAL_FOLDER -o RESULT_NAME -ds rocm -tp tb_eval/data/ROCm/data/ROCm_v1_autotune`
+    - `naive_softmax.py` kernel from [rocm blog](https://rocm.docs.amd.com/projects/ai-developer-hub/en/latest/notebooks/gpu_dev_optimize/triton_kernel_dev.html#naive-version) is added to this repo.
+    - Use `-c` argument to directly run evaluations on python triton code file(s)/folder instead of json-based parsing.
+
+
 #### Credits:
 Our repo has found the following repos as helpful:
 1. [TritonBench](https://github.com/thunlp/TritonBench/tree/main)
