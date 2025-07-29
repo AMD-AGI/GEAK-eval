@@ -167,11 +167,11 @@ class TestAllCloseEvaluatorROCm(TestAllCloseEvaluatorTBG):
             f.write(code)
         return code
     
-    def _check_match(self, gen_fpath :str, ref_fpath:str , atol :float=1e-2, rtol :float=1e-2, timeout :int =2*60) -> tuple[bool, str, str]:
+    def _check_match(self, gen_fpath :str, ref_fpath:str , atol :float=1e-2, rtol :float=1e-2, timeout :int =60*60) -> tuple[bool, str, str]:
         """
         Executes the generated file and checks its correctness against the reference file.
         """
-        cmd = [f'python3 {self.MODULE_DIR}/ROCm_correctness.py --gen_file {gen_fpath} --ref_file {ref_fpath} --atol {atol} --rtol {rtol} --verbose']
+        cmd = [f'python3 {self.MODULE_DIR}/ROCm_correctness.py --gen_file {gen_fpath} --ref_file {ref_fpath} --atol {atol} --rtol {rtol} --global_timeout {timeout} --verbose']
         status, stdout, stderr = run_shell(cmd, timeout=None if timeout is None else timeout)
         with open(gen_fpath+".stdout", 'w') as f:
             f.write(stdout)
@@ -181,7 +181,7 @@ class TestAllCloseEvaluatorROCm(TestAllCloseEvaluatorTBG):
             f.write(stderr)
         return status, stdout, stderr
     
-    def execute(self, code :str, log_root:str, exec_root:str, fname:str, atol :float=1e-3, rtol:float=1e-1, timeout :int =2*60, custom_tests_path=None, verbose :bool =False) -> tuple[bool, bool, str, str]:
+    def execute(self, code :str, log_root:str, exec_root:str, fname:str, atol :float=1e-3, rtol:float=1e-1, timeout :int =40*60, custom_tests_path=None, verbose :bool =False) -> tuple[bool, bool, str, str]:
         
         triton_file = self.get_ground_truth_fpath(fname) 
 
@@ -193,7 +193,7 @@ class TestAllCloseEvaluatorROCm(TestAllCloseEvaluatorTBG):
     
         test_code_lines_procs = self.get_tests_code(triton_file)
 
-        if custom_tests_path is not None:
+        if custom_tests_path is not None and "@triton.autotune" in code:
             custom_tests_file = os.path.join(custom_tests_path, fname)
             if os.path.exists(custom_tests_file):
                 test_code_lines_procs = self.get_tests_code(custom_tests_file)
@@ -210,7 +210,7 @@ class TestAllCloseEvaluatorROCm(TestAllCloseEvaluatorTBG):
             # Check for correctness
             match_status = False
             atol, rtol = 1e-2, 1e-2
-            match_status, stdout, stderr = self._check_match(gen_file, ref_file, atol=atol, rtol=rtol, timeout=None)
+            match_status, stdout, stderr = self._check_match(gen_file, ref_file, atol=atol, rtol=rtol, timeout=timeout)
 
             # Check if the generated code executed successfully
             if not match_status:

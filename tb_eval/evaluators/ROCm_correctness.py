@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import subprocess
 from tb_eval.constants import Names
-
+from loguru import logger
 
 torch.set_printoptions(profile="full")
 
@@ -253,9 +253,17 @@ def test_pt_correctness(ref_file, gen_file, atol=1e-3, rtol=1e-3, verbose=False)
 
 
 
-def test_correctness_rocm(ref_file, gen_file, var_name='result_gold', atol=1e-3, rtol=1e-3, verbose=False):
-    ref_result_call = subprocess.run([f'python3 -m pytest --capture=sys -k "not test_performance and not test_save_performance_results" {ref_file}'], capture_output=True, text=True, shell=True)
-    gen_result_call = subprocess.run([f'python3 -m pytest --capture=sys -k "not test_performance and not test_save_performance_results" {gen_file}'], capture_output=True, text=True, shell=True)
+def test_correctness_rocm(ref_file, gen_file, var_name='result_gold', atol=1e-3, rtol=1e-3, verbose=False, global_timeout=60*60):
+    # per_test_timeout = 60*10 # 5 minutes per test
+    logger.info("Global timeout: %ds", global_timeout)
+    # ref_result_call = subprocess.run([f'python3 -m pytest --capture=sys -k "not test_performance and not test_save_performance_results" {ref_file}'], capture_output=True, text=True, shell=True)
+    # gen_result_call = subprocess.run([f'python3 -m pytest --capture=sys -k "not test_performance and not test_save_performance_results" {gen_file}'], capture_output=True, text=True, shell=True)
+
+    # ref_result_call = subprocess.run([f'python3 -m pytest --timeout={per_test_timeout} --capture=sys -k "not test_performance and not test_save_performance_results" {ref_file}'], capture_output=True, text=True, shell=True, timeout=global_timeout)
+    # gen_result_call = subprocess.run([f'python3 -m pytest --timeout={per_test_timeout} --capture=sys -k "not test_performance and not test_save_performance_results" {gen_file}'], capture_output=True, text=True, shell=True, timeout=global_timeout)
+
+    ref_result_call = subprocess.run([f'python3 -m pytest --capture=sys -k "not test_performance and not test_save_performance_results" {ref_file}'], capture_output=True, text=True, shell=True, timeout=global_timeout)
+    gen_result_call = subprocess.run([f'python3 -m pytest --capture=sys -k "not test_performance and not test_save_performance_results" {gen_file}'], capture_output=True, text=True, shell=True, timeout=global_timeout)
 
 
     gen_call_acc, exec_acc, match_stats, gen_stderr = test_pt_correctness(ref_file, gen_file, atol=atol, rtol=rtol, verbose=verbose)  
@@ -278,12 +286,13 @@ def parse_args():
     parser.add_argument("--var_name", type=str, default="result_gold")
     parser.add_argument("--atol", type=float, default=1e-3)
     parser.add_argument("--rtol", type=float, default=1e-1)
+    parser.add_argument("--global_timeout", type=int, default=60*60)
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
     args = parser.parse_args()
     return args
 
 if __name__ == "__main__":
     args = parse_args()
-    gen_call_acc, exec_acc, stdout, gen_stderr = test_correctness_rocm(args.ref_file, args.gen_file, args.var_name, atol=args.atol, rtol=args.rtol, verbose=args.verbose)
+    gen_call_acc, exec_acc, stdout, gen_stderr = test_correctness_rocm(args.ref_file, args.gen_file, args.var_name, atol=args.atol, rtol=args.rtol, verbose=args.verbose, global_timeout=args.global_timeout)
     print(f"{Names.PYTEST_SEPARATOR}")
     print(f"{gen_call_acc}{Names.RET_SEPERATOR}{exec_acc}{Names.RET_SEPERATOR}{stdout}{Names.RET_SEPERATOR}{gen_stderr}")
