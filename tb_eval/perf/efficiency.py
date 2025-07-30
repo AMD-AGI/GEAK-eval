@@ -102,7 +102,7 @@ class PerformanceEvalROCm(BasePerfEval):
     """
     ref_folder = ROCM_PERF_GOLD_DATA_ROOT
 
-    def __init__(self, name: str = 'PerformanceEvalROCm'):
+    def __init__(self, name: str = 'PerformanceEvalROCm', ref_folder: str = None):
         """
         Initialize the PerformanceEvalROCm instance.
         
@@ -110,6 +110,11 @@ class PerformanceEvalROCm(BasePerfEval):
             name (str): The name of the performance evaluation instance.
         """
         super().__init__(name=name)
+        if ref_folder is not None:
+            self.ref_folder = ref_folder
+        else:
+            self.ref_folder = ROCM_PERF_GOLD_DATA_ROOT
+
 
     def evaluate(self, exec_folder: str, gen_perf_folder: str = None, golden_metrics_folder: str = None) -> dict:
         """
@@ -160,9 +165,17 @@ class PerformanceEvalROCm(BasePerfEval):
             # Pass gen_perf_folder_abs as an environment variable so tests can use it
             test_env = os.environ.copy()
             test_env["PERF_OUTPUT_DIR"] = gen_perf_folder_abs
-
-            pytest_status, pytest_stdout, pytest_stderr = run_shell(cmd_pytest, env=test_env)
-
+            
+            global_timeout = 30*60
+            
+            try:
+                pytest_status, pytest_stdout, pytest_stderr = run_shell(cmd_pytest, env=test_env, timeout=global_timeout)
+            except TimeoutError as e:
+                pytest_status = False
+                pytest_stdout = None
+                pytest_stderr = str(e)
+                print(f"Pytest execution timed out for {py_file_path} (test_performance & test_save_performance_results): {pytest_stderr}") 
+                
             print(f"Pytest run for {py_file_path} (test_performance & test_save_performance_results) status: {pytest_status}")
             if pytest_stdout:
                 print(f"Stdout: {pytest_stdout}")
@@ -189,7 +202,7 @@ class PerformanceEvalROCm(BasePerfEval):
                 else:
                     assert False, f"Efficiency script not found. Checked: {os.path.join(curr_dir, 'ROCm', 'efficiency.py')} and {alt_efficiency_script_path}"
         
-        cmd_efficiency = [f"python3 {efficiency_script_path} --gen_folder {gen_perf_folder_abs}"]
+        cmd_efficiency = [f"python3 {efficiency_script_path} --gen_folder {gen_perf_folder_abs} --ref_folder {self.ref_folder}"]
 
         print(f"Running efficiency script: {' '.join(cmd_efficiency)}")
         eff_status, eff_stdout, eff_stderr = run_shell(cmd_efficiency)
