@@ -1,10 +1,10 @@
 # Copyright(C) [2025] Advanced Micro Devices, Inc. All rights reserved.
-import os, sys
+import os, sys, json
 import subprocess
 from shutil import copyfile
 from .base import BaseEvaluator
 from ..helpers import get_temp_file, get_rocm_temp_file
-from ..helpers.helper import run_shell, process_code, extract_errors
+from ..helpers.helper import run_shell, process_code, extract_errors, extract_json_from_stdout
 from ..processors.llm import LLMOutputProcessor
 from ..constants import REPO_ROOT, TMP_ROOT, TBG_DATA_ROOT, ROCm_DATA_ROOT, Names
 _MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -71,6 +71,8 @@ class TestAllCloseEvaluatorTBG(BaseEvaluator):
 
     def execute(self, code :str, log_root:str, exec_root:str, fname:str, atol :float=1e-3, rtol:float=1e-1, timeout :int =2*60, verbose :bool =False, custom_tests_path=None) -> tuple[bool, bool, str, str]:
         
+        speedup = 0
+
         triton_file = self.get_ground_truth_fpath(fname) 
 
         gen_file = self.get_gen_fpath(log_root, fname)
@@ -85,34 +87,42 @@ class TestAllCloseEvaluatorTBG(BaseEvaluator):
 
             call_status, stdout, stderr = self._call_file(gen_file, timeout=timeout)
 
-            # Check for correctness
-            match_status = False
-            if call_status:
-                match_status, stdout, stderr = self._check_match(gen_file, triton_file, atol=atol, rtol=rtol, timeout=timeout)
-                if not match_status:
-                        print(f"Mismatch found: {stderr}")
-            else:
-                return call_status, False, stdout, stderr
+            if not call_status:
+                return call_status, False, speedup, stdout, stderr
+
+            ## copy the generated file and its perf file to exec_fpath
+            exec_fpath = os.path.join(exec_root, fname)
+            os.makedirs(exec_root, exist_ok=True)
+            with open(exec_fpath, 'w') as f:
+                f.write(code)
             
-            # Check if the generated code executed successfully
-            if not match_status:
-                if verbose:
-                    print(f"Error in generated code: {stderr}")
-                return call_status, False, stdout, stderr
-            else:
-                if verbose:
-                    print(f"Success in generated code: {stdout}")
-                _, exec_status, gen_stdout, gen_stderr = stdout.split(Names.RET_SEPERATOR) #("*#*#")
-                exec_status = exec_status.strip().lower() == str(True).lower()
+            perf_fname = f"{Names.NATIVE_PERF_GOLD_ROOT}/{fname.replace(".py", "_perf.py")}"
+            assert os.path.exists(perf_fname), f"Performance file {perf_fname} does not exist. Please check the ground truth data."
+            copyfile(perf_fname, exec_root)
+            
+            cmd_status, perf_stdout, perf_stderr = self._call_file(perf_fname, timeout=timeout)
 
-                if exec_status:
-                    ## The generated code executed successfully, save the file in exec folder
-                    exec_fpath = os.path.join(exec_root, fname)
-                    os.makedirs(exec_root, exist_ok=True)
-                    with open(exec_fpath, 'w') as f:
-                        f.write(code)
+            if not cmd_status:
+                if verbose:
+                    print(f"Performance file execution failed: {perf_stderr}")
+                return call_status, False, speedup, perf_stdout, perf_stderr
+            
+            exec_status = perf_stdout.split(",")[0].strip().lower() == str(True).lower()
 
-                return call_status, exec_status, gen_stdout, gen_stderr
+            if not exec_status:
+                if verbose:
+                    print(f"Performance file execution failed: {perf_stderr}")
+                return call_status, False, speedup, perf_stdout, perf_stderr
+
+            perf_data = extract_json_from_stdout(perf_stdout)
+
+            if not perf_data:
+                if verbose:
+                    print(f"Performance data extraction failed: {perf_stderr}")
+                return call_status, exec_status, speedup, perf_stdout, perf_stderr
+
+            speedup = perf_data.get("speedup", 0)
+            return call_status, exec_status, speedup, perf_stdout, perf_stderr
 
         except Exception as e:
             if verbose:

@@ -3,12 +3,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.adam_update_triton import update_fn
-from performance_utils import Performance_Metrics, do_bench_config
+from adam_update_triton import update_fn
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 import torch
 import triton
 import triton.language as tl
+
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.adam_update_triton import update_fn as update_fn_ref
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -35,6 +37,14 @@ class performance_metrics(Performance_Metrics):
         beta2 = 0.999
         update_fn(p, grad, exp_avg, lr, wd, beta1, beta2)
 
+    def call_op_ref(self, input_tensor):
+        p, grad, exp_avg = input_tensor
+        lr = 0.001
+        wd = 0.01
+        beta1 = 0.9
+        beta2 = 0.999
+        update_fn_ref(p, grad, exp_avg, lr, wd, beta1, beta2)
+
     def get_gbps(self, input_tensor, runtime):
         p, grad, exp_avg = input_tensor
         total_bytes = 3 * p.numel() * p.element_size()  # p, grad, exp_avg
@@ -51,4 +61,6 @@ if __name__ == '__main__':
     op_perf = performance_metrics()
     op_perf.get_input_tensors()
     op_perf.get_do_bench_config()
-    op_perf.run_benchmark()
+    result = op_perf.run_benchmark()
+
+    print(result)

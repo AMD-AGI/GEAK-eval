@@ -5,6 +5,10 @@ import triton.language as tl
 from typing import Callable
 import json
 import os
+import random
+
+def get_random_choice(item_list):
+    return random.choice(item_list)
 
 class do_bench_config():
     def __init__(
@@ -30,6 +34,7 @@ class Performance_Metrics:
             **kwargs
     ):
         self.op_name = op_name
+        self.ref_op_name = op_name + '_ref'
         self.dtype = dtype
         if is_backward:
             self.op_name += 'backward'
@@ -46,6 +51,9 @@ class Performance_Metrics:
     
     def call_op(self, input_tensor):
         raise NotImplementedError("You must implement this method to call the op")
+
+    def call_op_ref(self, input_tensor):
+        raise NotImplementedError("You must implement this method to call the reference op")
 
     def get_do_bench_config(self, warmup=None, rep=None):
         if warmup != None and rep != None:
@@ -117,27 +125,54 @@ class Performance_Metrics:
 
     def run_benchmark(self):
         results = []
+        perf = []
+        perf_ref = []
         for input_tensor_ in self.input_tensors:
             try:
                 input_tensor = self.to_cuda(input_tensor_)
                 # print(input_tensor)
                 op = lambda : self.call_op(input_tensor)            
-                ms = self.get_runtime(op)
+                op_ref = lambda : self.call_op_ref(input_tensor)
+                
+                output = self.call_op(input_tensor)
+                output_ref = self.call_op_ref(input_tensor)
+                
+                if not torch.isclose(output, output_ref, rtol=1e-3, atol=1e-3).all():
+                    return False, f"Output mismatch between the operation and its reference implementation for input tensor shape {input_tensor.shape}"
+
+                # Randomly choose which operation to run first
+                # to avoid any bias in the performance measurement                
+                if get_random_choice([0, 1]) == 0:
+                    ms = self.get_runtime(op)
+                    ms_ref = self.get_runtime(op_ref)
+                else:
+                    ms_ref = self.get_runtime(op_ref)
+                    ms = self.get_runtime(op)
+                
                 gbps = self.get_gbps(input_tensor, ms)
                 tflops = self.get_tflops(input_tensor, ms)
                 result = {
                     "input_size": [item.shape if type(item)==torch.Tensor else item for item in input_tensor],
                     "ms": ms,
+                    "ms_ref": ms_ref,
                     "GB/s": gbps,
                     "TFLOPS": tflops
                 }
                 print(result)
                 results.append(result)
+                perf.append(ms)
+                perf_ref.append(ms_ref)
             except Exception as e:
                 print(f"Failed to run benchmark for input tensor. Error: {e}")
+                return False, f"Failed to run benchmark for input tensor shape {input_tensor.shape} due to {e}"
             input_tensor = None
-        folder_path = "AMD_Instinct_MI300X_VF_golden_metrics"
-        file_name = self.op_name + ".json"
-        file_path = os.path.join(folder_path, file_name)
-        with open(file_path, 'w', encoding='utf8') as f:
-            json.dump(results, f, indent=4)
+
+        ## calculate average performance
+        if perf and perf_ref:
+            avg_perf = sum(perf_ref) / len(perf)
+
+        results.append({
+            "average_speedup": avg_perf
+        })
+
+        return True, f"```json\n{json.dumps(results, indent=4)}\n```"

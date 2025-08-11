@@ -53,6 +53,11 @@ def write_file(input_folder_path, results_path, golden_metrics_folder):
                 # print(lines)
                 updated_lines = []
                 for line in lines:
+                    if "from TritonBench_v1." in line:
+                        fn_name = line.split(" ")[-1].strip()
+                        updated_lines.append(
+                                                f"import tb_eval.data.TritonBench.data.TritonBench_G_v1.{op}.{fn_name} as {fn_name}_ref"
+                                            )
                     if line == "sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))\n":
                         updated_lines.append(f"sys.path.append('{input_folder_path}')\n")
                     line = line.replace("from TritonBench_v1.", "from ")
