@@ -6,7 +6,7 @@ from .base import BaseEvaluator
 from ..helpers import get_temp_file, get_rocm_temp_file
 from ..helpers.helper import run_shell, process_code, extract_errors, extract_json_from_stdout
 from ..processors.llm import LLMOutputProcessor
-from ..constants import REPO_ROOT, TMP_ROOT, TBG_DATA_ROOT, ROCm_DATA_ROOT, Names
+from ..constants import REPO_ROOT, TMP_ROOT, TBG_DATA_ROOT, ROCm_DATA_ROOT, Names, NATIVE_PERF_GOLD_ROOT
 _MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class TestAllCloseEvaluatorTBG(BaseEvaluator):
@@ -96,7 +96,7 @@ class TestAllCloseEvaluatorTBG(BaseEvaluator):
             with open(exec_fpath, 'w') as f:
                 f.write(code)
             
-            perf_fname = f"{Names.NATIVE_PERF_GOLD_ROOT}/{fname.replace(".py", "_perf.py")}"
+            perf_fname = f"{NATIVE_PERF_GOLD_ROOT}/{fname.replace(".py", "_perf.py")}"
             assert os.path.exists(perf_fname), f"Performance file {perf_fname} does not exist. Please check the ground truth data."
             copyfile(perf_fname, exec_root)
             
@@ -127,12 +127,12 @@ class TestAllCloseEvaluatorTBG(BaseEvaluator):
         except Exception as e:
             if verbose:
                 print(f"File: {fname}, Execution error: {e}")
-            return False, False, None, str(e)
+            return False, False, 0, None, str(e)
 
         except subprocess.TimeoutExpired:
             if verbose:
                 print(f"File: {fname} timed out!")
-            return False, False, None, "Time out"
+            return False, False, 0, None, "Time out"
 
 
 class TestAllCloseEvaluatorROCm(TestAllCloseEvaluatorTBG):

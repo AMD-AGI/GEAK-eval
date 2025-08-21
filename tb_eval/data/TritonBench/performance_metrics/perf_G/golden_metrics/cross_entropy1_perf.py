@@ -3,12 +3,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.cross_entropy1 import cross_entropy_loss
-from performance_utils import Performance_Metrics, do_bench_config
+from cross_entropy1 import cross_entropy_loss
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 import torch
 import triton
 import triton.language as tl
+
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.cross_entropy1 import cross_entropy_loss as cross_entropy_loss_ref
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -29,6 +31,11 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         logits, labels = input_tensor
         return cross_entropy_loss(logits, labels, label_smoothing=0.1)
+
+    def call_op_ref(self, input_tensor):
+        logits, labels = input_tensor
+        # Assuming the reference implementation is similar to the main one
+        return cross_entropy_loss_ref(logits, labels, label_smoothing=0.1)
 
     def get_gbps(self, input_tensor, runtime):
         logits, _ = input_tensor

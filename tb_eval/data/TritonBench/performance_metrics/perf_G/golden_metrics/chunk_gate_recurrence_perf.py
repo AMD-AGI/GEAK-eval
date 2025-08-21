@@ -3,12 +3,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.chunk_gate_recurrence import chunk_gate_recurrent
-from performance_utils import Performance_Metrics, do_bench_config
+from chunk_gate_recurrence import chunk_gate_recurrent
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 import torch
 import triton
 import triton.language as tl
+
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.chunk_gate_recurrence import chunk_gate_recurrent as chunk_gate_recurrent_ref
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -33,6 +35,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         kv, cross_decay = input_tensor
         return chunk_gate_recurrent(kv, cross_decay)
+
+    def call_op_ref(self, input_tensor):
+        kv, cross_decay = input_tensor
+        return chunk_gate_recurrent_ref(kv, cross_decay)
 
     def get_gbps(self, input_tensor, runtime):
         kv, _ = input_tensor

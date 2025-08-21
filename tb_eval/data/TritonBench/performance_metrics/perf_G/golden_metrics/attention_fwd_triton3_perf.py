@@ -3,12 +3,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.attention_fwd_triton3 import _forward
-from performance_utils import Performance_Metrics, do_bench_config
+from attention_fwd_triton3 import _forward
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 import torch
 import triton
 import triton.language as tl
+
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.attention_fwd_triton3 import _forward as _forward_ref
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -34,6 +36,13 @@ class performance_metrics(Performance_Metrics):
         m = torch.empty(q.shape[0], q.shape[1], q.shape[2], dtype=torch.float32, device=q.device)
         l = torch.empty(q.shape[0], q.shape[1], q.shape[2], dtype=torch.float32, device=q.device)
         return _forward(q, k, v, sm_scale, o=o, m=m, l=l, end=True)
+
+    def call_op_ref(self, input_tensor):
+        q, k, v, sm_scale = input_tensor
+        o = torch.empty_like(q)
+        m = torch.empty(q.shape[0], q.shape[1], q.shape[2], dtype=torch.float32, device=q.device)
+        l = torch.empty(q.shape[0], q.shape[1], q.shape[2], dtype=torch.float32, device=q.device)
+        return _forward_ref(q, k, v, sm_scale, o=o, m=m, l=l, end=True)
 
     def get_gbps(self, input_tensor, runtime):
         q, k, v, sm_scale = input_tensor

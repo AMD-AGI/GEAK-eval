@@ -3,12 +3,15 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.cross_entropy2 import cross_entropy_fwd, cross_entropy_bwd
-from performance_utils import Performance_Metrics, do_bench_config
+from cross_entropy2 import cross_entropy_fwd, cross_entropy_bwd
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 import torch
 import triton
 import triton.language as tl
+
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.cross_entropy2 import cross_entropy_fwd as cross_entropy_fwd_ref
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.cross_entropy2 import cross_entropy_bwd as cross_entropy_bwd_ref
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -38,6 +41,19 @@ class performance_metrics(Performance_Metrics):
         HAS_SMOOTHING = True
         SPLIT = False
         return cross_entropy_fwd(logits, labels, smoothing, logit_scale, lse_square_scale, ignored_index, total_classes, class_start_idx, BLOCK_SIZE, HAS_SMOOTHING, SPLIT)
+    
+    def call_op_ref(self, input_tensor):
+        logits, labels = input_tensor
+        smoothing = 0.1
+        logit_scale = 1.0
+        lse_square_scale = 0.0
+        ignored_index = -1
+        total_classes = logits.size(1)
+        class_start_idx = 0
+        BLOCK_SIZE = 128
+        HAS_SMOOTHING = True
+        SPLIT = False
+        return cross_entropy_fwd_ref(logits, labels, smoothing, logit_scale, lse_square_scale, ignored_index, total_classes, class_start_idx, BLOCK_SIZE, HAS_SMOOTHING, SPLIT)
 
     def get_gbps(self, input_tensor, runtime):
         logits, _ = input_tensor

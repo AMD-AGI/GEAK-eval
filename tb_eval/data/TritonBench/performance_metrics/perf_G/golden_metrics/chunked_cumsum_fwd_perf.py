@@ -3,12 +3,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.chunked_cumsum_fwd import _chunk_cumsum_fwd
-from performance_utils import Performance_Metrics, do_bench_config
+from chunked_cumsum_fwd import _chunk_cumsum_fwd
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 import torch
 import triton
 import triton.language as tl
+
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.chunked_cumsum_fwd import _chunk_cumsum_fwd as _chunk_cumsum_fwd_ref
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -33,6 +35,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         dt, A, chunk_size, dt_bias = input_tensor
         return _chunk_cumsum_fwd(dt, A, chunk_size, dt_bias)
+
+    def call_op_ref(self, input_tensor):
+        dt, A, chunk_size, dt_bias = input_tensor
+        return _chunk_cumsum_fwd_ref(dt, A, chunk_size, dt_bias)
 
     def get_gbps(self, input_tensor, runtime):
         dt, A, chunk_size, dt_bias = input_tensor

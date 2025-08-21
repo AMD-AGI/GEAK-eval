@@ -134,6 +134,11 @@ class Performance_Metrics:
                 op = lambda : self.call_op(input_tensor)            
                 op_ref = lambda : self.call_op_ref(input_tensor)
                 
+                ## Keep dummy initial calls to converge to optimal triton autotune configs regardless it exists or not!
+                output = self.call_op(input_tensor)
+                output_ref = self.call_op_ref(input_tensor)                
+
+                ## The following calls should be using the optimal triton autotune configs for given inputs!
                 output = self.call_op(input_tensor)
                 output_ref = self.call_op_ref(input_tensor)
                 

@@ -3,12 +3,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.bgmv_shrink_kernel import _bgmv_shrink
-from performance_utils import Performance_Metrics, do_bench_config
+from bgmv_shrink_kernel import _bgmv_shrink
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 import torch
 import triton
 import triton.language as tl
+
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.bgmv_shrink_kernel import _bgmv_shrink as _bgmv_shrink_ref
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -31,6 +33,11 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         inputs, lora_a_weights, output_tensor, lora_indices_tensor = input_tensor
         _bgmv_shrink(inputs, lora_a_weights, output_tensor, lora_indices_tensor, scaling=1.0)
+        return output_tensor
+
+    def call_op_ref(self, input_tensor):
+        inputs, lora_a_weights, output_tensor, lora_indices_tensor = input_tensor
+        _bgmv_shrink_ref(inputs, lora_a_weights, output_tensor, lora_indices_tensor, scaling=1.0)
         return output_tensor
 
     def get_gbps(self, input_tensor, runtime):

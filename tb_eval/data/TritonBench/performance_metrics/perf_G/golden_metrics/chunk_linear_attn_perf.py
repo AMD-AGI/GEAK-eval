@@ -3,12 +3,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.chunk_linear_attn import chunk_linear_attn
-from performance_utils import Performance_Metrics, do_bench_config
+from chunk_linear_attn import chunk_linear_attn
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 import torch
 import triton
 import triton.language as tl
+
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.chunk_linear_attn import chunk_linear_attn as chunk_linear_attn_ref
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -31,6 +33,11 @@ class performance_metrics(Performance_Metrics):
         q, k, v = input_tensor
         scale = q.shape[-1] ** -0.5
         return chunk_linear_attn(q, k, v, scale=scale)
+
+    def call_op_ref(self, input_tensor):
+        q, k, v = input_tensor
+        scale = q.shape[-1] ** -0.5
+        return chunk_linear_attn_ref(q, k, v, scale=scale)
 
     def get_gbps(self, input_tensor, runtime):
         q, k, v = input_tensor

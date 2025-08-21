@@ -3,12 +3,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.chunk_delta_fwd import chunk_fwd_h_fn  # Correctly import the function
-from performance_utils import Performance_Metrics, do_bench_config
+from chunk_delta_fwd import chunk_fwd_h_fn  # Correctly import the function
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 import torch
 import triton
 import triton.language as tl
+
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.chunk_delta_fwd import chunk_fwd_h_fn as chunk_fwd_h_ref
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -39,6 +41,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         k, u, w, BT, initial_state, final_state = input_tensor
         return chunk_fwd_h_fn(k, w, u, BT, initial_state, final_state)
+
+    def call_op_ref(self, input_tensor):
+        k, u, w, BT, initial_state, final_state = input_tensor
+        return chunk_fwd_h_ref(k, w, u, BT, initial_state, final_state)
 
     def get_gbps(self, input_tensor, runtime):
         k, u, w, BT, initial_state, final_state = input_tensor

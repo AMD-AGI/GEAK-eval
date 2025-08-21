@@ -3,12 +3,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.cache_transform_triton import get_xine_cache
-from performance_utils import Performance_Metrics, do_bench_config
+from cache_transform_triton import get_xine_cache
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 import torch
 import triton
 import triton.language as tl
+
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.cache_transform_triton import get_xine_cache as get_xine_cache_ref
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -32,6 +34,10 @@ class performance_metrics(Performance_Metrics):
         lengths, cos_cache, sin_cache = input_tensor
         return get_xine_cache(lengths, cos_cache, sin_cache, is_prompts=False)
 
+    def call_op_ref(self, input_tensor):
+        lengths, cos_cache, sin_cache = input_tensor
+        return get_xine_cache_ref(lengths, cos_cache, sin_cache, is_prompts=False)
+    
     def get_gbps(self, input_tensor, runtime):
         lengths, cos_cache, sin_cache = input_tensor
         total_bytes = (cos_cache.numel() + sin_cache.numel()) * cos_cache.element_size()

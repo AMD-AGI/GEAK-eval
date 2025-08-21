@@ -3,12 +3,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.attention_score import get_score
-from performance_utils import Performance_Metrics, do_bench_config
+from attention_score import get_score
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 import torch
 import triton
 import triton.language as tl
+
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.attention_score import get_score as get_score_ref
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -30,6 +32,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         q, k, m = input_tensor
         return get_score(q, k, m, sliding_window=None, complement_sliding_window=False)
+    
+    def call_op_ref(self, input_tensor):
+        q, k, m = input_tensor
+        return get_score_ref(q, k, m, sliding_window=None, complement_sliding_window=False)
 
     def get_gbps(self, input_tensor, runtime):
         q, k, m = input_tensor

@@ -3,12 +3,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.attention_kernel_aligned import _attention_rel_h_rel_w_kernel_aligned_device
-from performance_utils import Performance_Metrics, do_bench_config
+from attention_kernel_aligned import _attention_rel_h_rel_w_kernel_aligned_device
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 import torch
 import triton
 import triton.language as tl
+
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.attention_kernel_aligned import _attention_rel_h_rel_w_kernel_aligned_device as _attention_rel_h_rel_w_kernel_aligned_device_ref
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -36,6 +38,11 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         q, k, v, rel_h_w, sm_scale, o = input_tensor
         _attention_rel_h_rel_w_kernel_aligned_device(q, k, v, rel_h_w, sm_scale, o, BLOCK_M=64, BLOCK_N=64, num_warps=4, num_stages=2)
+        return o
+
+    def call_op_ref(self, input_tensor):
+        q, k, v, rel_h_w, sm_scale, o = input_tensor
+        _attention_rel_h_rel_w_kernel_aligned_device_ref(q, k, v, rel_h_w, sm_scale, o, BLOCK_M=64, BLOCK_N=64, num_warps=4, num_stages=2)
         return o
 
     def get_gbps(self, input_tensor, runtime):

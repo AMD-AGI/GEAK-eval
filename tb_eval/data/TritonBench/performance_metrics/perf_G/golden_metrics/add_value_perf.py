@@ -11,7 +11,7 @@ import torch
 import triton
 import triton.language as tl
 
-from tb_eval.data.TritonBench.data.TritonBench_G_v1 import puzzle1 as puzzle1_ref
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.add_value import puzzle1 as puzzle1_ref
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):

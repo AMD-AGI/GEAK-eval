@@ -3,12 +3,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.block_sparse_attn import block_sparse_attention
-from performance_utils import Performance_Metrics, do_bench_config
+from block_sparse_attn import block_sparse_attention
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 import torch
 import triton
 import triton.language as tl
+
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.block_sparse_attn import block_sparse_attention as block_sparse_attention_ref
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -52,6 +54,9 @@ class performance_metrics(Performance_Metrics):
 
     def call_op(self, input_tensor):
         return block_sparse_attention(*input_tensor)
+
+    def call_op_ref(self, input_tensor):
+        return block_sparse_attention_ref(*input_tensor)
 
     def get_gbps(self, input_tensor, runtime):
         Q, K, V, *_ = input_tensor

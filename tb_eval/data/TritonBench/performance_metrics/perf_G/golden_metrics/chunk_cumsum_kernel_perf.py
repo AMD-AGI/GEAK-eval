@@ -4,12 +4,14 @@ import json
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.chunk_cumsum_kernel import chunk_global_cumsum_scalar
-from performance_utils import Performance_Metrics, do_bench_config
+from chunk_cumsum_kernel import chunk_global_cumsum_scalar
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 import torch
 import triton
 import triton.language as tl
+
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.chunk_cumsum_kernel import chunk_global_cumsum_scalar as chunk_global_cumsum_scalar_ref
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -28,6 +30,9 @@ class performance_metrics(Performance_Metrics):
 
     def call_op(self, input_tensor):
         return chunk_global_cumsum_scalar(input_tensor)
+
+    def call_op_ref(self, input_tensor):
+        return chunk_global_cumsum_scalar_ref(input_tensor)
 
     def get_gbps(self, input_tensor, runtime):
         x = input_tensor

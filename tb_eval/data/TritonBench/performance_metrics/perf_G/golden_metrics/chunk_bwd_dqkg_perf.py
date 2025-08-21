@@ -3,12 +3,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.chunk_bwd_dqkg import chunk_bwd_dqkg_fn
-from performance_utils import Performance_Metrics, do_bench_config
+from chunk_bwd_dqkg import chunk_bwd_dqkg_fn
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 import torch
 import triton
 import triton.language as tl
+
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.chunk_bwd_dqkg import chunk_bwd_dqkg_fn as chunk_bwd_dqkg_ref
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -38,6 +40,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         do, q, k, v, g, h, dh, scale = input_tensor
         return chunk_bwd_dqkg_fn(do, q, k, v, g, h, dh, scale)
+
+    def call_op_ref(self, input_tensor):
+        do, q, k, v, g, h, dh, scale = input_tensor
+        return chunk_bwd_dqkg_ref(do, q, k, v, g, h, dh, scale)
 
     def get_gbps(self, input_tensor, runtime):
         do, q, k, v, g, h, dh, scale = input_tensor

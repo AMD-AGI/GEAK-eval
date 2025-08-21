@@ -3,12 +3,15 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.chunk_gla_fwd import chunk_fwd_intra_gated_gk_fn, chunk_fwd_o_gated_gk_fn
-from performance_utils import Performance_Metrics, do_bench_config
+from chunk_gla_fwd import chunk_fwd_intra_gated_gk_fn, chunk_fwd_o_gated_gk_fn
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 import torch
 import triton
 import triton.language as tl
+
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.chunk_gla_fwd import chunk_fwd_intra_gated_gk_fn as chunk_fwd_intra_gated_gk_ref
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.chunk_gla_fwd import chunk_fwd_o_gated_gk_fn as chunk_fwd_o_gated_gk_ref
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -35,6 +38,12 @@ class performance_metrics(Performance_Metrics):
         q, k, g, v, h, scale, BT = input_tensor
         A = chunk_fwd_intra_gated_gk_fn(q, k, g, scale, BT)
         o = chunk_fwd_o_gated_gk_fn(q, v, g, A, h, BT, scale)
+        return o
+
+    def call_op_ref(self, input_tensor):
+        q, k, g, v, h, scale, BT = input_tensor
+        A = chunk_fwd_intra_gated_gk_ref(q, k, g, scale, BT)
+        o = chunk_fwd_o_gated_gk_ref(q, v, g, A, h, BT, scale)
         return o
 
     def get_gbps(self, input_tensor, runtime):

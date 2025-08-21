@@ -3,12 +3,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.batched_vecmat_mult import batched_vecmat
-from performance_utils import Performance_Metrics, do_bench_config
+from batched_vecmat_mult import batched_vecmat
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 import torch
 import triton
 import triton.language as tl
+
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.batched_vecmat_mult import batched_vecmat as batched_vecmat_ref
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -33,6 +35,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         M, N, K, block_m, block_n, block_k = input_tensor
         return batched_vecmat(M, N, K, block_m, block_n, block_k)
+
+    def call_op_ref(self, input_tensor):
+        M, N, K, block_m, block_n, block_k = input_tensor
+        return batched_vecmat_ref(M, N, K, block_m, block_n, block_k)
 
     def get_gbps(self, input_tensor, runtime):
         M, N, K, block_m, block_n, block_k = input_tensor

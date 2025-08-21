@@ -3,12 +3,15 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.chunk_gated_attention import fwd_pre, fwd_inner
-from performance_utils import Performance_Metrics, do_bench_config
+from chunk_gated_attention import fwd_pre, fwd_inner
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 import torch
 import triton
 import triton.language as tl
+
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.chunk_gated_attention import fwd_pre as fwd_pre_ref
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.chunk_gated_attention import fwd_inner as fwd_inner_ref
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -39,6 +42,11 @@ class performance_metrics(Performance_Metrics):
         q, k, v, g, B, H, T, K, V, BT, BK, BV = input_tensor
         g_pre = fwd_pre(g, B, H, T, S=T, BT=BT)
         return fwd_inner(q, k, v, g_pre, B, H, T, K, V, BT, BK, BV)
+
+    def call_op_ref(self, input_tensor):
+        q, k, v, g, B, H, T, K, V, BT, BK, BV = input_tensor
+        g_pre = fwd_pre_ref(g, B, H, T, S=T, BT=BT)
+        return fwd_inner_ref(q, k, v, g_pre, B, H, T, K, V, BT, BK, BV)
 
     def get_gbps(self, input_tensor, runtime):
         q, k, v, g, B, H, T, K, V, BT, BK, BV = input_tensor
