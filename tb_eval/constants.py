@@ -24,6 +24,8 @@ class Names:
     DIFFICULTY = 'difficulty'
     LABEL = 'label'
 
+    SPEEDUP = 'speedup'
+
 REPO_ROOT = os.path.abspath(os.path.dirname(__file__))
 TMP_ROOT = "tmp2"
 TBG_ROOT = os.path.join(REPO_ROOT, "data", "TritonBench")

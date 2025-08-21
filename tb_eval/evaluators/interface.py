@@ -98,9 +98,11 @@ class TestAllCloseEvaluatorTBG(BaseEvaluator):
             
             perf_fname = f"{NATIVE_PERF_GOLD_ROOT}/{fname.replace(".py", "_perf.py")}"
             assert os.path.exists(perf_fname), f"Performance file {perf_fname} does not exist. Please check the ground truth data."
-            copyfile(perf_fname, exec_root)
+
+            exec_perf_fpath = os.path.join(exec_root, os.path.basename(perf_fname))
+            copyfile(perf_fname, exec_perf_fpath)
             
-            cmd_status, perf_stdout, perf_stderr = self._call_file(perf_fname, timeout=timeout)
+            cmd_status, perf_stdout, perf_stderr = self._call_file(exec_perf_fpath, timeout=timeout)
 
             if not cmd_status:
                 if verbose:

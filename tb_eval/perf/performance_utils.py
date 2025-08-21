@@ -143,7 +143,7 @@ class Performance_Metrics:
                 output_ref = self.call_op_ref(input_tensor)
                 
                 if not torch.isclose(output, output_ref, rtol=1e-3, atol=1e-3).all():
-                    return False, f"Output mismatch between the operation and its reference implementation for input tensor shape {input_tensor.shape}"
+                    return False, f"Output mismatch between the operation and its reference implementation for input tensor shape"
 
                 # Randomly choose which operation to run first
                 # to avoid any bias in the performance measurement                
@@ -169,7 +169,7 @@ class Performance_Metrics:
                 perf_ref.append(ms_ref)
             except Exception as e:
                 print(f"Failed to run benchmark for input tensor. Error: {e}")
-                return False, f"Failed to run benchmark for input tensor shape {input_tensor.shape} due to {e}"
+                return False, f"Failed to run benchmark for an input tensor shape due to {e}"
             input_tensor = None
 
         ## calculate average performance
