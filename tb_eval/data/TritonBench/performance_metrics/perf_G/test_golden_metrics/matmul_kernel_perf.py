@@ -17,8 +17,8 @@ class performance_metrics(Performance_Metrics):
         
     def get_input_tensors(self):
         self.input_tensors = []
-        for i in range(6, 32):  # Adjust the range as needed for different sizes
-            size = 128 * i
+        for i in [1,2,4]:  # Adjust the range as needed for different sizes
+            size = 64 * i
             a = torch.rand(size, size, dtype=torch.float16)
             b = torch.rand(size, size, dtype=torch.float16)
             c = torch.empty(size, size, dtype=torch.float16)

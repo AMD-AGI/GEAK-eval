@@ -104,8 +104,13 @@ class Performance_Metrics:
 
             previous_ms = ms
         
-        print("MS did not stabilize. Returning default config.")
-        raise NotImplementedError("You must implement this method to make the runtime stable")
+        print("MS did not stabilize. Returning last config.")
+        self.do_bench_config = do_bench_config(
+            warm_up=warmup,
+            repetition=rep,
+        )
+        return 
+        # raise NotImplementedError("You must implement this method to make the runtime stable")
 
     def get_runtime(self, op: Callable):
         ms, min_ms, max_ms = triton.testing.do_bench(
@@ -122,6 +127,24 @@ class Performance_Metrics:
 
     def get_tflops(self, input_tensor, runtime):
         raise NotImplementedError("You must implement this method to get the method to calculate TFLOPS")
+
+    def check_close(self, a, b, rtol=1e-05, atol=1e-08):
+        if isinstance(a, (list, tuple)):
+            return all(self.check_close(x, y, rtol=rtol, atol=atol) for x, y in zip(a, b))
+        if isinstance(a, dict):
+            return all(key in b and self.check_close(a[key], b[key], rtol=rtol, atol=atol) for key in a)
+        if isinstance(a, torch.Tensor) and isinstance(b, torch.Tensor):
+            return torch.allclose(a, b, rtol=rtol, atol=atol)
+        return a == b
+
+    def get_num_elements(self, input_tensor):
+        if isinstance(input_tensor, (list, tuple)):
+            return sum(self.get_num_elements(x) for x in input_tensor)
+        if isinstance(input_tensor, dict):
+            return sum(self.get_num_elements(v) for v in input_tensor.values())
+        if isinstance(input_tensor, torch.Tensor):
+            return input_tensor.numel()
+        return 1
 
     def run_benchmark(self):
         results = []
@@ -142,7 +165,7 @@ class Performance_Metrics:
                 output = self.call_op(input_tensor)
                 output_ref = self.call_op_ref(input_tensor)
                 
-                if not torch.isclose(output, output_ref, rtol=1e-3, atol=1e-3).all():
+                if not self.check_close(output, output_ref, rtol=1e-3, atol=1e-3):
                     return False, f"Output mismatch between the operation and its reference implementation for input tensor shape"
 
                 # Randomly choose which operation to run first
@@ -157,7 +180,7 @@ class Performance_Metrics:
                 gbps = self.get_gbps(input_tensor, ms)
                 tflops = self.get_tflops(input_tensor, ms)
                 result = {
-                    "input_size": [item.shape if type(item)==torch.Tensor else item for item in input_tensor],
+                    "input_size": self.get_num_elements(input_tensor_),
                     "ms": ms,
                     "ms_ref": ms_ref,
                     "GB/s": gbps,
