@@ -19,8 +19,8 @@ class performance_metrics(Performance_Metrics):
     def get_input_tensors(self):
         self.input_tensors = []
         for i in range(2, 16):  # Adjust the range as needed for your testing
-            batch_size = 2 ** i
-            seq_len = 128
+            batch_size = 2
+            seq_len = 2 ** i
             head = 8  # Example head size
             dim = 64  # Example dimension size
             sliding_window = 64

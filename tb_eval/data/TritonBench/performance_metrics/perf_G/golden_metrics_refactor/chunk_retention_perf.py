@@ -19,11 +19,11 @@ class performance_metrics(Performance_Metrics):
     def get_input_tensors(self):
         self.input_tensors = []
         for i in range(2, 12):  # Adjust the range as needed
-            B, H, T, D = 32, 128, 2 ** i, 128  # Example dimensions
-            q = torch.rand(B, H, T, D, dtype=torch.float32)
-            k = torch.rand(B, H, T, D, dtype=torch.float32)
-            v = torch.rand(B, H, T, D, dtype=torch.float32)
-            initial_state = torch.rand(B, H, T, D, dtype=torch.float32)
+            B, H, T, K, V = 32, 128, 2 ** i, 64, 64   # Example dimensions
+            q = torch.rand(B, H, T, K, dtype=torch.float32)
+            k = torch.rand(B, H, K, T, dtype=torch.float32)
+            v = torch.rand(B, H, T, V, dtype=torch.float32)
+            initial_state = torch.rand(B, H, K, V, dtype=torch.float32)
             self.input_tensors.append((q, k, v, initial_state))
 
     def to_cuda(self, input_tensor):

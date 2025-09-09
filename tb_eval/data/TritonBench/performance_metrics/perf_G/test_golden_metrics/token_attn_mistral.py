@@ -84,8 +84,11 @@ def token_att_fwd2(
     num_warps = 4
     dim = v.shape[-1]
 
-    kv_group_num = prob.shape[0] // v.shape[1]
-
+    num_q_heads = prob.shape[0]
+    num_kv_heads = v.shape[0]
+    assert num_q_heads % num_kv_heads == 0
+    kv_group_num = num_q_heads // num_kv_heads
+    
     _fwd_kernel_token_att2[grid](
         prob,
         v,
@@ -186,4 +189,5 @@ def test_token_att_fwd2():
 
 
 # Execute the test function
-result_gold = test_token_att_fwd2()
+if __name__ == '__main__':
+    result_gold = test_token_att_fwd2()

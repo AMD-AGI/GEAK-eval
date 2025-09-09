@@ -4,12 +4,13 @@ import json
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.token_attn_mistral import token_att_fwd2
-from performance_utils import Performance_Metrics, do_bench_config
+from token_attn_mistral import token_att_fwd2
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.token_attn_mistral import token_att_fwd2 as token_att_fwd2_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -18,8 +19,8 @@ class performance_metrics(Performance_Metrics):
     def get_input_tensors(self):
         self.input_tensors = []
         for i in range(2, 16):  # Adjust the range as needed for your testing
-            batch_size = 2 ** i
-            seq_len = 128
+            batch_size = 2
+            seq_len = 2 ** i
             head = 8  # Example head size
             dim = 64  # Example dimension size
             sliding_window = 64
@@ -44,6 +45,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         prob, v, out, Req_to_tokens, B_req_idx, B_Start_Loc, B_Seqlen, B_Att_Start_Loc, B_Att_Seqlen, sliding_window = input_tensor
         return token_att_fwd2(prob, v, out, Req_to_tokens, B_req_idx, B_Start_Loc, B_Seqlen, B_Att_Start_Loc, B_Att_Seqlen, sliding_window)
+
+    def call_op_ref(self, input_tensor):
+        prob, v, out, Req_to_tokens, B_req_idx, B_Start_Loc, B_Seqlen, B_Att_Start_Loc, B_Att_Seqlen, sliding_window = input_tensor
+        return token_att_fwd2_ref(prob, v, out, Req_to_tokens, B_req_idx, B_Start_Loc, B_Seqlen, B_Att_Start_Loc, B_Att_Seqlen, sliding_window)
 
     def get_gbps(self, input_tensor, runtime):
         prob, v, out, _, _, _, _, _, _, _ = input_tensor

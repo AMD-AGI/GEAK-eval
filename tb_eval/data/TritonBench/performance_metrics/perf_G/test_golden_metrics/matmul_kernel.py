@@ -5,17 +5,11 @@ import triton.language as tl
 import torch
 
 @triton.jit
-def matmul_kernel(c_ptr, a_ptr, b_ptr, BLOCK_SIZE_M: tl.constexpr, BLOCK_SIZE_N: tl.constexpr, BLOCK_SIZE_K: tl.constexpr):
+def matmul_kernel(c_ptr, a_ptr, b_ptr,  M, N, K,
+    stride_am, stride_ak, stride_bk, stride_bn, stride_cm, stride_cn,
+    BLOCK_SIZE_M: tl.constexpr, BLOCK_SIZE_N: tl.constexpr, BLOCK_SIZE_K: tl.constexpr):
     pid_m = tl.program_id(axis=0)
     pid_n = tl.program_id(axis=1)
-
-    M, N, K = 4096, 4096, 4096
-    stride_am = 4096
-    stride_ak = 1
-    stride_bk = 4096
-    stride_bn = 1
-    stride_cm = 4096
-    stride_cn = 1
 
     offs_am = (pid_m * BLOCK_SIZE_M + tl.arange(0, BLOCK_SIZE_M)) % M
     offs_bn = (pid_n * BLOCK_SIZE_N + tl.arange(0, BLOCK_SIZE_N)) % N
@@ -39,8 +33,15 @@ def matmul_kernel(c_ptr, a_ptr, b_ptr, BLOCK_SIZE_M: tl.constexpr, BLOCK_SIZE_N:
     tl.store(c_ptrs, c)
 
 def matmul(c, a, b, M, N, K, BLOCK_SIZE_M, BLOCK_SIZE_N, BLOCK_SIZE_K):
+    assert a.shape[1] == b.shape[0], "Incompatible dimensions"
+    M, K = a.shape
+    K, N = b.shape
     matmul_kernel[triton.cdiv(M, BLOCK_SIZE_M), triton.cdiv(N, BLOCK_SIZE_N)](
-        c, a, b, BLOCK_SIZE_M, BLOCK_SIZE_N, BLOCK_SIZE_K
+        c, a, b, M, N, K,
+        a.stride(0), a.stride(1),
+        b.stride(0), b.stride(1),
+        c.stride(0), c.stride(1),
+        BLOCK_SIZE_M, BLOCK_SIZE_N, BLOCK_SIZE_K
     )
 
 
