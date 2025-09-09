@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.fused_recurrent_hgrn import fused_recurrent_hgrn
-from performance_utils import Performance_Metrics, do_bench_config
+from fused_recurrent_hgrn import fused_recurrent_hgrn
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.fused_recurrent_hgrn import fused_recurrent_hgrn as fused_recurrent_hgrn_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -33,6 +34,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         x, g, initial_state = input_tensor
         return fused_recurrent_hgrn(x, g, initial_state, output_final_state=True)
+
+    def call_op_ref(self, input_tensor):
+        x, g, initial_state = input_tensor
+        return fused_recurrent_hgrn_ref(x, g, initial_state, output_final_state=True)
 
     def get_gbps(self, input_tensor, runtime):
         x, g, _ = input_tensor

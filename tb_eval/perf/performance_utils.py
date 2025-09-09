@@ -186,7 +186,7 @@ class Performance_Metrics:
                     "GB/s": gbps,
                     "TFLOPS": tflops
                 }
-                print(result)
+                # print(result)
                 results.append(result)
                 perf.append(ms)
                 perf_ref.append(ms_ref)
@@ -197,10 +197,12 @@ class Performance_Metrics:
 
         ## calculate average performance
         if perf and perf_ref:
-            avg_perf = sum(perf_ref) / len(perf)
+            avg_perf = sum(perf_ref) / sum(perf)
 
         results.append({
-            "average_speedup": avg_perf
+            "speedup": avg_perf
         })
+
+        print(f"```json\n{json.dumps(results, indent=4)}\n```")
 
         return True, f"```json\n{json.dumps(results, indent=4)}\n```"

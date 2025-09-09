@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.flash_decode2_llama import flash_decode_stage2
-from performance_utils import Performance_Metrics, do_bench_config
+from flash_decode2_llama import flash_decode_stage2
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.flash_decode2_llama import flash_decode_stage2 as flash_decode_stage2_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -37,6 +38,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         mid_out, mid_out_logexpsum, B_Seqlen, O, block_seq = input_tensor
         return flash_decode_stage2(mid_out, mid_out_logexpsum, B_Seqlen, O, block_seq)
+
+    def call_op_ref(self, input_tensor):
+        mid_out, mid_out_logexpsum, B_Seqlen, O, block_seq = input_tensor
+        return flash_decode_stage2_ref(mid_out, mid_out_logexpsum, B_Seqlen, O, block_seq)
 
     def get_gbps(self, input_tensor, runtime):
         # mid_out, _, _, _, _ = input_tensor

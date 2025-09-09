@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.fused_rotary_embedding import decoding_fused_rotary_embedding
-from performance_utils import Performance_Metrics, do_bench_config
+from fused_rotary_embedding import decoding_fused_rotary_embedding
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.fused_rotary_embedding import decoding_fused_rotary_embedding as decoding_fused_rotary_embedding_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -44,6 +45,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         q, k, v, cos, sin, k_cache, v_cache, block_tables, kv_lengths = input_tensor
         return decoding_fused_rotary_embedding(q, k, v, cos, sin, k_cache, v_cache, block_tables, kv_lengths)
+
+    def call_op_ref(self, input_tensor):
+        q, k, v, cos, sin, k_cache, v_cache, block_tables, kv_lengths = input_tensor
+        return decoding_fused_rotary_embedding_ref(q, k, v, cos, sin, k_cache, v_cache, block_tables, kv_lengths)
 
     def get_gbps(self, input_tensor, runtime):
         q, k, v, cos, sin, k_cache, v_cache, block_tables, kv_lengths = input_tensor

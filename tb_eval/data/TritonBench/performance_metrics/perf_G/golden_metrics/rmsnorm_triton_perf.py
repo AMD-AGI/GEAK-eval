@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.rmsnorm_triton import rmsnorm_triton_wrapper
-from performance_utils import Performance_Metrics, do_bench_config
+from rmsnorm_triton import rmsnorm_triton_wrapper
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.rmsnorm_triton import rmsnorm_triton_wrapper as rmsnorm_triton_wrapper_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -31,6 +32,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         x, rms_w = input_tensor
         return rmsnorm_triton_wrapper(x, rms_w)
+
+    def call_op_ref(self, input_tensor):
+        x, rms_w = input_tensor
+        return rmsnorm_triton_wrapper_ref(x, rms_w)
 
     def get_gbps(self, input_tensor, runtime):
         x, rms_w = input_tensor

@@ -21,7 +21,7 @@ def sin_kernel(
 
 def sin_triton(x, out):
     n_elements = x.numel()
-    sin_kernel[(n_elements,)](x, out, n_elements, BLOCK_SIZE=4)
+    sin_kernel[(n_elements,)](x, out, n_elements, BLOCK_SIZE=4096)
 
 
 

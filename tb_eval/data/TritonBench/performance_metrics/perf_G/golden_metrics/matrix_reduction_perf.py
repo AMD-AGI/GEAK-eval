@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.matrix_reduction import load_reduce
-from performance_utils import Performance_Metrics, do_bench_config
+from matrix_reduction import load_reduce
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.matrix_reduction import load_reduce as load_reduce_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -28,6 +29,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         BLOCK_M, BLOCK_N = input_tensor
         return load_reduce(BLOCK_M, BLOCK_N, 'float16')
+
+    def call_op_ref(self, input_tensor):
+        BLOCK_M, BLOCK_N = input_tensor
+        return load_reduce_ref(BLOCK_M, BLOCK_N, 'float16')
 
     def get_gbps(self, input_tensor, runtime):
         BLOCK_M, BLOCK_N, = input_tensor

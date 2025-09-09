@@ -4,12 +4,13 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Correctly import the operator
-from TritonBench_v1.layer_norm_ops import _layer_norm_fwd
-from performance_utils import Performance_Metrics, do_bench_config
+from layer_norm_ops import _layer_norm_fwd
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.layer_norm_ops import _layer_norm_fwd as _layer_norm_fwd_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -33,6 +34,11 @@ class performance_metrics(Performance_Metrics):
         x, weight, bias = input_tensor
         eps = 1e-5
         return _layer_norm_fwd(x, weight, bias, eps)
+
+    def call_op_ref(self, input_tensor):
+        x, weight, bias = input_tensor
+        eps = 1e-5
+        return _layer_norm_fwd_ref(x, weight, bias, eps)
 
     def get_gbps(self, input_tensor, runtime):
         x, _, _ = input_tensor

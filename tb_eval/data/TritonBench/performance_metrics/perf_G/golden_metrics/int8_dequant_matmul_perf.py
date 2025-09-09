@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.int8_dequant_matmul import int8_matmul_rowwise_dequantize
-from performance_utils import Performance_Metrics, do_bench_config
+from int8_dequant_matmul import int8_matmul_rowwise_dequantize
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.int8_dequant_matmul import int8_matmul_rowwise_dequantize as int8_matmul_rowwise_dequantize_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -33,6 +34,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         a, b, state_x, state_w, bias = input_tensor
         return int8_matmul_rowwise_dequantize(a, b, state_x, state_w, bias)
+
+    def call_op_ref(self, input_tensor):
+        a, b, state_x, state_w, bias = input_tensor
+        return int8_matmul_rowwise_dequantize_ref(a, b, state_x, state_w, bias)
 
     def get_gbps(self, input_tensor, runtime):
         a, b, _, _, _ = input_tensor

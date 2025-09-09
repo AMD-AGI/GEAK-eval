@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.parallel_attention import parallel_rebased
-from performance_utils import Performance_Metrics, do_bench_config
+from parallel_attention import parallel_rebased
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.parallel_attention import parallel_rebased as parallel_rebased_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -34,6 +35,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         q, k, v = input_tensor
         return parallel_rebased(q, k, v)
+
+    def call_op_ref(self, input_tensor):
+        q, k, v = input_tensor
+        return parallel_rebased_ref(q, k, v)
 
     def get_gbps(self, input_tensor, runtime):
         q, k, v = input_tensor

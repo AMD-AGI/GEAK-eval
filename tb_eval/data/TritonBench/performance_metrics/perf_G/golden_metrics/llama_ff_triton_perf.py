@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.llama_ff_triton import kernel_ff
-from performance_utils import Performance_Metrics, do_bench_config
+from llama_ff_triton import kernel_ff
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.llama_ff_triton import kernel_ff as kernel_ff_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -32,6 +33,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         x, w1, w3, rms_w = input_tensor
         return kernel_ff(x, w1, w3, rms_w)
+
+    def call_op_ref(self, input_tensor):
+        x, w1, w3, rms_w = input_tensor
+        return kernel_ff_ref(x, w1, w3, rms_w)
 
     def get_gbps(self, input_tensor, runtime):
         x, w1, w3, rms_w = input_tensor

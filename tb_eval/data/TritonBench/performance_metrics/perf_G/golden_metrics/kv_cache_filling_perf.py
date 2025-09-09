@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.kv_cache_filling import fill_kv_cache
-from performance_utils import Performance_Metrics, do_bench_config
+from kv_cache_filling import fill_kv_cache
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.kv_cache_filling import fill_kv_cache as fill_kv_cache_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -41,6 +42,21 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         k_states, v_states, k_caches, v_caches, q_start_loc, q_seq_length, kv_seq_length, block_offsets = input_tensor
         fill_kv_cache(
+            k_states,
+            v_states,
+            k_caches,
+            v_caches,
+            q_start_loc,
+            q_seq_length,
+            kv_seq_length,
+            max_q_seq_length=k_states.size(1),
+            block_offsets=block_offsets
+        )
+        return k_caches, v_caches
+
+    def call_op_ref(self, input_tensor):
+        k_states, v_states, k_caches, v_caches, q_start_loc, q_seq_length, kv_seq_length, block_offsets = input_tensor
+        fill_kv_cache_ref(
             k_states,
             v_states,
             k_caches,

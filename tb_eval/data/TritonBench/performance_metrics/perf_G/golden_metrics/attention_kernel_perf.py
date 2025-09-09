@@ -40,6 +40,14 @@ class performance_metrics(Performance_Metrics):
         )
         return Out
 
+    def call_op_ref(self, input_tensor):
+        Q, K, V, rel_h_w, sm_scale, Out = input_tensor
+        _attention_rel_h_rel_w_kernel_aligned_device(
+            Q, K, V, rel_h_w, sm_scale, Out,
+            BLOCK_M=64, BLOCK_N=64, num_warps=4, num_stages=2
+        )
+        return Out
+
     def call_op_cuda(self, input_tensor):
         Q, K, V, rel_h_w, sm_scale, Out = input_tensor
         _attention_rel_h_rel_w_kernel_aligned_device_ref(

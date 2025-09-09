@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.embedding_triton_kernel import embedding
-from performance_utils import Performance_Metrics, do_bench_config
+from embedding_triton_kernel import embedding
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.embedding_triton_kernel import embedding as embedding_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -34,6 +35,11 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         input_ids, weight, vob_start_id, vob_end_id, out = input_tensor
         embedding(input_ids, weight, vob_start_id, vob_end_id, out)
+        return out
+
+    def call_op_ref(self, input_tensor):
+        input_ids, weight, vob_start_id, vob_end_id, out = input_tensor
+        embedding_ref(input_ids, weight, vob_start_id, vob_end_id, out)
         return out
 
     def get_gbps(self, input_tensor, runtime):

@@ -43,6 +43,9 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         return apply_penalty(*input_tensor)
 
+    def call_op_ref(self, input_tensor):
+        return apply_penalty(*input_tensor)
+
     def call_op(self, input_tensor):
         return apply_penalty_ref(*input_tensor)
 

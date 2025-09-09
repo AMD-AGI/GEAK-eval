@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.matmul_tma import warpper_tma_load_store
-from performance_utils import Performance_Metrics, do_bench_config
+from matmul_tma import warpper_tma_load_store
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.matmul_tma import warpper_tma_load_store as warpper_tma_load_store_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -31,6 +32,15 @@ class performance_metrics(Performance_Metrics):
         TRANS_B = True
         OUTPUT_F16 = True
         return warpper_tma_load_store(M, N, K, NUM_CTAS, NUM_WARPS, TRANS_A, TRANS_B, OUTPUT_F16)
+
+    def call_op_ref(self, input_tensor):
+        M, N, K = input_tensor
+        NUM_CTAS = 1
+        NUM_WARPS = 8
+        TRANS_A = True
+        TRANS_B = True
+        OUTPUT_F16 = True
+        return warpper_tma_load_store_ref(M, N, K, NUM_CTAS, NUM_WARPS, TRANS_A, TRANS_B, OUTPUT_F16)
 
     def get_gbps(self, input_tensor, runtime):
         total_time_seconds = runtime / 1000.0

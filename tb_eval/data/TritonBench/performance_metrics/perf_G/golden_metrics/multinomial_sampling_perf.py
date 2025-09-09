@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.multinomial_sampling import multinomial_sampling
-from performance_utils import Performance_Metrics, do_bench_config
+from multinomial_sampling import multinomial_sampling
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.multinomial_sampling import multinomial_sampling as multinomial_sampling_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -32,6 +33,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         scores, seeds, offsets, indices = input_tensor
         return multinomial_sampling(scores, seeds, offsets, indices)
+
+    def call_op_ref(self, input_tensor):
+        scores, seeds, offsets, indices = input_tensor
+        return multinomial_sampling_ref(scores, seeds, offsets, indices)
 
     def get_gbps(self, input_tensor, runtime):
         scores, _, _, _ = input_tensor

@@ -3,12 +3,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.int_scaled_matmul import int_scaled_matmul_kernel, Config
-from performance_utils import Performance_Metrics, do_bench_config
+from int_scaled_matmul import int_scaled_matmul_kernel, Config
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.int_scaled_matmul import int_scaled_matmul_kernel as int_scaled_matmul_kernel_ref
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.int_scaled_matmul import Config as Config_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -40,6 +42,16 @@ class performance_metrics(Performance_Metrics):
             GROUP_M=8
         )
         return int_scaled_matmul_kernel(a, b, scales1, c, config)
+
+    def call_op_ref(self, input_tensor):
+        a, b, scales1, c, BLOCK_CONFIG = input_tensor
+        config = Config_ref(
+            BLOCK_M=BLOCK_CONFIG,
+            BLOCK_N=BLOCK_CONFIG,
+            BLOCK_K=BLOCK_CONFIG,
+            GROUP_M=8
+        )
+        return int_scaled_matmul_kernel_ref(a, b, scales1, c, config)
 
     def get_gbps(self, input_tensor, runtime):
         A, B, scales1, C, BLOCK_CONIFG = input_tensor

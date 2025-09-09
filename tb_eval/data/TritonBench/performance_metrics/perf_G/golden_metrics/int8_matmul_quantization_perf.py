@@ -3,12 +3,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.int8_matmul_quantization import matmul_quantize_int8, quantize_int8
-from performance_utils import Performance_Metrics, do_bench_config
+from int8_matmul_quantization import matmul_quantize_int8, quantize_int8
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.int8_matmul_quantization import matmul_quantize_int8 as matmul_quantize_int8_ref
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.int8_matmul_quantization import quantize_int8 as quantize_int8_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -32,6 +34,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         fpa, b, b_scale = input_tensor
         return matmul_quantize_int8(fpa, b, b_scale)
+
+    def call_op_ref(self, input_tensor):
+        fpa, b, b_scale = input_tensor
+        return matmul_quantize_int8_ref(fpa, b, b_scale)
 
     def get_gbps(self, input_tensor, runtime):
         fpa, b, _ = input_tensor

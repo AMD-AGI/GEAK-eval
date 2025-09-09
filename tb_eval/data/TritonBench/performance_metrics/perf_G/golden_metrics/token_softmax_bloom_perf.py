@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.token_softmax_bloom import token_softmax_fwd
-from performance_utils import Performance_Metrics, do_bench_config
+from token_softmax_bloom import token_softmax_fwd
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.token_softmax_bloom import token_softmax_fwd as token_softmax_fwd_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -35,6 +36,11 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         Logics, B_Start_Loc, B_Seqlen, Prob_Out, max_seq_len = input_tensor
         token_softmax_fwd(Logics, B_Start_Loc, B_Seqlen, Prob_Out, max_seq_len)
+        return Prob_Out
+
+    def call_op_ref(self, input_tensor):
+        Logics, B_Start_Loc, B_Seqlen, Prob_Out, max_seq_len = input_tensor
+        token_softmax_fwd_ref(Logics, B_Start_Loc, B_Seqlen, Prob_Out, max_seq_len)
         return Prob_Out
 
     def get_gbps(self, input_tensor, runtime):

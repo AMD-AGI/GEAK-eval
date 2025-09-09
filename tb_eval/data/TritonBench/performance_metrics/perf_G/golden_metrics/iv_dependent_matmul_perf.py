@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.iv_dependent_matmul import iv_dependent_matmul_wrapper
-from performance_utils import Performance_Metrics, do_bench_config
+from iv_dependent_matmul import iv_dependent_matmul_wrapper
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.iv_dependent_matmul import iv_dependent_matmul_wrapper as iv_dependent_matmul_wrapper_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -33,6 +34,13 @@ class performance_metrics(Performance_Metrics):
         BLOCK_SIZE_N = 128
         BLOCK_SIZE_K = 32
         return iv_dependent_matmul_wrapper(M, K, N, BLOCK_SIZE_M, BLOCK_SIZE_N, BLOCK_SIZE_K, type="pre_load")
+
+    def call_op_ref(self, input_tensor):
+        M, K, N = input_tensor
+        BLOCK_SIZE_M = 128  # Example block size, adjust as needed
+        BLOCK_SIZE_N = 128
+        BLOCK_SIZE_K = 32
+        return iv_dependent_matmul_wrapper_ref(M, K, N, BLOCK_SIZE_M, BLOCK_SIZE_N, BLOCK_SIZE_K, type="pre_load")
     
     def get_gbps(self, input_tensor, runtime):
         M, K, N = input_tensor

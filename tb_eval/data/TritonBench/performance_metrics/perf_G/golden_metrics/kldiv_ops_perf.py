@@ -3,12 +3,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.kldiv_ops import kldiv_forward_triton, kldiv_backward_triton
-from performance_utils import Performance_Metrics, do_bench_config
+from kldiv_ops import kldiv_forward_triton, kldiv_backward_triton
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.kldiv_ops import kldiv_forward_triton as kldiv_forward_triton_ref
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.kldiv_ops import kldiv_backward_triton as kldiv_backward_triton_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -33,6 +35,14 @@ class performance_metrics(Performance_Metrics):
         reduction = "batchmean"
         eps = 1e-9
         return kldiv_forward_triton(y_pred, y_true, log_target, reduction, eps)
+
+    def call_op_ref(self, input_tensor):
+        y_pred, y_true = input_tensor
+        # Assuming default values for log_target, reduction, and eps
+        log_target = False
+        reduction = "batchmean"
+        eps = 1e-9
+        return kldiv_forward_triton_ref(y_pred, y_true, log_target, reduction, eps)
 
     def get_gbps(self, input_tensor, runtime):
         y_pred, _ = input_tensor

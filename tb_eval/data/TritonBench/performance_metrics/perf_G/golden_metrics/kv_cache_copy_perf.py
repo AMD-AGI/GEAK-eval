@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.kv_cache_copy import copy_kv_to_blocked_cache
-from performance_utils import Performance_Metrics, do_bench_config
+from kv_cache_copy import copy_kv_to_blocked_cache
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.kv_cache_copy import copy_kv_to_blocked_cache as copy_kv_to_blocked_cache_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -38,6 +39,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         k, v, k_cache, v_cache, kv_lengths, block_tables = input_tensor
         copy_kv_to_blocked_cache(k, v, k_cache, v_cache, kv_lengths, block_tables)
+
+    def call_op_ref(self, input_tensor):
+        k, v, k_cache, v_cache, kv_lengths, block_tables = input_tensor
+        copy_kv_to_blocked_cache_ref(k, v, k_cache, v_cache, kv_lengths, block_tables)
 
     def get_gbps(self, input_tensor, runtime):
         k, v, k_cache, v_cache, kv_lengths, block_tables = input_tensor

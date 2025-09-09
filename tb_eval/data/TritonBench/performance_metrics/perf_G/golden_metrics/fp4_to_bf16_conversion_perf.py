@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.fp4_to_bf16_conversion import triton_f4_to_scaled_bf16
-from performance_utils import Performance_Metrics, do_bench_config
+from fp4_to_bf16_conversion import triton_f4_to_scaled_bf16
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.fp4_to_bf16_conversion import triton_f4_to_scaled_bf16 as triton_f4_to_scaled_bf16_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -30,6 +31,11 @@ class performance_metrics(Performance_Metrics):
         x, s_e8m0 = input_tensor
         mx_block_size = 32  # Assuming block size of 32 as per the function description
         return triton_f4_to_scaled_bf16(x, s_e8m0, mx_block_size)
+
+    def call_op_ref(self, input_tensor):
+        x, s_e8m0 = input_tensor
+        mx_block_size = 32  # Assuming block size of 32 as per the function description
+        return triton_f4_to_scaled_bf16_ref(x, s_e8m0, mx_block_size)
 
     def get_gbps(self, input_tensor, runtime):
         x, _ = input_tensor

@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.token_attn_reduceV import token_att_fwd2
-from performance_utils import Performance_Metrics, do_bench_config
+from token_attn_reduceV import token_att_fwd2
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.token_attn_reduceV import token_att_fwd2 as token_att_fwd2_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -38,6 +39,11 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         prob, v, out, Req_to_tokens, B_req_idx, B_Start_Loc, B_Seqlen = input_tensor
         token_att_fwd2(prob, v, out, Req_to_tokens, B_req_idx, B_Start_Loc, B_Seqlen)
+        return out
+
+    def call_op_ref(self, input_tensor):
+        prob, v, out, Req_to_tokens, B_req_idx, B_Start_Loc, B_Seqlen = input_tensor
+        token_att_fwd2_ref(prob, v, out, Req_to_tokens, B_req_idx, B_Start_Loc, B_Seqlen)
         return out
 
     def get_gbps(self, input_tensor, runtime):

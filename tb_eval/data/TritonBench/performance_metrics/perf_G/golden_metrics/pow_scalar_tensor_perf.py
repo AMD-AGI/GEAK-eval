@@ -8,8 +8,9 @@ import triton.language as tl
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Correctly import the operator
-from TritonBench_v1.pow_scalar_tensor import pow_func_scalar_tensor_wrapper_rank_1
-from performance_utils import Performance_Metrics, do_bench_config
+from pow_scalar_tensor import pow_func_scalar_tensor_wrapper_rank_1
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.pow_scalar_tensor import pow_func_scalar_tensor_wrapper_rank_1 as pow_func_scalar_tensor_wrapper_rank_1_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -35,6 +36,14 @@ class performance_metrics(Performance_Metrics):
         # return pow_func_scalar_tensor_wrapper_rank_1(2.0, input_tensor, out0=output_tensor)
         in0, out0 = input_tensor
         return pow_func_scalar_tensor_wrapper_rank_1(2.0, in0, out0=out0)
+
+    def call_op_ref(self, input_tensor):
+        # # Create an output tensor with the same size as input_tensor
+        # output_tensor = torch.empty_like(input_tensor)
+        # # Call the operator
+        # return pow_func_scalar_tensor_wrapper_rank_1_ref(2.0, input_tensor, out0=output_tensor)
+        in0, out0 = input_tensor
+        return pow_func_scalar_tensor_wrapper_rank_1_ref(2.0, in0, out0=out0)
 
     def get_gbps(self, input_tensor, runtime):
 

@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.rms_rbe_matmul import rms_matmul_rbe_wrapper
-from performance_utils import Performance_Metrics, do_bench_config
+from rms_rbe_matmul import rms_matmul_rbe_wrapper
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.rms_rbe_matmul import rms_matmul_rbe_wrapper as rms_matmul_rbe_wrapper_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -33,6 +34,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         x, weight, rms_w, use_rbe, start_pos, n_heads, head_dim = input_tensor
         return rms_matmul_rbe_wrapper(x, weight, rms_w, use_rbe, start_pos, n_heads, head_dim)
+
+    def call_op_ref(self, input_tensor):
+        x, weight, rms_w, use_rbe, start_pos, n_heads, head_dim = input_tensor
+        return rms_matmul_rbe_wrapper_ref(x, weight, rms_w, use_rbe, start_pos, n_heads, head_dim)
 
     def get_gbps(self, input_tensor, runtime):
         x, weight, rms_w, _, _, _, _ = input_tensor

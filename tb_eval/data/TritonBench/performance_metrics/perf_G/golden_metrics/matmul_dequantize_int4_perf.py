@@ -3,12 +3,14 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.matmul_dequantize_int4 import matmul_dequantize_int4_gptq, quantize_int4
-from performance_utils import Performance_Metrics, do_bench_config
+from matmul_dequantize_int4 import matmul_dequantize_int4_gptq, quantize_int4
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.matmul_dequantize_int4 import matmul_dequantize_int4_gptq as matmul_dequantize_int4_gptq_ref
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.matmul_dequantize_int4 import quantize_int4 as quantize_int4_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -32,6 +34,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         x, qweight, scales, qzeros, group_size = input_tensor
         return matmul_dequantize_int4_gptq(x, qweight, scales, qzeros, group_size)
+
+    def call_op_ref(self, input_tensor):
+        x, qweight, scales, qzeros, group_size = input_tensor
+        return matmul_dequantize_int4_gptq_ref(x, qweight, scales, qzeros, group_size)
 
     def get_gbps(self, input_tensor, runtime):
         a, int_b, b_scale, b_zero_point, group_size = input_tensor

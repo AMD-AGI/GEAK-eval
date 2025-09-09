@@ -8,8 +8,9 @@ import triton.language as tl
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Correctly import the operator
-from TritonBench_v1.dequantize_rowwise import dequantize_rowwise
-from performance_utils import Performance_Metrics, do_bench_config
+from dequantize_rowwise import dequantize_rowwise
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.dequantize_rowwise import dequantize_rowwise as dequantize_rowwise_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -31,6 +32,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         x, state_x = input_tensor
         return dequantize_rowwise(x, state_x)
+
+    def call_op_ref(self, input_tensor):
+        x, state_x = input_tensor
+        return dequantize_rowwise_ref(x, state_x)
 
     def get_gbps(self, input_tensor, runtime):
         x, _ = input_tensor

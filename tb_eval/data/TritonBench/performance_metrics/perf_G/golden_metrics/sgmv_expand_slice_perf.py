@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.sgmv_expand_slice import _sgmv_expand_slice
-from performance_utils import Performance_Metrics, do_bench_config
+from sgmv_expand_slice import _sgmv_expand_slice
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.sgmv_expand_slice import _sgmv_expand_slice as _sgmv_expand_slice_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -32,6 +33,24 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         inputs, lora_b_weights, output_tensor, b_seq_start_loc, seq_len_tensor, lora_indices_tensor = input_tensor
         _sgmv_expand_slice(
+            inputs,
+            lora_b_weights,
+            output_tensor,
+            b_seq_start_loc,
+            seq_len_tensor,
+            lora_indices_tensor,
+            batches=inputs.size(0),
+            max_seq_length=inputs.size(0),
+            token_nums=inputs.size(0),
+            slice_offset=0,
+            slice_size=lora_b_weights.size(-2),
+            add_inputs=False
+        )
+        return output_tensor
+
+    def call_op_ref(self, input_tensor):
+        inputs, lora_b_weights, output_tensor, b_seq_start_loc, seq_len_tensor, lora_indices_tensor = input_tensor
+        _sgmv_expand_slice_ref(
             inputs,
             lora_b_weights,
             output_tensor,

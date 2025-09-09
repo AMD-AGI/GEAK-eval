@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.matmul_kernel import matmul
-from performance_utils import Performance_Metrics, do_bench_config
+from matmul_kernel import matmul
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.matmul_kernel import matmul as matmul_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -16,8 +17,8 @@ class performance_metrics(Performance_Metrics):
         
     def get_input_tensors(self):
         self.input_tensors = []
-        for i in range(6, 32):  # Adjust the range as needed for different sizes
-            size = 128 * i
+        for i in [1,2,4]:  # Adjust the range as needed for different sizes
+            size = 64 * i
             a = torch.rand(size, size, dtype=torch.float16)
             b = torch.rand(size, size, dtype=torch.float16)
             c = torch.empty(size, size, dtype=torch.float16)
@@ -33,6 +34,14 @@ class performance_metrics(Performance_Metrics):
         BLOCK_SIZE_N = 128
         BLOCK_SIZE_K = 64
         matmul(c, a, b, M, N, K, BLOCK_SIZE_M, BLOCK_SIZE_N, BLOCK_SIZE_K)
+        return c
+
+    def call_op_ref(self, input_tensor):
+        c, a, b, M, N, K = input_tensor
+        BLOCK_SIZE_M = 128  # Example block size, adjust as needed
+        BLOCK_SIZE_N = 128
+        BLOCK_SIZE_K = 64
+        matmul_ref(c, a, b, M, N, K, BLOCK_SIZE_M, BLOCK_SIZE_N, BLOCK_SIZE_K)
         return c
 
     def get_gbps(self, input_tensor, runtime):

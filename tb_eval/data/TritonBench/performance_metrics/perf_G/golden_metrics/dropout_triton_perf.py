@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.dropout_triton import dropout
-from performance_utils import Performance_Metrics, do_bench_config
+from dropout_triton import dropout
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.dropout_triton import dropout as dropout_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -30,6 +31,11 @@ class performance_metrics(Performance_Metrics):
         x, x_keep = input_tensor
         p = 0.5  # Example dropout probability
         return dropout(x, x_keep, p)
+
+    def call_op_ref(self, input_tensor):
+        x, x_keep = input_tensor
+        p = 0.5  # Example dropout probability
+        return dropout_ref(x, x_keep, p)
 
     def get_gbps(self, input_tensor, runtime):
         x, x_keep = input_tensor

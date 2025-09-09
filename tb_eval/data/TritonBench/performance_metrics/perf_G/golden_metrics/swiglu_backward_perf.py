@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.swiglu_backward import _swiglu_bwd
-from performance_utils import Performance_Metrics, do_bench_config
+from swiglu_backward import _swiglu_bwd
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.swiglu_backward import _swiglu_bwd as _swiglu_bwd_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -29,6 +30,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         xy, dout = input_tensor
         return _swiglu_bwd(xy, dout)
+
+    def call_op_ref(self, input_tensor):
+        xy, dout = input_tensor
+        return _swiglu_bwd_ref(xy, dout)
 
     def get_gbps(self, input_tensor, runtime):
         xy, dout = input_tensor

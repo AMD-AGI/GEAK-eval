@@ -9,8 +9,9 @@ import triton.language as tl
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Correctly import the operator
-from TritonBench_v1.relu_strided_buffer import relu_forward_wrapper_rank_1
-from performance_utils import Performance_Metrics, do_bench_config
+from relu_strided_buffer import relu_forward_wrapper_rank_1
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.relu_strided_buffer import relu_forward_wrapper_rank_1 as relu_forward_wrapper_rank_1_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -34,6 +35,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         in0, out0 = input_tensor
         relu_forward_wrapper_rank_1(in0, out0=out0)
+
+    def call_op_ref(self, input_tensor):
+        in0, out0 = input_tensor
+        relu_forward_wrapper_rank_1_ref(in0, out0=out0)
 
     def get_gbps(self, input_tensor, runtime):
         in0, out0 = input_tensor

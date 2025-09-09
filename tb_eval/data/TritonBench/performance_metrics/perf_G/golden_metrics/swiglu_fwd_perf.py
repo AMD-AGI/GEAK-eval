@@ -4,12 +4,13 @@ import json
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.swiglu_fwd import _swiglu_fwd
-from performance_utils import Performance_Metrics, do_bench_config
+from swiglu_fwd import _swiglu_fwd
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.swiglu_fwd import _swiglu_fwd as _swiglu_fwd_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -29,6 +30,9 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         return _swiglu_fwd(input_tensor)
 
+    def call_op_ref(self, input_tensor):
+        return _swiglu_fwd_ref(input_tensor)
+
     def get_gbps(self, input_tensor, runtime):
         xy = input_tensor
         total_bytes = 3 * xy.numel() * xy.element_size() / 2  # 2 reads (x and y) and 1 write (out)
@@ -41,29 +45,29 @@ class performance_metrics(Performance_Metrics):
         TFLOPS = FLOPS / (runtime / 1000) / 1e12
         return TFLOPS
     
-    def run_benchmark(self):
-        results = []
-        for input_tensor_ in self.input_tensors:
-            input_tensor = self.to_cuda(input_tensor_)
-            # print(input_tensor)
-            op = lambda : self.call_op(input_tensor)
-            ms = self.get_runtime(op)
-            gbps = self.get_gbps(input_tensor, ms)
-            tflops = self.get_tflops(input_tensor, ms)
-            result = {
-                "input_size": [input_tensor.shape],
-                "ms": ms,
-                "GB/s": gbps,
-                "TFLOPS": tflops
-            }
-            print(result)
-            results.append(result)
-            input_tensor = None
-        folder_path = "/home/lishangzhan/triton/bench_performance/results"
-        file_name = self.op_name + ".json"
-        file_path = os.path.join(folder_path, file_name)
-        with open(file_path, 'w', encoding='utf8') as f:
-            json.dump(results, f, indent=4)
+    # def run_benchmark(self):
+    #     results = []
+    #     for input_tensor_ in self.input_tensors:
+    #         input_tensor = self.to_cuda(input_tensor_)
+    #         # print(input_tensor)
+    #         op = lambda : self.call_op(input_tensor)
+    #         ms = self.get_runtime(op)
+    #         gbps = self.get_gbps(input_tensor, ms)
+    #         tflops = self.get_tflops(input_tensor, ms)
+    #         result = {
+    #             "input_size": [input_tensor.shape],
+    #             "ms": ms,
+    #             "GB/s": gbps,
+    #             "TFLOPS": tflops
+    #         }
+    #         print(result)
+    #         results.append(result)
+    #         input_tensor = None
+    #     folder_path = "/home/lishangzhan/triton/bench_performance/results"
+    #     file_name = self.op_name + ".json"
+    #     file_path = os.path.join(folder_path, file_name)
+    #     with open(file_path, 'w', encoding='utf8') as f:
+    #         json.dump(results, f, indent=4)
 
 if __name__ == '__main__':
     op_perf = performance_metrics()

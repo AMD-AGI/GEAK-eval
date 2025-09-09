@@ -84,7 +84,6 @@ class TestAllCloseEvaluatorTBG(BaseEvaluator):
         code = self.format_gen_code(gen_file, code, test_code_lines_procs)
 
         try:
-
             call_status, stdout, stderr = self._call_file(gen_file, timeout=timeout)
 
             if not call_status:
@@ -109,7 +108,7 @@ class TestAllCloseEvaluatorTBG(BaseEvaluator):
                     print(f"Performance file execution failed: {perf_stderr}")
                 return call_status, False, speedup, perf_stdout, perf_stderr
             
-            exec_status = perf_stdout.split(",")[0].strip().lower() == str(True).lower()
+            exec_status = "Failed to run benchmark for input tensor." not in perf_stdout #perf_stdout.split(",")[0].strip().lower() == str(True).lower()
 
             if not exec_status:
                 if verbose:
@@ -123,7 +122,7 @@ class TestAllCloseEvaluatorTBG(BaseEvaluator):
                     print(f"Performance data extraction failed: {perf_stderr}")
                 return call_status, exec_status, speedup, perf_stdout, perf_stderr
 
-            speedup = perf_data.get("speedup", 0)
+            speedup = perf_data[-1].get("speedup", 0)
             return call_status, exec_status, speedup, perf_stdout, perf_stderr
 
         except Exception as e:

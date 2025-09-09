@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.rotary_emb import rotary_emb_fwd
-from performance_utils import Performance_Metrics, do_bench_config
+from rotary_emb import rotary_emb_fwd
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.rotary_emb import rotary_emb_fwd as rotary_emb_fwd_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -33,6 +34,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         q, k, cos, sin = input_tensor
         rotary_emb_fwd(q, k, cos, sin)
+
+    def call_op_ref(self, input_tensor):
+        q, k, cos, sin = input_tensor
+        rotary_emb_fwd_ref(q, k, cos, sin)
 
     def get_gbps(self, input_tensor, runtime):
         q, k, cos, sin = input_tensor

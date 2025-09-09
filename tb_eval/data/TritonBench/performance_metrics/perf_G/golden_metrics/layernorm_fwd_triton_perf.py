@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.layernorm_fwd_triton import layernorm_forward
-from performance_utils import Performance_Metrics, do_bench_config
+from layernorm_fwd_triton import layernorm_forward
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.layernorm_fwd_triton import layernorm_forward as layernorm_forward_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -31,6 +32,11 @@ class performance_metrics(Performance_Metrics):
         X, W = input_tensor
         eps = 1e-5  # Example epsilon value
         return layernorm_forward(X, W, eps)
+
+    def call_op_ref(self, input_tensor):
+        X, W = input_tensor
+        eps = 1e-5  # Example epsilon value
+        return layernorm_forward_ref(X, W, eps)
 
     def get_gbps(self, input_tensor, runtime):
         X, W = input_tensor

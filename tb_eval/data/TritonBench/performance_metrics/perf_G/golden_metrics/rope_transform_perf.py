@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.rope_transform import rope_forward
-from performance_utils import Performance_Metrics, do_bench_config
+from rope_transform import rope_forward
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.rope_transform import rope_forward as rope_forward_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -37,6 +38,10 @@ class performance_metrics(Performance_Metrics):
     def call_op(self, input_tensor):
         q, k, cos, sin = input_tensor
         return rope_forward(q, k, cos, sin)
+
+    def call_op_ref(self, input_tensor):
+        q, k, cos, sin = input_tensor
+        return rope_forward_ref(q, k, cos, sin)
 
     def get_gbps(self, input_tensor, runtime):
         q, k, cos, sin = input_tensor

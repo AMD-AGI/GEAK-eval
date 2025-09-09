@@ -3,12 +3,13 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from TritonBench_v1.streamk_matmul import matmul
-from performance_utils import Performance_Metrics, do_bench_config
+from streamk_matmul import matmul
 
 import torch
 import triton
 import triton.language as tl
+from tb_eval.data.TritonBench.data.TritonBench_G_v1.streamk_matmul import matmul as matmul_ref
+from tb_eval.perf.performance_utils import Performance_Metrics, do_bench_config
 
 class performance_metrics(Performance_Metrics):
     def __init__(self, dtype=None, is_backward=False, **kwargs):
@@ -24,6 +25,10 @@ class performance_metrics(Performance_Metrics):
         return (input_tensor[0].cuda(), input_tensor[1].cuda())
 
     def call_op(self, input_tensor):
+        a, b = input_tensor
+        return matmul.forward(None, a, b, grid=1)
+
+    def call_op_ref(self, input_tensor):
         a, b = input_tensor
         return matmul.forward(None, a, b, grid=1)
 
