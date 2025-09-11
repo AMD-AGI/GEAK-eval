@@ -160,14 +160,15 @@ def eval(args):
         with open(out_file + f"_results_{pass_num}.json", 'w') as out_f:
             json.dump(eval_data_for_file, out_f, indent=4)
 
-        # perf_data = None
-        # ## Do the performance evaluation
-        # try:
-        #     perf_data = perf_evaluator(exec_root) ## returns (speedup, GPU efficiency) for tbg
-        # except Exception as e:
-        #     print(f"Error: {e}")
-        # with open(out_file + f"_perf_{pass_num}.json", 'w') as out_f:
-        #     json.dump(perf_data, out_f, indent=4)
+        if args.dataset == "rocm":
+            perf_data = None
+            ## Do the performance evaluation
+            try:
+                perf_data = perf_evaluator(exec_root) ## returns (speedup, GPU efficiency) for tbg
+            except Exception as e:
+                print(f"Error: {e}")
+            with open(out_file + f"_perf_{pass_num}.json", 'w') as out_f:
+                json.dump(perf_data, out_f, indent=4)
 
     froot = os.path.join(args.folder_or_file.replace(EXT, ""), args.outfile)
     # Save the data across passes to a file
