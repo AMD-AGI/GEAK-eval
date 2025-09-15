@@ -74,7 +74,8 @@ def eval(args):
     if is_folder:
         if not args.run_on_code:
             files = glob(os.path.join(args.folder_or_file, f'{args.file_pat}.json'), recursive=True)
-            assert len(files) > 0, f"No files found in {args.folder_or_file} with pattern {args.file_pat}.json"
+            if len(files) <= 0:
+                files = glob(os.path.join(args.folder_or_file, f'{args.file_pat}.jsonl'), recursive=True)
         else:
             files = glob(os.path.join(args.folder_or_file, f'{args.file_pat}.py'), recursive=True)
             assert len(files) > 0, f"No files found in {args.folder_or_file} with pattern {args.file_pat}.py"
@@ -101,7 +102,13 @@ def eval(args):
         eval_data_for_file = []
         pass_num += 1
         with open(file, 'r') as f:
-            data = json.load(f) if not args.run_on_code else range(1)
+            if not args.run_on_code:
+                if file.endswith('.jsonl'):
+                    data = [json.loads(line) for line in f.readlines()]
+                else:
+                    data = json.load(f)
+            else:
+                data = [0]
             num_files = 0
             for item in tqdm(data, desc="Processing file", unit="item"):
                 if args.debug > 0:

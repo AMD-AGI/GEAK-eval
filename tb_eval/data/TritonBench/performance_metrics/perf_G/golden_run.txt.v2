@@ -1,0 +1,452 @@
+Skipping known ok file: vector_addition_perf.py
+--------------------------------------------------
+Skipping known ok file: vector_addition_custom_perf.py
+--------------------------------------------------
+Skipping known ok file: var_len_copy_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/uniform_sampling_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/uniform_sampling_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/triton_softmax_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/triton_softmax_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/triton_mul2_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/triton_mul2_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: triton_matmul_perf.py
+--------------------------------------------------
+Skipping known ok file: triton_linear_activation_perf.py
+--------------------------------------------------
+Skipping known ok file: triton_conv2d_fwd_perf.py
+--------------------------------------------------
+Skipping known ok file: triton_attention_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/triton_argmax_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/triton_argmax_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: token_softmax_llama_perf.py
+--------------------------------------------------
+Skipping known ok file: token_softmax_bloom_perf.py
+--------------------------------------------------
+Skipping known ok file: token_attn_reduceV_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/token_attn_mistral_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/token_attn_mistral_perf.py, Return Code: 134, 
+ Error: Memory access fault by GPU node-2 (Agent handle: 0x5603a1b4b930) on address 0x7f1df997e000. Reason: Unknown.
+Aborted (core dumped)
+
+--------------------------------------------------
+Skipping known ok file: token_attn_llama2_perf.py
+--------------------------------------------------
+Skipping known ok file: swiglu_triton_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/swiglu_fwd_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/swiglu_fwd_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: swiglu_backward_perf.py
+--------------------------------------------------
+Skipping known ok file: streamk_matmul_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/square_matrix_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/square_matrix_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: spinning_lock_reduction_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/softmax_triton3_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/softmax_triton3_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/softmax_triton2_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/softmax_triton2_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/softmax_triton1_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/softmax_triton1_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: softmax_reducev_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/softmax_optimize_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/softmax_optimize_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/softmax_flaggems_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/softmax_flaggems_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/sin_kernel_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/sin_kernel_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/sin_computation_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/sin_computation_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: sgmv_expand_slice_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/seeded_dropout_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/seeded_dropout_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/rowwise_quantization_triton_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/rowwise_quantization_triton_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: rotary_transform_perf.py
+--------------------------------------------------
+Skipping known ok file: rotary_transform_ops_perf.py
+--------------------------------------------------
+Skipping known ok file: rotary_emb_perf.py
+--------------------------------------------------
+Skipping known ok file: rotary_emb_nopad_perf.py
+--------------------------------------------------
+Skipping known ok file: rope_transform_perf.py
+--------------------------------------------------
+Skipping known ok file: rope_embedding_perf.py
+--------------------------------------------------
+Skipping known ok file: rope_backward_transform_perf.py
+--------------------------------------------------
+Skipping known ok file: rmsnorm_triton_perf.py
+--------------------------------------------------
+Skipping known ok file: rmsnorm_implementation_perf.py
+--------------------------------------------------
+Skipping known ok file: rmsnorm_fused_perf.py
+--------------------------------------------------
+Skipping known ok file: rmsnorm_fused_llama_perf.py
+--------------------------------------------------
+Skipping known ok file: rms_rbe_matmul_perf.py
+--------------------------------------------------
+Skipping known ok file: rms_norm_triton_perf.py
+--------------------------------------------------
+Skipping known ok file: rms_matmul_rbe_perf.py
+--------------------------------------------------
+Skipping known ok file: reversed_cumsum_scalar_perf.py
+--------------------------------------------------
+Skipping known ok file: reversed_cumsum_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/relu_triton_kernel_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/relu_triton_kernel_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: relu_strided_buffer_perf.py
+--------------------------------------------------
+Skipping known ok file: rbe_triton_transform_perf.py
+--------------------------------------------------
+Skipping known ok file: quantize_kv_transform_perf.py
+--------------------------------------------------
+Skipping known ok file: quantize_kv_copy_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/quantize_global_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/quantize_global_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: quantize_copy_kv_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/quant_transpose_kernel_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/quant_transpose_kernel_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: pow_scalar_tensor_perf.py
+--------------------------------------------------
+Skipping known ok file: parallel_retention_attention_perf.py
+--------------------------------------------------
+Skipping known ok file: parallel_attention_perf.py
+--------------------------------------------------
+Skipping known ok file: nested_loops_processing_perf.py
+--------------------------------------------------
+Skipping known ok file: multinomial_sampling_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/mul_exponent_compensator_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/mul_exponent_compensator_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: mixed_sparse_attention_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/mean_reduction_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/mean_reduction_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/max_reduction_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/max_reduction_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: matrix_vector_multip_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/matrix_transpose_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/matrix_transpose_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: matrix_reduction_perf.py
+--------------------------------------------------
+Skipping known ok file: matmul_triton_autotune_perf.py
+--------------------------------------------------
+Skipping known ok file: matmul_triton2_perf.py
+--------------------------------------------------
+Skipping known ok file: matmul_triton1_perf.py
+--------------------------------------------------
+Skipping known ok file: matmul_tma_perf.py
+--------------------------------------------------
+Skipping known ok file: matmul_persistent_triton_perf.py
+--------------------------------------------------
+Skipping known ok file: matmul_leakyrelu_perf.py
+--------------------------------------------------
+Skipping known ok file: matmul_leakyrelu_fp8_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/matmul_kernel_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/matmul_kernel_perf.py, Return Code: 134, 
+ Error: Memory access fault by GPU node-2 (Agent handle: 0x5651613695c0) on address 0x7f232da00000. Reason: Unknown.
+Aborted (core dumped)
+
+--------------------------------------------------
+Skipping known ok file: matmul_dequantize_perf.py
+--------------------------------------------------
+Skipping known ok file: matmul_dequantize_int4_perf.py
+--------------------------------------------------
+Skipping known ok file: matmul_dequant_int4_perf.py
+--------------------------------------------------
+Skipping known ok file: masked_select_perf.py
+--------------------------------------------------
+Skipping known ok file: masked_add_cuda_perf.py
+--------------------------------------------------
+Skipping known ok file: lora_expand_gemv_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/logsumexp_fwd_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/logsumexp_fwd_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/log_softmax_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/log_softmax_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: llama_ff_triton_perf.py
+--------------------------------------------------
+Skipping known ok file: lightning_attention_perf.py
+--------------------------------------------------
+Skipping known ok file: layernorm_fwd_triton_perf.py
+--------------------------------------------------
+Skipping known ok file: layer_norm_welfold_perf.py
+--------------------------------------------------
+Skipping known ok file: layer_norm_triton_perf.py
+--------------------------------------------------
+Skipping known ok file: layer_norm_ops_perf.py
+--------------------------------------------------
+Skipping known ok file: layer_norm_liger_perf.py
+--------------------------------------------------
+Skipping known ok file: layer_norm_fwd_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/l2_norm_triton2_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/l2_norm_triton2_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/l2_norm_triton1_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/l2_norm_triton1_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: l2_norm_bwd_perf.py
+--------------------------------------------------
+Skipping known ok file: kv_cache_filling_perf.py
+--------------------------------------------------
+Skipping known ok file: kv_cache_copy_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/ksoftmax_triton_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/ksoftmax_triton_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: kldiv_triton_perf.py
+--------------------------------------------------
+Skipping known ok file: kldiv_ops_perf.py
+--------------------------------------------------
+Skipping known ok file: kldiv_compute_perf.py
+--------------------------------------------------
+Skipping known ok file: kcache_copy_triton_perf.py
+--------------------------------------------------
+Skipping known ok file: iv_dependent_matmul_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/isfinite_kernel_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/isfinite_kernel_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: int_scaled_matmul_perf.py
+--------------------------------------------------
+Skipping known ok file: int8_quantization_perf.py
+--------------------------------------------------
+Skipping known ok file: int8_matmul_quantization_perf.py
+--------------------------------------------------
+Skipping known ok file: int8_matmul_kernel_perf.py
+--------------------------------------------------
+Skipping known ok file: int8_dequant_matmul_perf.py
+--------------------------------------------------
+Skipping known ok file: int4_matmul_perf.py
+--------------------------------------------------
+Skipping known ok file: index_select_cat_perf.py
+--------------------------------------------------
+Skipping known ok file: index_select_bwd_perf.py
+--------------------------------------------------
+Skipping known ok file: geglu_tanh_triton_perf.py
+--------------------------------------------------
+Skipping known ok file: fused_rwkv6_kernel_perf.py
+--------------------------------------------------
+Skipping known ok file: fused_rotary_embedding_perf.py
+--------------------------------------------------
+Skipping known ok file: fused_recurrent_retention_perf.py
+--------------------------------------------------
+Skipping known ok file: fused_recurrent_hgrn_perf.py
+--------------------------------------------------
+Skipping known ok file: fused_recurrent_delta_perf.py
+--------------------------------------------------
+Skipping known ok file: fused_layernorm_triton_perf.py
+--------------------------------------------------
+Skipping known ok file: fused_activation_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/fp4_to_bf16_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/fp4_to_bf16_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: fp4_to_bf16_conversion_perf.py
+--------------------------------------------------
+Skipping known ok file: flash_decode2_phi_perf.py
+--------------------------------------------------
+Skipping known ok file: flash_decode2_llama_perf.py
+--------------------------------------------------
+Skipping known ok file: flash_attn_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/fifth_order_sph_harmonics_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/fifth_order_sph_harmonics_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: fast_rope_embedding_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/fast_rms_layernorm_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/fast_rms_layernorm_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/fast_layernorm_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/fast_layernorm_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: fast_ce_loss_perf.py
+--------------------------------------------------
+Skipping known ok file: f8_conversion_utils_perf.py
+--------------------------------------------------
+Skipping known ok file: embedding_triton_kernel_perf.py
+--------------------------------------------------
+Skipping known ok file: dropout_triton_perf.py
+--------------------------------------------------
+Skipping known ok file: diag_ssm_triton_perf.py
+--------------------------------------------------
+Skipping known ok file: destindex_copy_perf.py
+--------------------------------------------------
+Skipping known ok file: destindex_copy_kv2_perf.py
+--------------------------------------------------
+Skipping known ok file: destindex_copy_kv1_perf.py
+--------------------------------------------------
+Skipping known ok file: dequantize_rowwise_perf.py
+--------------------------------------------------
+Skipping known ok file: dequantize_matmul_perf.py
+--------------------------------------------------
+Skipping known ok file: decay_cumsum_perf.py
+--------------------------------------------------
+Skipping known ok file: cross_entropy_ops_perf.py
+--------------------------------------------------
+Skipping known ok file: cross_entropy2_perf.py
+--------------------------------------------------
+Skipping known ok file: cross_entropy1_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/cosine_compute_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/cosine_compute_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: context_attn_nopad_perf.py
+--------------------------------------------------
+Skipping known ok file: context_attn_mistral_perf.py
+--------------------------------------------------
+Skipping known ok file: context_attn_llama_perf.py
+--------------------------------------------------
+Skipping known ok file: context_attn_fwd_perf.py
+--------------------------------------------------
+Skipping known ok file: context_attn_bloom_perf.py
+--------------------------------------------------
+Skipping known ok file: chunked_cumsum_fwd_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/chunk_retention_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/chunk_retention_perf.py, Return Code: 134, 
+ Error: Memory access fault by GPU node-2 (Agent handle: 0x555e4096cd90) on address 0x7f77a8d81000. Reason: Unknown.
+Aborted (core dumped)
+
+--------------------------------------------------
+Skipping known ok file: chunk_retention_ops_perf.py
+--------------------------------------------------
+Skipping known ok file: chunk_linear_attn_perf.py
+--------------------------------------------------
+Skipping known ok file: chunk_gla_simple_perf.py
+--------------------------------------------------
+Skipping known ok file: chunk_gla_fwd_perf.py
+--------------------------------------------------
+Skipping known ok file: chunk_gated_attention_perf.py
+--------------------------------------------------
+Skipping known ok file: chunk_gate_recurrence_perf.py
+--------------------------------------------------
+Skipping known ok file: chunk_delta_fwd_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/chunk_cumsum_vector_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/chunk_cumsum_vector_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/chunk_cumsum_kernel_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/chunk_cumsum_kernel_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------
+Skipping known ok file: chunk_bwd_dqkg_perf.py
+--------------------------------------------------
+Skipping known ok file: cache_transform_triton_perf.py
+--------------------------------------------------
+Skipping known ok file: bmm_optimized_perf.py
+--------------------------------------------------
+Skipping known ok file: bmm_chunk_fwd_perf.py
+--------------------------------------------------
+Skipping known ok file: bmm_chunk_bwd_perf.py
+--------------------------------------------------
+Skipping known ok file: block_sparse_attn_perf.py
+--------------------------------------------------
+Skipping known ok file: bgmv_shrink_kernel_perf.py
+--------------------------------------------------
+Skipping known ok file: bgmv_expand_slice_perf.py
+--------------------------------------------------
+Skipping known ok file: batched_vecmat_mult_perf.py
+--------------------------------------------------
+Skipping known ok file: attn_fwd_triton_perf.py
+--------------------------------------------------
+Skipping known ok file: attn_fwd_causal_perf.py
+--------------------------------------------------
+Skipping known ok file: attention_score_perf.py
+--------------------------------------------------
+Skipping known ok file: attention_llama_perf.py
+--------------------------------------------------
+Skipping known ok file: attention_kernel_perf.py
+--------------------------------------------------
+Skipping known ok file: attention_kernel_aligned_perf.py
+--------------------------------------------------
+Skipping known ok file: attention_fwd_triton3_perf.py
+--------------------------------------------------
+Skipping known ok file: attention_fwd_triton2_perf.py
+--------------------------------------------------
+Skipping known ok file: attention_fwd_triton1_perf.py
+--------------------------------------------------
+Skipping known ok file: attention_forward_triton_perf.py
+--------------------------------------------------
+Skipping known ok file: apply_penalty_perf.py
+--------------------------------------------------
+Skipping known ok file: add_value_perf.py
+--------------------------------------------------
+Skipping known ok file: add_example_perf.py
+--------------------------------------------------
+Running: python /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/adam_update_triton_perf.py
+File: /home/vinajosh/tbeval/tb_eval/data/TritonBench/performance_metrics/perf_G/test_golden_metrics/adam_update_triton_perf.py, Return Code: 0, 
+ Error: 
+--------------------------------------------------

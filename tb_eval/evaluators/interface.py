@@ -95,7 +95,7 @@ class TestAllCloseEvaluatorTBG(BaseEvaluator):
             with open(exec_fpath, 'w') as f:
                 f.write(code)
             
-            perf_fname = f"{NATIVE_PERF_GOLD_ROOT}/{fname.replace(".py", "_perf.py")}"
+            perf_fname = f"{NATIVE_PERF_GOLD_ROOT}/{fname.replace('.py', '_perf.py')}"
             assert os.path.exists(perf_fname), f"Performance file {perf_fname} does not exist. Please check the ground truth data."
 
             exec_perf_fpath = os.path.join(exec_root, os.path.basename(perf_fname))

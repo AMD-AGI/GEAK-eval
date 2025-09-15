@@ -166,6 +166,7 @@ class Performance_Metrics:
                 output_ref = self.call_op_ref(input_tensor)
                 
                 if not self.check_close(output, output_ref, rtol=1e-3, atol=1e-3):
+                    print(f"Failed to run benchmark for input tensor. Error: {e}")
                     return False, f"Output mismatch between the operation and its reference implementation for input tensor shape"
 
                 # Randomly choose which operation to run first
