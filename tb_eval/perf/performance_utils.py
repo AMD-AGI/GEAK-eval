@@ -162,8 +162,8 @@ class Performance_Metrics:
                 output_ref = self.call_op_ref(input_tensor)                
 
                 ## The following calls should be using the optimal triton autotune configs for given inputs!
-                output = self.call_op(input_tensor)
-                output_ref = self.call_op_ref(input_tensor)
+                output = self.call_op( input_tensor.clone() )
+                output_ref = self.call_op_ref( input_tensor.clone() )
                 
                 if not self.check_close(output, output_ref, rtol=1e-3, atol=1e-3):
                     print(f"Failed to run benchmark for input tensor. Error: {e}")
