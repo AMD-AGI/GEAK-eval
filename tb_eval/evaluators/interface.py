@@ -228,7 +228,7 @@ class TestAllCloseEvaluatorROCm(TestAllCloseEvaluatorTBG):
                 if verbose:
                     print(f"Error in generated code: {stderr}")
                 stderr += "Error in generate triton-kernel code :\n " + extract_errors(stdout.split(Names.PYTEST_SEPARATOR)[0])
-                return call_status, False, stdout, stderr
+                return call_status, False, -1, stdout, stderr
             else:
                 if verbose:
                     print(f"Success in generated code: {stdout}")
@@ -252,17 +252,17 @@ class TestAllCloseEvaluatorROCm(TestAllCloseEvaluatorTBG):
                         f.write(code)
 
                 
-                return call_status, exec_status, gen_stdout, gen_stderr
+                return call_status, exec_status, -1, gen_stdout, gen_stderr
 
         except Exception as e:
             if verbose:
                 print(f"File: {fname}, Execution error: {e}")
-            return False, False, None, str(e)
+            return False, False, None, -1, str(e)
 
         except subprocess.TimeoutExpired:
             if verbose:
                 print(f"File: {fname} timed out!")
-            return False, False, None, "Time out"
+            return False, False, None, -1, "Time out"
 get_evaluators = {
     "tbg": TestAllCloseEvaluatorTBG,
     "rocm": TestAllCloseEvaluatorROCm
