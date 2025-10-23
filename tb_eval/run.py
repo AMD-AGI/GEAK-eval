@@ -74,7 +74,8 @@ def eval(args):
     if is_folder:
         if not args.run_on_code:
             files = glob(os.path.join(args.folder_or_file, f'{args.file_pat}.json'), recursive=True)
-            assert len(files) > 0, f"No files found in {args.folder_or_file} with pattern {args.file_pat}.json"
+            if len(files) <= 0:
+                files = glob(os.path.join(args.folder_or_file, f'{args.file_pat}.jsonl'), recursive=True)
         else:
             files = glob(os.path.join(args.folder_or_file, f'{args.file_pat}.py'), recursive=True)
             assert len(files) > 0, f"No files found in {args.folder_or_file} with pattern {args.file_pat}.py"
@@ -101,7 +102,13 @@ def eval(args):
         eval_data_for_file = []
         pass_num += 1
         with open(file, 'r') as f:
-            data = json.load(f) if not args.run_on_code else range(1)
+            if not args.run_on_code:
+                if file.endswith('.jsonl'):
+                    data = [json.loads(line) for line in f.readlines()]
+                else:
+                    data = json.load(f)
+            else:
+                data = [0]
             num_files = 0
             for item in tqdm(data, desc="Processing file", unit="item"):
                 if args.debug > 0:
@@ -126,15 +133,16 @@ def eval(args):
                     fname = os.path.basename(file)
                     difficulty = -1  # No difficulty for code files
                 if code is None:
-                    call_status, exec_status, stdout, stderr = False, False, "", "Code is empty"
+                    call_status, exec_status, speedup, stdout, stderr = False, False, 0, "", "Code is empty"
                 else:
-                    call_status, exec_status, stdout, stderr = evaluator(code, log_root, exec_root, fname, atol=1e-2, rtol=1e-1, custom_tests_path=args.custom_tests_path)
+                    call_status, exec_status, speedup, stdout, stderr = evaluator(code, log_root, exec_root, fname, atol=1e-2, rtol=1e-1, custom_tests_path=args.custom_tests_path)
 
                 eval_data = {
                     Names.PASS_NUM : pass_num,
                     Names.FILE_NAME : fname,
                     Names.CALL_STATUS : 1 if call_status else 0,
                     Names.EXEC_STATUS : 1 if exec_status else 0,
+                    Names.SPEEDUP : speedup,
                     Names.STDOUT : stdout,
                     Names.STDERR : stderr,
                     Names.DIFFICULTY : int(difficulty)
@@ -142,7 +150,7 @@ def eval(args):
                 eval_data_for_file.append(eval_data)
                 call_acc += 1 if call_status else 0 
                 exec_acc += 1 if exec_status else 0 
-                log = f"{get_time()} => File: {fname}, Call Status: {call_status}, Exec Status: {exec_status}, difficulty: {difficulty}, stderr: {stderr}"
+                log = f"{get_time()} => File: {fname}, Call Status: {call_status}, Exec Status: {exec_status}, speedup: {speedup}, difficulty: {difficulty}, stderr: {stderr}"
                 logs.append(log)
                 print(log.split("stderr")[0])
                 with open(out_file, 'w') as out_f:
@@ -154,20 +162,20 @@ def eval(args):
                 _log = f"{get_time()} => File: {file}, Call Accuracy: {call_acc}, Exec Accuracy: {exec_acc}"
                 out_f.write(_log + '\n')
         
-        perf_data = None
-        ## Do the performance evaluation
-        try:
-            perf_data = perf_evaluator(exec_root) ## returns (speedup, GPU efficiency) for tbg
-        except Exception as e:
-            print(f"Error: {e}")
-
         data_across_passes += eval_data_for_file
         # Save the data for this pass to a file
         with open(out_file + f"_results_{pass_num}.json", 'w') as out_f:
             json.dump(eval_data_for_file, out_f, indent=4)
 
-        with open(out_file + f"_perf_{pass_num}.json", 'w') as out_f:
-            json.dump(perf_data, out_f, indent=4)
+        if args.dataset == "rocm":
+            perf_data = None
+            ## Do the performance evaluation
+            try:
+                perf_data = perf_evaluator(exec_root) ## returns (speedup, GPU efficiency) for tbg
+            except Exception as e:
+                print(f"Error: {e}")
+            with open(out_file + f"_perf_{pass_num}.json", 'w') as out_f:
+                json.dump(perf_data, out_f, indent=4)
 
     froot = os.path.join(args.folder_or_file.replace(EXT, ""), args.outfile)
     # Save the data across passes to a file
