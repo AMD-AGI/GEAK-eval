@@ -2,7 +2,7 @@
 
 # Improved TritonBench evaluation framework
 
-### Dependancy installation
+### Dependency installation
 - You may install requirements as `pip install -r requirements.txt`
 
 ### Installation
@@ -19,7 +19,7 @@ You can run evaluations in the following two ways:
     - `geak-eval -f PATH_TO_FOLDER_OR_FILE -o NAME_OF_OUTPUT_FILE -ds tbg` for Tritonbench-G-v1
     - `geak-eval -f PATH_TO_FOLDER_OR_FILE -o NAME_OF_OUTPUT_FILE -ds rocm` for ROCm
 2. From python script: the following is a bare minimum example, for a detail example please see `geak-eval/run.py`.
-    - `from geak-eval.evaluators.interface import get_evaluators`
+    - `from geak_eval.evaluators.interface import get_evaluators`
     - `evaluator = get_evaluators["tbg"]() # for TritonBenchG eval`
     - `evaluator = get_evaluators["rocm"]() # for ROCm eval`
     - `call_status, exec_status, stdout, stderr = evaluator(generated_code, log_root=PATH_TO_LOG, file_name="kernel.py", atol=1e-5, rtol=1e-2) # run evaluations`
@@ -29,7 +29,7 @@ You can run evaluations in the following two ways:
 1. The execution was purely done using subprocess call for both generated and ground truth files.
 1. The seed consistancy is violated.
 1. The outputs of the two Triton runs are compared using stdout string comparison, which is not always correct.
-1. Around ground truth 150 files do not `print(result_gold)` line, hence the eval framework is essentially comapring the two null strings.
+1. Around ground truth 150 files do not `print(result_gold)` line, hence the eval framework is essentially comparing the two null strings.
 1. Some of the ground truth files (e.g. `context_attn_bloom.py`) does not even have `result_gold = test_*()` line at the end. So the call accuracy run using this file `0_call_acc.py` just blindly assumes that the call was success.
 1. 7 kernel files (originally provided) run into `memory access faults`, we have fixed them.
 
@@ -50,11 +50,11 @@ Please raise github issue or PR for any issues/help or contributions!
 You can contribute in the following ways:
 1. Add new kernels for evaluations: 
     - Add the dataset of new kernels under `geak-eval/data`.
-    - Add the path of this new dataset in `geak-eval.constants`.
-    - Add an evaluator interface for this new dataset in `geak-eval.evaluators.interface`.
-    - Add an evaluator to be run by the interface in `geak-eval.evaluators`. The evaluator is a function that only runs python call and does not run if imported as a module. The `evaluator` (e.g. `TB_correctness.py`) is run by its `interface` (e.g. `interface.TestAllCloseEvaluatorTBG`).  
-2. You can add new metrics for evaluator to work with in `geak-eval.metrics`.
-3. You can add new performance eval metrics for your (or existing) dataset under `geak-eval.perf`.
+    - Add the path of this new dataset in `geak_eval.constants`.
+    - Add an evaluator interface for this new dataset in `geak_eval.evaluators.interface`.
+    - Add an evaluator to be run by the interface in `geak_eval.evaluators`. The evaluator is a function that only runs python call and does not run if imported as a module. The `evaluator` (e.g. `TB_correctness.py`) is run by its `interface` (e.g. `interface.TestAllCloseEvaluatorTBG`).
+2. You can add new metrics for evaluator to work with in `geak_eval.metrics`.
+3. You can add new performance eval metrics for your (or existing) dataset under `geak_eval.perf`.
 
 ### Updates
 * [2025-07-16] Added autotune compatible ROCm kernels and naive softmax, use `-tp` argument with path to this folder as below:
