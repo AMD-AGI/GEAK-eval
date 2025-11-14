@@ -1,0 +1,2 @@
+Memory access fault by GPU node-7 (Agent handle: 0x55aaaac02ba0) on address 0x7f5f63c01000. Reason: Write access to a read-only page.
+Aborted (core dumped)

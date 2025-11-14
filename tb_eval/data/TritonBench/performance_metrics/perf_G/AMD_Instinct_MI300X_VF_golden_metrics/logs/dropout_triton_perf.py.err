@@ -1,0 +1,2 @@
+/opt/conda/envs/py_3.12/lib/python3.12/site-packages/triton/language/semantic.py:1687: UserWarning: tl.where with a non-boolean condition is deprecated and will error out in a future triton release. Got int32
+  warnings.warn(

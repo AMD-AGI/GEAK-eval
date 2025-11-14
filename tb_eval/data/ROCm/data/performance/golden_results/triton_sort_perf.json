@@ -1,0 +1,1346 @@
+[
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 1024,
+            "descending": false,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.0122,
+        "min_ms": 0.0126,
+        "max_ms": 0.0121,
+        "GB/s": 0.67,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 4096,
+            "descending": false,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.0662,
+        "min_ms": 0.067,
+        "max_ms": 0.0658,
+        "GB/s": 0.49,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 8192,
+            "descending": false,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.153,
+        "min_ms": 0.1539,
+        "max_ms": 0.1523,
+        "GB/s": 0.43,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 16384,
+            "descending": false,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.3509,
+        "min_ms": 0.3524,
+        "max_ms": 0.3497,
+        "GB/s": 0.37,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 512,
+            "descending": false,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.0247,
+        "min_ms": 0.0252,
+        "max_ms": 0.0245,
+        "GB/s": 1.33,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 1024,
+            "descending": false,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.077,
+        "min_ms": 0.0778,
+        "max_ms": 0.0765,
+        "GB/s": 0.85,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 2048,
+            "descending": false,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.1983,
+        "min_ms": 0.1993,
+        "max_ms": 0.1975,
+        "GB/s": 0.66,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 64,
+            "M_tile_cols": 128,
+            "descending": false,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.0241,
+        "min_ms": 0.0246,
+        "max_ms": 0.0239,
+        "GB/s": 2.72,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 64,
+            "M_tile_cols": 256,
+            "descending": false,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.067,
+        "min_ms": 0.0678,
+        "max_ms": 0.0665,
+        "GB/s": 1.96,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 64,
+            "descending": false,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.0364,
+        "min_ms": 0.0372,
+        "max_ms": 0.0363,
+        "GB/s": 3.6,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 128,
+            "descending": false,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.0968,
+        "min_ms": 0.0977,
+        "max_ms": 0.0961,
+        "GB/s": 2.71,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 256,
+            "descending": false,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.3063,
+        "min_ms": 0.3087,
+        "max_ms": 0.3047,
+        "GB/s": 1.71,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 1024,
+            "descending": true,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.0122,
+        "min_ms": 0.0128,
+        "max_ms": 0.012,
+        "GB/s": 0.67,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 4096,
+            "descending": true,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.0664,
+        "min_ms": 0.067,
+        "max_ms": 0.066,
+        "GB/s": 0.49,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 8192,
+            "descending": true,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.1531,
+        "min_ms": 0.1541,
+        "max_ms": 0.1523,
+        "GB/s": 0.43,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 16384,
+            "descending": true,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.3506,
+        "min_ms": 0.3518,
+        "max_ms": 0.3496,
+        "GB/s": 0.37,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 512,
+            "descending": true,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.0246,
+        "min_ms": 0.0251,
+        "max_ms": 0.0244,
+        "GB/s": 1.33,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 1024,
+            "descending": true,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.0766,
+        "min_ms": 0.0777,
+        "max_ms": 0.0761,
+        "GB/s": 0.86,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 2048,
+            "descending": true,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.1986,
+        "min_ms": 0.1997,
+        "max_ms": 0.1977,
+        "GB/s": 0.66,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 64,
+            "M_tile_cols": 128,
+            "descending": true,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.0241,
+        "min_ms": 0.0245,
+        "max_ms": 0.0239,
+        "GB/s": 2.72,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 64,
+            "M_tile_cols": 256,
+            "descending": true,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.0675,
+        "min_ms": 0.0682,
+        "max_ms": 0.067,
+        "GB/s": 1.94,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 64,
+            "descending": true,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.0362,
+        "min_ms": 0.037,
+        "max_ms": 0.0361,
+        "GB/s": 3.62,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 128,
+            "descending": true,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.0971,
+        "min_ms": 0.0979,
+        "max_ms": 0.0964,
+        "GB/s": 2.7,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 256,
+            "descending": true,
+            "dtype_str": "int32",
+            "num_warps": 4
+        },
+        "ms": 0.3017,
+        "min_ms": 0.3035,
+        "max_ms": 0.3005,
+        "GB/s": 1.74,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 1024,
+            "descending": false,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.0116,
+        "min_ms": 0.012,
+        "max_ms": 0.0114,
+        "GB/s": 0.35,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 4096,
+            "descending": false,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.0614,
+        "min_ms": 0.0623,
+        "max_ms": 0.0607,
+        "GB/s": 0.27,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 8192,
+            "descending": false,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.1465,
+        "min_ms": 0.1481,
+        "max_ms": 0.1455,
+        "GB/s": 0.22,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 16384,
+            "descending": false,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.3504,
+        "min_ms": 0.3517,
+        "max_ms": 0.3492,
+        "GB/s": 0.19,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 512,
+            "descending": false,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.0196,
+        "min_ms": 0.0204,
+        "max_ms": 0.0194,
+        "GB/s": 0.84,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 1024,
+            "descending": false,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.0617,
+        "min_ms": 0.0626,
+        "max_ms": 0.0611,
+        "GB/s": 0.53,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 2048,
+            "descending": false,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.18,
+        "min_ms": 0.1811,
+        "max_ms": 0.1791,
+        "GB/s": 0.36,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 64,
+            "M_tile_cols": 128,
+            "descending": false,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.0214,
+        "min_ms": 0.0222,
+        "max_ms": 0.0212,
+        "GB/s": 1.53,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 64,
+            "M_tile_cols": 256,
+            "descending": false,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.0645,
+        "min_ms": 0.0654,
+        "max_ms": 0.0639,
+        "GB/s": 1.02,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 64,
+            "descending": false,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.0304,
+        "min_ms": 0.0314,
+        "max_ms": 0.0297,
+        "GB/s": 2.15,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 128,
+            "descending": false,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.0947,
+        "min_ms": 0.0955,
+        "max_ms": 0.0939,
+        "GB/s": 1.38,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 256,
+            "descending": false,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.2559,
+        "min_ms": 0.2576,
+        "max_ms": 0.2546,
+        "GB/s": 1.02,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 1024,
+            "descending": true,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.0116,
+        "min_ms": 0.0121,
+        "max_ms": 0.0114,
+        "GB/s": 0.35,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 4096,
+            "descending": true,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.0615,
+        "min_ms": 0.0625,
+        "max_ms": 0.0607,
+        "GB/s": 0.27,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 8192,
+            "descending": true,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.1462,
+        "min_ms": 0.1477,
+        "max_ms": 0.145,
+        "GB/s": 0.22,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 16384,
+            "descending": true,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.3499,
+        "min_ms": 0.351,
+        "max_ms": 0.3487,
+        "GB/s": 0.19,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 512,
+            "descending": true,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.0196,
+        "min_ms": 0.0203,
+        "max_ms": 0.0194,
+        "GB/s": 0.84,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 1024,
+            "descending": true,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.0618,
+        "min_ms": 0.0627,
+        "max_ms": 0.0611,
+        "GB/s": 0.53,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 2048,
+            "descending": true,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.181,
+        "min_ms": 0.1823,
+        "max_ms": 0.1801,
+        "GB/s": 0.36,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 64,
+            "M_tile_cols": 128,
+            "descending": true,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.0214,
+        "min_ms": 0.0222,
+        "max_ms": 0.0212,
+        "GB/s": 1.53,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 64,
+            "M_tile_cols": 256,
+            "descending": true,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.0647,
+        "min_ms": 0.0656,
+        "max_ms": 0.064,
+        "GB/s": 1.01,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 64,
+            "descending": true,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.0299,
+        "min_ms": 0.0308,
+        "max_ms": 0.0291,
+        "GB/s": 2.19,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 128,
+            "descending": true,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.0947,
+        "min_ms": 0.0956,
+        "max_ms": 0.0939,
+        "GB/s": 1.38,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 256,
+            "descending": true,
+            "dtype_str": "float16",
+            "num_warps": 4
+        },
+        "ms": 0.2571,
+        "min_ms": 0.2587,
+        "max_ms": 0.2558,
+        "GB/s": 1.02,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 1024,
+            "descending": false,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.0113,
+        "min_ms": 0.0118,
+        "max_ms": 0.0111,
+        "GB/s": 0.72,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 4096,
+            "descending": false,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.0617,
+        "min_ms": 0.0625,
+        "max_ms": 0.0608,
+        "GB/s": 0.53,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 8192,
+            "descending": false,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.1497,
+        "min_ms": 0.1508,
+        "max_ms": 0.1488,
+        "GB/s": 0.44,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 16384,
+            "descending": false,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.3472,
+        "min_ms": 0.3482,
+        "max_ms": 0.3461,
+        "GB/s": 0.38,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 512,
+            "descending": false,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.0223,
+        "min_ms": 0.0229,
+        "max_ms": 0.0221,
+        "GB/s": 1.47,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 1024,
+            "descending": false,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.0761,
+        "min_ms": 0.0771,
+        "max_ms": 0.0754,
+        "GB/s": 0.86,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 2048,
+            "descending": false,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.1934,
+        "min_ms": 0.1947,
+        "max_ms": 0.1924,
+        "GB/s": 0.68,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 64,
+            "M_tile_cols": 128,
+            "descending": false,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.0216,
+        "min_ms": 0.0222,
+        "max_ms": 0.0213,
+        "GB/s": 3.04,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 64,
+            "M_tile_cols": 256,
+            "descending": false,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.0622,
+        "min_ms": 0.0632,
+        "max_ms": 0.0616,
+        "GB/s": 2.11,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 64,
+            "descending": false,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.0287,
+        "min_ms": 0.0298,
+        "max_ms": 0.0281,
+        "GB/s": 4.57,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 128,
+            "descending": false,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.0939,
+        "min_ms": 0.0949,
+        "max_ms": 0.0932,
+        "GB/s": 2.79,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 256,
+            "descending": false,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.2691,
+        "min_ms": 0.2705,
+        "max_ms": 0.2678,
+        "GB/s": 1.95,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 1024,
+            "descending": true,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.0113,
+        "min_ms": 0.0119,
+        "max_ms": 0.0111,
+        "GB/s": 0.72,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 4096,
+            "descending": true,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.0617,
+        "min_ms": 0.0625,
+        "max_ms": 0.0608,
+        "GB/s": 0.53,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 8192,
+            "descending": true,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.1497,
+        "min_ms": 0.1507,
+        "max_ms": 0.1488,
+        "GB/s": 0.44,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 16384,
+            "descending": true,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.348,
+        "min_ms": 0.3492,
+        "max_ms": 0.3472,
+        "GB/s": 0.38,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 512,
+            "descending": true,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.0222,
+        "min_ms": 0.0229,
+        "max_ms": 0.0221,
+        "GB/s": 1.48,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 1024,
+            "descending": true,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.0763,
+        "min_ms": 0.0775,
+        "max_ms": 0.0755,
+        "GB/s": 0.86,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 2048,
+            "descending": true,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.1937,
+        "min_ms": 0.1948,
+        "max_ms": 0.1928,
+        "GB/s": 0.68,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 64,
+            "M_tile_cols": 128,
+            "descending": true,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.0216,
+        "min_ms": 0.0223,
+        "max_ms": 0.0213,
+        "GB/s": 3.04,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 64,
+            "M_tile_cols": 256,
+            "descending": true,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.062,
+        "min_ms": 0.0627,
+        "max_ms": 0.0614,
+        "GB/s": 2.11,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 64,
+            "descending": true,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.0287,
+        "min_ms": 0.0298,
+        "max_ms": 0.0281,
+        "GB/s": 4.56,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 128,
+            "descending": true,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.0943,
+        "min_ms": 0.0951,
+        "max_ms": 0.0936,
+        "GB/s": 2.78,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 256,
+            "descending": true,
+            "dtype_str": "float32",
+            "num_warps": 4
+        },
+        "ms": 0.2693,
+        "min_ms": 0.2708,
+        "max_ms": 0.2678,
+        "GB/s": 1.95,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 1024,
+            "descending": false,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.0218,
+        "min_ms": 0.0225,
+        "max_ms": 0.0216,
+        "GB/s": 0.19,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 4096,
+            "descending": false,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.1335,
+        "min_ms": 0.1348,
+        "max_ms": 0.132,
+        "GB/s": 0.12,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 8192,
+            "descending": false,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.3224,
+        "min_ms": 0.3245,
+        "max_ms": 0.3203,
+        "GB/s": 0.1,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 16384,
+            "descending": false,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.751,
+        "min_ms": 0.7545,
+        "max_ms": 0.7479,
+        "GB/s": 0.09,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 512,
+            "descending": false,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.0554,
+        "min_ms": 0.056,
+        "max_ms": 0.0548,
+        "GB/s": 0.3,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 1024,
+            "descending": false,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.1584,
+        "min_ms": 0.16,
+        "max_ms": 0.157,
+        "GB/s": 0.21,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 2048,
+            "descending": false,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.4222,
+        "min_ms": 0.4247,
+        "max_ms": 0.42,
+        "GB/s": 0.16,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 64,
+            "M_tile_cols": 128,
+            "descending": false,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.0669,
+        "min_ms": 0.0679,
+        "max_ms": 0.0658,
+        "GB/s": 0.49,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 64,
+            "M_tile_cols": 256,
+            "descending": false,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.1701,
+        "min_ms": 0.1716,
+        "max_ms": 0.1686,
+        "GB/s": 0.39,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 64,
+            "descending": false,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.0912,
+        "min_ms": 0.0923,
+        "max_ms": 0.0902,
+        "GB/s": 0.72,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 128,
+            "descending": false,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.2726,
+        "min_ms": 0.2745,
+        "max_ms": 0.2707,
+        "GB/s": 0.48,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 256,
+            "descending": false,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.7102,
+        "min_ms": 0.7137,
+        "max_ms": 0.7063,
+        "GB/s": 0.37,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 1024,
+            "descending": true,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.022,
+        "min_ms": 0.0227,
+        "max_ms": 0.0216,
+        "GB/s": 0.19,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 4096,
+            "descending": true,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.1349,
+        "min_ms": 0.1361,
+        "max_ms": 0.1337,
+        "GB/s": 0.12,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 8192,
+            "descending": true,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.325,
+        "min_ms": 0.3269,
+        "max_ms": 0.3232,
+        "GB/s": 0.1,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 1,
+            "M_tile_cols": 16384,
+            "descending": true,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.7592,
+        "min_ms": 0.7622,
+        "max_ms": 0.7561,
+        "GB/s": 0.09,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 512,
+            "descending": true,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.0607,
+        "min_ms": 0.0616,
+        "max_ms": 0.0599,
+        "GB/s": 0.27,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 1024,
+            "descending": true,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.1572,
+        "min_ms": 0.1585,
+        "max_ms": 0.1559,
+        "GB/s": 0.21,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 8,
+            "M_tile_cols": 2048,
+            "descending": true,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.4205,
+        "min_ms": 0.4227,
+        "max_ms": 0.4184,
+        "GB/s": 0.16,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 64,
+            "M_tile_cols": 128,
+            "descending": true,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.0662,
+        "min_ms": 0.0672,
+        "max_ms": 0.0654,
+        "GB/s": 0.5,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 64,
+            "M_tile_cols": 256,
+            "descending": true,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.1695,
+        "min_ms": 0.171,
+        "max_ms": 0.1682,
+        "GB/s": 0.39,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 64,
+            "descending": true,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.0904,
+        "min_ms": 0.0914,
+        "max_ms": 0.0893,
+        "GB/s": 0.73,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 128,
+            "descending": true,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.273,
+        "min_ms": 0.2754,
+        "max_ms": 0.2709,
+        "GB/s": 0.48,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_tile_rows": 256,
+            "M_tile_cols": 256,
+            "descending": true,
+            "dtype_str": "bfloat16",
+            "num_warps": 4
+        },
+        "ms": 0.7062,
+        "min_ms": 0.7108,
+        "max_ms": 0.7016,
+        "GB/s": 0.37,
+        "TFLOPS": 0.0
+    }
+]

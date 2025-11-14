@@ -1,0 +1,157 @@
+{
+    "gemm.py": {
+        "call_status": 0,
+        "exec_status": 0,
+        "difficulty": -1
+    },
+    "layernorm.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "moe_gemm.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "multreduce_matmul_dot_kernel.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "naive_softmax.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "rmsnorm_bwd.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "rmsnorm_fwd.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "softmax.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_add_kernel.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_batched_vecmat.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_block_copy.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_block_pointer_matmul.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_cast_matmul.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_chained_dot_fp8.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_chained_matmul.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_flashattention_fwd.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_gemm_fusion.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_gemm_no_scf.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_iv_dependent_matmul.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_kernel_dot.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_kernel_sub.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_load_reduce.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_matmul_MXFP.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_randn.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_random_int.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_reverse_range.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_tma_store_gemm.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_triton_flip.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_triton_sort.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "test_triton_swizzle2d.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    },
+    "triton_multreduce_matmul_kernel.py": {
+        "call_status": 1,
+        "exec_status": 1,
+        "difficulty": -1
+    }
+}

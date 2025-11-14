@@ -1,0 +1,266 @@
+[
+    {
+        "params": {
+            "M": 64,
+            "N": 64,
+            "K": 64,
+            "num_warps": 4,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0068,
+        "min_ms": 0.007,
+        "max_ms": 0.0067,
+        "GB/s": 3.63,
+        "TFLOPS": 0.08
+    },
+    {
+        "params": {
+            "M": 128,
+            "N": 128,
+            "K": 128,
+            "num_warps": 4,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0091,
+        "min_ms": 0.0094,
+        "max_ms": 0.009,
+        "GB/s": 10.75,
+        "TFLOPS": 0.46
+    },
+    {
+        "params": {
+            "M": 64,
+            "N": 128,
+            "K": 256,
+            "num_warps": 4,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0091,
+        "min_ms": 0.0093,
+        "max_ms": 0.009,
+        "GB/s": 12.6,
+        "TFLOPS": 0.46
+    },
+    {
+        "params": {
+            "M": 256,
+            "N": 64,
+            "K": 128,
+            "num_warps": 4,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0095,
+        "min_ms": 0.0097,
+        "max_ms": 0.0093,
+        "GB/s": 12.07,
+        "TFLOPS": 0.44
+    },
+    {
+        "params": {
+            "M": 128,
+            "N": 256,
+            "K": 64,
+            "num_warps": 4,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0142,
+        "min_ms": 0.0146,
+        "max_ms": 0.013,
+        "GB/s": 8.06,
+        "TFLOPS": 0.29
+    },
+    {
+        "params": {
+            "M": 64,
+            "N": 64,
+            "K": 64,
+            "num_warps": 8,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0066,
+        "min_ms": 0.0069,
+        "max_ms": 0.0061,
+        "GB/s": 3.74,
+        "TFLOPS": 0.08
+    },
+    {
+        "params": {
+            "M": 128,
+            "N": 128,
+            "K": 128,
+            "num_warps": 8,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0086,
+        "min_ms": 0.0088,
+        "max_ms": 0.0085,
+        "GB/s": 11.4,
+        "TFLOPS": 0.49
+    },
+    {
+        "params": {
+            "M": 64,
+            "N": 128,
+            "K": 256,
+            "num_warps": 8,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0087,
+        "min_ms": 0.0089,
+        "max_ms": 0.0086,
+        "GB/s": 13.12,
+        "TFLOPS": 0.48
+    },
+    {
+        "params": {
+            "M": 256,
+            "N": 64,
+            "K": 128,
+            "num_warps": 8,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0088,
+        "min_ms": 0.0089,
+        "max_ms": 0.0087,
+        "GB/s": 13.0,
+        "TFLOPS": 0.48
+    },
+    {
+        "params": {
+            "M": 128,
+            "N": 256,
+            "K": 64,
+            "num_warps": 8,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0133,
+        "min_ms": 0.0138,
+        "max_ms": 0.0121,
+        "GB/s": 8.62,
+        "TFLOPS": 0.32
+    },
+    {
+        "params": {
+            "M": 64,
+            "N": 64,
+            "K": 64,
+            "num_warps": 4,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0067,
+        "min_ms": 0.0071,
+        "max_ms": 0.0066,
+        "GB/s": 7.3,
+        "TFLOPS": 0.08
+    },
+    {
+        "params": {
+            "M": 128,
+            "N": 128,
+            "K": 128,
+            "num_warps": 4,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0213,
+        "min_ms": 0.0216,
+        "max_ms": 0.0211,
+        "GB/s": 9.22,
+        "TFLOPS": 0.2
+    },
+    {
+        "params": {
+            "M": 64,
+            "N": 128,
+            "K": 256,
+            "num_warps": 4,
+            "dtype_str": "fp32"
+        },
+        "error": "out of resource: shared memory, Required: 131072, Hardware limit: 65536. Reducing block sizes or `num_stages` may help."
+    },
+    {
+        "params": {
+            "M": 256,
+            "N": 64,
+            "K": 128,
+            "num_warps": 4,
+            "dtype_str": "fp32"
+        },
+        "error": "out of resource: shared memory, Required: 131072, Hardware limit: 65536. Reducing block sizes or `num_stages` may help."
+    },
+    {
+        "params": {
+            "M": 128,
+            "N": 256,
+            "K": 64,
+            "num_warps": 4,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0272,
+        "min_ms": 0.0276,
+        "max_ms": 0.0268,
+        "GB/s": 8.43,
+        "TFLOPS": 0.15
+    },
+    {
+        "params": {
+            "M": 64,
+            "N": 64,
+            "K": 64,
+            "num_warps": 8,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0078,
+        "min_ms": 0.008,
+        "max_ms": 0.0077,
+        "GB/s": 6.29,
+        "TFLOPS": 0.07
+    },
+    {
+        "params": {
+            "M": 128,
+            "N": 128,
+            "K": 128,
+            "num_warps": 8,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0226,
+        "min_ms": 0.0229,
+        "max_ms": 0.0224,
+        "GB/s": 8.71,
+        "TFLOPS": 0.19
+    },
+    {
+        "params": {
+            "M": 64,
+            "N": 128,
+            "K": 256,
+            "num_warps": 8,
+            "dtype_str": "fp32"
+        },
+        "error": "out of resource: shared memory, Required: 131072, Hardware limit: 65536. Reducing block sizes or `num_stages` may help."
+    },
+    {
+        "params": {
+            "M": 256,
+            "N": 64,
+            "K": 128,
+            "num_warps": 8,
+            "dtype_str": "fp32"
+        },
+        "error": "out of resource: shared memory, Required: 131072, Hardware limit: 65536. Reducing block sizes or `num_stages` may help."
+    },
+    {
+        "params": {
+            "M": 128,
+            "N": 256,
+            "K": 64,
+            "num_warps": 8,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0257,
+        "min_ms": 0.026,
+        "max_ms": 0.0253,
+        "GB/s": 8.94,
+        "TFLOPS": 0.16
+    }
+]

@@ -1,0 +1,200 @@
+[
+    {
+        "params": {
+            "M": 64,
+            "N": 64,
+            "K": 16,
+            "NUM_CTAS": 1,
+            "NUM_WARPS": 4,
+            "TRANS_A": false,
+            "TRANS_B": true,
+            "OUTPUT_F16": false,
+            "input_dtype_str": "fp16"
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0068,
+        "max_ms": 0.0062,
+        "GB/s": 3.23,
+        "TFLOPS": 0.02
+    },
+    {
+        "params": {
+            "M": 64,
+            "N": 64,
+            "K": 16,
+            "NUM_CTAS": 1,
+            "NUM_WARPS": 4,
+            "TRANS_A": false,
+            "TRANS_B": true,
+            "OUTPUT_F16": true,
+            "input_dtype_str": "fp16"
+        },
+        "ms": 0.0062,
+        "min_ms": 0.0066,
+        "max_ms": 0.0061,
+        "GB/s": 1.99,
+        "TFLOPS": 0.02
+    },
+    {
+        "params": {
+            "M": 128,
+            "N": 64,
+            "K": 32,
+            "NUM_CTAS": 1,
+            "NUM_WARPS": 4,
+            "TRANS_A": false,
+            "TRANS_B": true,
+            "OUTPUT_F16": false,
+            "input_dtype_str": "fp16"
+        },
+        "ms": 0.0062,
+        "min_ms": 0.0067,
+        "max_ms": 0.0061,
+        "GB/s": 7.25,
+        "TFLOPS": 0.08
+    },
+    {
+        "params": {
+            "M": 128,
+            "N": 64,
+            "K": 32,
+            "NUM_CTAS": 1,
+            "NUM_WARPS": 4,
+            "TRANS_A": false,
+            "TRANS_B": true,
+            "OUTPUT_F16": true,
+            "input_dtype_str": "fp16"
+        },
+        "ms": 0.0062,
+        "min_ms": 0.0066,
+        "max_ms": 0.0061,
+        "GB/s": 4.61,
+        "TFLOPS": 0.08
+    },
+    {
+        "params": {
+            "M": 64,
+            "N": 128,
+            "K": 32,
+            "NUM_CTAS": 1,
+            "NUM_WARPS": 4,
+            "TRANS_A": false,
+            "TRANS_B": true,
+            "OUTPUT_F16": false,
+            "input_dtype_str": "fp16"
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0071,
+        "max_ms": 0.0062,
+        "GB/s": 7.11,
+        "TFLOPS": 0.08
+    },
+    {
+        "params": {
+            "M": 64,
+            "N": 128,
+            "K": 32,
+            "NUM_CTAS": 1,
+            "NUM_WARPS": 4,
+            "TRANS_A": false,
+            "TRANS_B": true,
+            "OUTPUT_F16": true,
+            "input_dtype_str": "fp16"
+        },
+        "ms": 0.0062,
+        "min_ms": 0.0066,
+        "max_ms": 0.0061,
+        "GB/s": 4.64,
+        "TFLOPS": 0.08
+    },
+    {
+        "params": {
+            "M": 128,
+            "N": 128,
+            "K": 64,
+            "NUM_CTAS": 1,
+            "NUM_WARPS": 4,
+            "TRANS_A": false,
+            "TRANS_B": true,
+            "OUTPUT_F16": false,
+            "input_dtype_str": "fp16"
+        },
+        "ms": 0.0095,
+        "min_ms": 0.01,
+        "max_ms": 0.0091,
+        "GB/s": 10.39,
+        "TFLOPS": 0.22
+    },
+    {
+        "params": {
+            "M": 128,
+            "N": 128,
+            "K": 64,
+            "NUM_CTAS": 1,
+            "NUM_WARPS": 4,
+            "TRANS_A": false,
+            "TRANS_B": true,
+            "OUTPUT_F16": true,
+            "input_dtype_str": "fp16"
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0069,
+        "max_ms": 0.0062,
+        "GB/s": 10.41,
+        "TFLOPS": 0.33
+    },
+    {
+        "params": {
+            "M": 64,
+            "N": 64,
+            "K": 128,
+            "NUM_CTAS": 1,
+            "NUM_WARPS": 4,
+            "TRANS_A": false,
+            "TRANS_B": false,
+            "OUTPUT_F16": true,
+            "input_dtype_str": "fp16"
+        },
+        "ms": 0.0062,
+        "min_ms": 0.0066,
+        "max_ms": 0.0061,
+        "GB/s": 6.59,
+        "TFLOPS": 0.17
+    },
+    {
+        "params": {
+            "M": 64,
+            "N": 64,
+            "K": 128,
+            "NUM_CTAS": 1,
+            "NUM_WARPS": 4,
+            "TRANS_A": false,
+            "TRANS_B": false,
+            "OUTPUT_F16": false,
+            "input_dtype_str": "fp16"
+        },
+        "ms": 0.0062,
+        "min_ms": 0.0067,
+        "max_ms": 0.0061,
+        "GB/s": 7.91,
+        "TFLOPS": 0.17
+    },
+    {
+        "params": {
+            "M": 32,
+            "N": 32,
+            "K": 256,
+            "NUM_CTAS": 1,
+            "NUM_WARPS": 4,
+            "TRANS_A": false,
+            "TRANS_B": false,
+            "OUTPUT_F16": true,
+            "input_dtype_str": "fp16"
+        },
+        "ms": 0.0062,
+        "min_ms": 0.0067,
+        "max_ms": 0.0061,
+        "GB/s": 5.6,
+        "TFLOPS": 0.08
+    }
+]

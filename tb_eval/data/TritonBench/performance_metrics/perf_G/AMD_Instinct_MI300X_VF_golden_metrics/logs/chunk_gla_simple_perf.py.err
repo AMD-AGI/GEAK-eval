@@ -1,0 +1,2 @@
+Memory access fault by GPU node-7 (Agent handle: 0x55ba0e07b5d0) on address 0x7fb476400000. Reason: Unknown.
+Aborted (core dumped)

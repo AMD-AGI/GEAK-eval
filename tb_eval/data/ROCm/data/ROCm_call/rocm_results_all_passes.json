@@ -1,0 +1,281 @@
+[
+    {
+        "pass_num": 0,
+        "file_name": "triton_multreduce_matmul_kernel.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 14, 'matched_tensors': 14, 'match_percentage': 100.0, 'detailed_results': [('test_matmul_1_4096_3078_False', True, None), ('test_matmul_1_8192_28672_False', True, None), ('test_matmul_1_23_31_False', True, None), ('test_matmul_1_23_128_False', True, None), ('test_matmul_1_23_31_True', True, None), ('test_matmul_2_16384_16384_False', True, None), ('test_matmul_1_6144_6144_True', True, None), ('test_matmul_1_4096_4096_False', True, None), ('test_matmul_1_6144_6144_False', True, None), ('test_matmul_1_8192_28672_True', True, None), ('test_matmul_1_4096_4096_True', True, None), ('test_matmul_1_4096_3078_True', True, None), ('test_matmul_1_23_128_True', True, None), ('test_matmul_2_16384_16384_True', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 1,
+        "file_name": "test_triton_swizzle2d.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 1, 'matched_tensors': 1, 'match_percentage': 100.0, 'detailed_results': [('test_swizzle2d_5_7_3', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 2,
+        "file_name": "test_triton_sort.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 32, 'matched_tensors': 32, 'match_percentage': 100.0, 'detailed_results': [('test_sort_float16_True_64_8', True, None), ('test_sort_bfloat16_False_8_512', True, None), ('test_sort_float32_True_16_256', True, None), ('test_sort_float16_True_8_512', True, None), ('test_sort_float32_False_64_8', True, None), ('test_sort_float16_False_16_256', True, None), ('test_sort_int32_False_64_8', True, None), ('test_sort_float32_False_512_1', True, None), ('test_sort_float16_False_8_512', True, None), ('test_sort_float16_True_512_1', True, None), ('test_sort_int32_False_512_1', True, None), ('test_sort_bfloat16_True_64_8', True, None), ('test_sort_float16_False_512_1', True, None), ('test_sort_bfloat16_True_512_1', True, None), ('test_sort_bfloat16_True_8_512', True, None), ('test_sort_int32_True_512_1', True, None), ('test_sort_float32_True_8_512', True, None), ('test_sort_float32_False_8_512', True, None), ('test_sort_int32_False_8_512', True, None), ('test_sort_int32_False_16_256', True, None), ('test_sort_float16_True_16_256', True, None), ('test_sort_float32_True_512_1', True, None), ('test_sort_int32_True_8_512', True, None), ('test_sort_bfloat16_True_16_256', True, None), ('test_sort_float32_False_16_256', True, None), ('test_sort_bfloat16_False_512_1', True, None), ('test_sort_float16_False_64_8', True, None), ('test_sort_float32_True_64_8', True, None), ('test_sort_bfloat16_False_16_256', True, None), ('test_sort_bfloat16_False_64_8', True, None), ('test_sort_int32_True_64_8', True, None), ('test_sort_int32_True_16_256', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 3,
+        "file_name": "test_triton_flip.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 16, 'matched_tensors': 16, 'match_percentage': 100.0, 'detailed_results': [('test_flip_float16_512_1', True, None), ('test_flip_float16_16_256', True, None), ('test_flip_int32_64_8', True, None), ('test_flip_int32_512_1', True, None), ('test_flip_int32_16_256', True, None), ('test_flip_int32_8_512', True, None), ('test_flip_bfloat16_64_8', True, None), ('test_flip_float32_64_8', True, None), ('test_flip_bfloat16_512_1', True, None), ('test_flip_bfloat16_16_256', True, None), ('test_flip_float16_64_8', True, None), ('test_flip_float16_8_512', True, None), ('test_flip_float32_512_1', True, None), ('test_flip_float32_16_256', True, None), ('test_flip_float32_8_512', True, None), ('test_flip_bfloat16_8_512', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 4,
+        "file_name": "test_tma_store_gemm.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 8, 'matched_tensors': 8, 'match_percentage': 100.0, 'detailed_results': [('test_tma_load_store_128_128_64_1_4_False_True_False', True, None), ('test_tma_load_store_64_128_32_1_4_False_True_True', True, None), ('test_tma_load_store_64_64_16_1_4_False_True_False', True, None), ('test_tma_load_store_64_128_32_1_4_False_True_False', True, None), ('test_tma_load_store_128_64_32_1_4_False_True_True', True, None), ('test_tma_load_store_64_64_16_1_4_False_True_True', True, None), ('test_tma_load_store_128_128_64_1_4_False_True_True', True, None), ('test_tma_load_store_128_64_32_1_4_False_True_False', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 5,
+        "file_name": "test_reverse_range.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 1, 'matched_tensors': 1, 'match_percentage': 100.0, 'detailed_results': [('test_reverse_range', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 6,
+        "file_name": "test_random_int.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 72, 'matched_tensors': 72, 'match_percentage': 100.0, 'detailed_results': [('test_randint_size4_42_int32_True', True, None), ('test_randint_size56_124_int32_True', True, None), ('test_randint_size13_54_int32_False', True, None), ('test_randint_size12_54_int32_True', True, None), ('test_randint_size32_124_int32_True', True, None), ('test_randint_size64_4294967295_int32_True', True, None), ('test_randint_size21_67830198458_int32_False', True, None), ('test_randint_size43_4294967295_int64_False', True, None), ('test_randint_size11_124_int64_False', True, None), ('test_randint_size24_0_int32_True', True, None), ('test_randint_size25_0_int32_False', True, None), ('test_randint_size46_67830198458_int64_True', True, None), ('test_randint_size60_54_int32_True', True, None), ('test_randint_size10_124_int64_True', True, None), ('test_randint_size54_42_int64_True', True, None), ('test_randint_size34_124_int64_True', True, None), ('test_randint_size19_4294967295_int64_False', True, None), ('test_randint_size17_4294967295_int32_False', True, None), ('test_randint_size31_42_int64_False', True, None), ('test_randint_size52_42_int32_True', True, None), ('test_randint_size57_124_int32_False', True, None), ('test_randint_size14_54_int64_True', True, None), ('test_randint_size62_54_int64_True', True, None), ('test_randint_size5_42_int32_False', True, None), ('test_randint_size70_67830198458_int64_True', True, None), ('test_randint_size6_42_int64_True', True, None), ('test_randint_size39_54_int64_False', True, None), ('test_randint_size30_42_int64_True', True, None), ('test_randint_size44_67830198458_int32_True', True, None), ('test_randint_size61_54_int32_False', True, None), ('test_randint_size68_67830198458_int32_True', True, None), ('test_randint_size37_54_int32_False', True, None), ('test_randint_size50_0_int64_True', True, None), ('test_randint_size2_0_int64_True', True, None), ('test_randint_size59_124_int64_False', True, None), ('test_randint_size66_4294967295_int64_True', True, None), ('test_randint_size63_54_int64_False', True, None), ('test_randint_size16_4294967295_int32_True', True, None), ('test_randint_size69_67830198458_int32_False', True, None), ('test_randint_size67_4294967295_int64_False', True, None), ('test_randint_size38_54_int64_True', True, None), ('test_randint_size58_124_int64_True', True, None), ('test_randint_size8_124_int32_True', True, None), ('test_randint_size53_42_int32_False', True, None), ('test_randint_size7_42_int64_False', True, None), ('test_randint_size0_0_int32_True', True, None), ('test_randint_size29_42_int32_False', True, None), ('test_randint_size22_67830198458_int64_True', True, None), ('test_randint_size45_67830198458_int32_False', True, None), ('test_randint_size18_4294967295_int64_True', True, None), ('test_randint_size26_0_int64_True', True, None), ('test_randint_size36_54_int32_True', True, None), ('test_randint_size9_124_int32_False', True, None), ('test_randint_size23_67830198458_int64_False', True, None), ('test_randint_size35_124_int64_False', True, None), ('test_randint_size15_54_int64_False', True, None), ('test_randint_size3_0_int64_False', True, None), ('test_randint_size33_124_int32_False', True, None), ('test_randint_size27_0_int64_False', True, None), ('test_randint_size40_4294967295_int32_True', True, None), ('test_randint_size41_4294967295_int32_False', True, None), ('test_randint_size47_67830198458_int64_False', True, None), ('test_randint_size49_0_int32_False', True, None), ('test_randint_size65_4294967295_int32_False', True, None), ('test_randint_size55_42_int64_False', True, None), ('test_randint_size42_4294967295_int64_True', True, None), ('test_randint_size1_0_int32_False', True, None), ('test_randint_size20_67830198458_int32_True', True, None), ('test_randint_size51_0_int64_False', True, None), ('test_randint_size28_42_int32_True', True, None), ('test_randint_size71_67830198458_int64_False', True, None), ('test_randint_size48_0_int32_True', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 7,
+        "file_name": "test_randn.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 16, 'matched_tensors': 16, 'match_percentage': 100.0, 'detailed_results': [('test_rand_100000_42_int64_True', True, None), ('test_rand_100000_0_int64_True', True, None), ('test_rand_100000_0_int32_True', True, None), ('test_rand_100000_0_int32_False', True, None), ('test_rand_100000_54_int64_False', True, None), ('test_rand_100000_54_int64_True', True, None), ('test_rand_100000_54_int32_True', True, None), ('test_rand_100000_54_int32_False', True, None), ('test_rand_100000_0_int64_False', True, None), ('test_rand_100000_124_int32_True', True, None), ('test_rand_100000_42_int32_False', True, None), ('test_rand_100000_42_int32_True', True, None), ('test_rand_100000_42_int64_False', True, None), ('test_rand_100000_124_int32_False', True, None), ('test_rand_100000_124_int64_True', True, None), ('test_rand_100000_124_int64_False', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 8,
+        "file_name": "test_matmul_MXFP.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 1, 'matched_tensors': 1, 'match_percentage': 100.0, 'detailed_results': [('test_pipeline_matmul_False', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 9,
+        "file_name": "test_load_reduce.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 1, 'matched_tensors': 1, 'match_percentage': 100.0, 'detailed_results': [('test_load_reduce_128_64_float16', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 10,
+        "file_name": "test_kernel_sub.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 1, 'matched_tensors': 1, 'match_percentage': 100.0, 'detailed_results': [('test_compile_kernel_sub_in_subproc', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 11,
+        "file_name": "test_kernel_dot.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 1, 'matched_tensors': 1, 'match_percentage': 100.0, 'detailed_results': [('test_compile_kernel_dot_in_forked_subproc', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 12,
+        "file_name": "test_iv_dependent_matmul.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 5, 'matched_tensors': 5, 'match_percentage': 100.0, 'detailed_results': [('test_iv_dependent_matmul_post_load', True, None), ('test_iv_dependent_matmul_pre_load', True, None), ('test_iv_dependent_matmul_post_load_two_iters', True, None), ('test_iv_dependent_matmul_post_load_three_iters', True, None), ('test_iv_dependent_matmul_post_pre_mixed', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 13,
+        "file_name": "test_gemm_no_scf.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 24, 'matched_tensors': 24, 'match_percentage': 100.0, 'detailed_results': [('test_gemm_no_scf_64_16_16_1_4_False_True_float16_True', True, None), ('test_gemm_no_scf_128_128_16_1_4_False_True_float32_False', True, None), ('test_gemm_no_scf_64_64_64_1_4_False_True_float32_True', True, None), ('test_gemm_no_scf_64_64_16_1_4_False_True_float16_True', True, None), ('test_gemm_no_scf_64_64_64_1_4_False_True_float32_False', True, None), ('test_gemm_no_scf_32_32_16_1_4_False_True_float32_False', True, None), ('test_gemm_no_scf_128_128_16_1_4_False_True_float16_False', True, None), ('test_gemm_no_scf_128_128_16_1_4_False_True_float16_True', True, None), ('test_gemm_no_scf_64_64_16_1_4_False_True_float32_True', True, None), ('test_gemm_no_scf_64_64_32_1_4_False_True_float32_True', True, None), ('test_gemm_no_scf_16_32_16_1_4_False_True_float32_True', True, None), ('test_gemm_no_scf_16_16_16_1_4_False_True_float32_False', True, None), ('test_gemm_no_scf_64_32_16_1_4_False_True_float16_True', True, None), ('test_gemm_no_scf_32_16_16_1_4_False_True_float32_False', True, None), ('test_gemm_no_scf_16_16_16_1_4_False_True_float32_True', True, None), ('test_gemm_no_scf_16_32_16_1_4_False_True_float32_False', True, None), ('test_gemm_no_scf_32_32_16_1_4_False_True_float32_True', True, None), ('test_gemm_no_scf_64_64_32_1_4_False_True_float32_False', True, None), ('test_gemm_no_scf_32_16_16_1_4_False_True_float32_True', True, None), ('test_gemm_no_scf_128_128_16_1_4_False_True_float32_True', True, None), ('test_gemm_no_scf_64_32_16_1_4_False_True_float16_False', True, None), ('test_gemm_no_scf_64_64_16_1_4_False_True_float32_False', True, None), ('test_gemm_no_scf_64_16_16_1_4_False_True_float16_False', True, None), ('test_gemm_no_scf_64_64_16_1_4_False_True_float16_False', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 14,
+        "file_name": "test_gemm_fusion.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 1, 'matched_tensors': 1, 'match_percentage': 100.0, 'detailed_results': [('test_gemm_fusion', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 15,
+        "file_name": "test_flashattention_fwd.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 6, 'matched_tensors': 6, 'match_percentage': 100.0, 'detailed_results': [('test_op_4_48_128_64', True, None), ('test_op_4_48_1024_64', True, None), ('test_op_4_48_256_64', True, None), ('test_op_4_48_512_64', True, None), ('test_op_4_48_2048_64', True, None), ('test_op_4_48_4096_64', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 16,
+        "file_name": "test_chained_matmul.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 1, 'matched_tensors': 1, 'match_percentage': 100.0, 'detailed_results': [('test_chained_matmul', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 17,
+        "file_name": "test_chained_dot_fp8.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 4, 'matched_tensors': 4, 'match_percentage': 100.0, 'detailed_results': [('test_chained_dot_128_64_32_fp8_16_fwd', True, None), ('test_chained_dot_128_64_32_fp8_32_fwd', True, None), ('test_chained_dot_256_128_128_fp8_16_fwd', True, None), ('test_chained_dot_256_128_128_fp8_32_fwd', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 18,
+        "file_name": "test_cast_matmul.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 24, 'matched_tensors': 24, 'match_percentage': 100.0, 'detailed_results': [('test_cast_matmul_128_128_128_float32_float64_float16', True, None), ('test_cast_matmul_128_128_128_float16_float64_float32', True, None), ('test_cast_matmul_128_128_128_float64_float16_float32', True, None), ('test_cast_matmul_128_128_128_float16_float64_float16', True, None), ('test_cast_matmul_128_128_128_float16_float32_float16', True, None), ('test_cast_matmul_128_128_128_float64_float32_float16', True, None), ('test_cast_matmul_1280_768_1024_float64_float32_float32', True, None), ('test_cast_matmul_1280_768_1024_float32_float64_float16', True, None), ('test_cast_matmul_1280_768_1024_float64_float16_float16', True, None), ('test_cast_matmul_128_128_128_float16_float32_float32', True, None), ('test_cast_matmul_128_128_128_float64_float16_float16', True, None), ('test_cast_matmul_1280_768_1024_float16_float32_float32', True, None), ('test_cast_matmul_1280_768_1024_float16_float64_float16', True, None), ('test_cast_matmul_1280_768_1024_float32_float64_float32', True, None), ('test_cast_matmul_1280_768_1024_float16_float64_float32', True, None), ('test_cast_matmul_128_128_128_float32_float16_float16', True, None), ('test_cast_matmul_1280_768_1024_float32_float16_float32', True, None), ('test_cast_matmul_128_128_128_float32_float16_float32', True, None), ('test_cast_matmul_128_128_128_float64_float32_float32', True, None), ('test_cast_matmul_1280_768_1024_float64_float32_float16', True, None), ('test_cast_matmul_1280_768_1024_float16_float32_float16', True, None), ('test_cast_matmul_1280_768_1024_float64_float16_float32', True, None), ('test_cast_matmul_128_128_128_float32_float64_float32', True, None), ('test_cast_matmul_1280_768_1024_float32_float16_float16', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 19,
+        "file_name": "test_block_pointer_matmul.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 6, 'matched_tensors': 6, 'match_percentage': 100.0, 'detailed_results': [('test_block_ptr_matmul_no_scf_shape4_4', True, None), ('test_block_ptr_matmul_no_scf_shape2_4', True, None), ('test_block_ptr_matmul_no_scf_shape1_8', True, None), ('test_block_ptr_matmul_no_scf_shape5_8', True, None), ('test_block_ptr_matmul_no_scf_shape0_4', True, None), ('test_block_ptr_matmul_no_scf_shape3_8', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 20,
+        "file_name": "test_block_copy.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 75, 'matched_tensors': 75, 'match_percentage': 100.0, 'detailed_results': [('test_block_copy_dtypes_str69_512_None', True, None), ('test_block_copy_dtypes_str51_256_None', True, None), ('test_block_copy_dtypes_str50_128_nan', True, None), ('test_block_copy_dtypes_str16_64_zero', True, None), ('test_block_copy_dtypes_str53_256_nan', True, None), ('test_block_copy_dtypes_str7_256_zero', True, None), ('test_block_copy_dtypes_str66_256_None', True, None), ('test_block_copy_dtypes_str86_512_nan', True, None), ('test_block_copy_dtypes_str24_512_None', True, None), ('test_block_copy_dtypes_str89_1024_nan', True, None), ('test_block_copy_dtypes_str3_128_None', True, None), ('test_block_copy_dtypes_str74_1024_nan', True, None), ('test_block_copy_dtypes_str27_1024_None', True, None), ('test_block_copy_dtypes_str68_256_nan', True, None), ('test_block_copy_dtypes_str39_512_None', True, None), ('test_block_copy_dtypes_str87_1024_None', True, None), ('test_block_copy_dtypes_str52_256_zero', True, None), ('test_block_copy_dtypes_str9_512_None', True, None), ('test_block_copy_dtypes_str82_256_zero', True, None), ('test_block_copy_dtypes_str85_512_zero', True, None), ('test_block_copy_dtypes_str4_128_zero', True, None), ('test_block_copy_dtypes_str40_512_zero', True, None), ('test_block_copy_dtypes_str84_512_None', True, None), ('test_block_copy_dtypes_str67_256_zero', True, None), ('test_block_copy_dtypes_str61_64_zero', True, None), ('test_block_copy_dtypes_str21_256_None', True, None), ('test_block_copy_dtypes_str22_256_zero', True, None), ('test_block_copy_dtypes_str36_256_None', True, None), ('test_block_copy_dtypes_str58_1024_zero', True, None), ('test_block_copy_dtypes_str79_128_zero', True, None), ('test_block_copy_dtypes_str65_128_nan', True, None), ('test_block_copy_dtypes_str19_128_zero', True, None), ('test_block_copy_dtypes_str46_64_zero', True, None), ('test_block_copy_dtypes_str71_512_nan', True, None), ('test_block_copy_dtypes_str0_64_None', True, None), ('test_block_copy_dtypes_str78_128_None', True, None), ('test_block_copy_dtypes_str45_64_None', True, None), ('test_block_copy_dtypes_str13_1024_zero', True, None), ('test_block_copy_dtypes_str70_512_zero', True, None), ('test_block_copy_dtypes_str30_64_None', True, None), ('test_block_copy_dtypes_str42_1024_None', True, None), ('test_block_copy_dtypes_str60_64_None', True, None), ('test_block_copy_dtypes_str63_128_None', True, None), ('test_block_copy_dtypes_str76_64_zero', True, None), ('test_block_copy_dtypes_str54_512_None', True, None), ('test_block_copy_dtypes_str10_512_zero', True, None), ('test_block_copy_dtypes_str43_1024_zero', True, None), ('test_block_copy_dtypes_str55_512_zero', True, None), ('test_block_copy_dtypes_str83_256_nan', True, None), ('test_block_copy_dtypes_str62_64_nan', True, None), ('test_block_copy_dtypes_str57_1024_None', True, None), ('test_block_copy_dtypes_str59_1024_nan', True, None), ('test_block_copy_dtypes_str77_64_nan', True, None), ('test_block_copy_dtypes_str34_128_zero', True, None), ('test_block_copy_dtypes_str75_64_None', True, None), ('test_block_copy_dtypes_str25_512_zero', True, None), ('test_block_copy_dtypes_str37_256_zero', True, None), ('test_block_copy_dtypes_str28_1024_zero', True, None), ('test_block_copy_dtypes_str33_128_None', True, None), ('test_block_copy_dtypes_str31_64_zero', True, None), ('test_block_copy_dtypes_str81_256_None', True, None), ('test_block_copy_dtypes_str72_1024_None', True, None), ('test_block_copy_dtypes_str80_128_nan', True, None), ('test_block_copy_dtypes_str48_128_None', True, None), ('test_block_copy_dtypes_str56_512_nan', True, None), ('test_block_copy_dtypes_str88_1024_zero', True, None), ('test_block_copy_dtypes_str1_64_zero', True, None), ('test_block_copy_dtypes_str49_128_zero', True, None), ('test_block_copy_dtypes_str12_1024_None', True, None), ('test_block_copy_dtypes_str64_128_zero', True, None), ('test_block_copy_dtypes_str18_128_None', True, None), ('test_block_copy_dtypes_str15_64_None', True, None), ('test_block_copy_dtypes_str6_256_None', True, None), ('test_block_copy_dtypes_str73_1024_zero', True, None), ('test_block_copy_dtypes_str47_64_nan', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 21,
+        "file_name": "test_batched_vecmat.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 1, 'matched_tensors': 1, 'match_percentage': 100.0, 'detailed_results': [('test_vecmat', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 22,
+        "file_name": "test_add_kernel.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 2, 'matched_tensors': 2, 'match_percentage': 100.0, 'detailed_results': [('test_add_98432_1024_float16', True, None), ('test_add_98432_1024_float32', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 23,
+        "file_name": "softmax.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 10, 'matched_tensors': 10, 'match_percentage': 100.0, 'detailed_results': [('test_softmax_1_1', True, None), ('test_softmax_8192_8192', True, None), ('test_softmax_128_1', True, None), ('test_softmax_1_128', True, None), ('test_softmax_4096_8192', True, None), ('test_softmax_1_359', True, None), ('test_softmax_1_131072', True, None), ('test_softmax_1_89999', True, None), ('test_softmax_1823_781', True, None), ('test_softmax_359_1', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 24,
+        "file_name": "rmsnorm_fwd.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 112, 'matched_tensors': 112, 'match_percentage': 100.0, 'detailed_results': [('test_rmsnorm_873_1245_False_fp16_bf16_rsigma', True, None), ('test_rmsnorm_8192_65536_False_bf16_fp16_y_triton', True, None), ('test_rmsnorm_8192_65536_True_bf16_bf16_y_triton', True, None), ('test_rmsnorm_2_10_False_bf16_bf16_y_triton', True, None), ('test_rmsnorm_1_4_False_fp16_fp16_y_triton', True, None), ('test_rmsnorm_256_4096_False_fp16_bf16_rsigma', True, None), ('test_rmsnorm_8192_65536_True_fp16_fp16_y_triton', True, None), ('test_rmsnorm_8192_65536_True_fp16_bf16_y_triton', True, None), ('test_rmsnorm_256_4096_False_fp16_fp16_y_triton', True, None), ('test_rmsnorm_2_10_False_fp16_bf16_y_triton', True, None), ('test_rmsnorm_873_1245_False_bf16_fp16_y_triton', True, None), ('test_rmsnorm_2_10_True_bf16_bf16_y_triton', True, None), ('test_rmsnorm_4096_8192_False_fp16_fp16_y_triton', True, None), ('test_rmsnorm_873_1245_True_fp16_bf16_rsigma', True, None), ('test_rmsnorm_873_1245_False_bf16_bf16_rsigma', True, None), ('test_rmsnorm_8192_65536_True_bf16_fp16_y_triton', True, None), ('test_rmsnorm_2_10_False_bf16_bf16_rsigma', True, None), ('test_rmsnorm_873_1245_True_bf16_bf16_y_triton', True, None), ('test_rmsnorm_2_10_True_bf16_bf16_rsigma', True, None), ('test_rmsnorm_1_31744_True_bf16_fp16_y_triton', True, None), ('test_rmsnorm_1_31744_False_bf16_bf16_y_triton', True, None), ('test_rmsnorm_8192_65536_False_bf16_bf16_rsigma', True, None), ('test_rmsnorm_1_31744_False_fp16_fp16_rsigma', True, None), ('test_rmsnorm_1_31744_False_bf16_fp16_rsigma', True, None), ('test_rmsnorm_4096_8192_True_fp16_fp16_rsigma', True, None), ('test_rmsnorm_4096_8192_False_fp16_bf16_y_triton', True, None), ('test_rmsnorm_2_10_False_bf16_fp16_y_triton', True, None), ('test_rmsnorm_873_1245_False_fp16_fp16_y_triton', True, None), ('test_rmsnorm_1_31744_True_fp16_bf16_rsigma', True, None), ('test_rmsnorm_2_10_False_fp16_bf16_rsigma', True, None), ('test_rmsnorm_8192_65536_True_fp16_fp16_rsigma', True, None), ('test_rmsnorm_256_4096_False_fp16_fp16_rsigma', True, None), ('test_rmsnorm_1_4_False_bf16_bf16_y_triton', True, None), ('test_rmsnorm_256_4096_True_fp16_fp16_rsigma', True, None), ('test_rmsnorm_256_4096_True_bf16_bf16_y_triton', True, None), ('test_rmsnorm_4096_8192_False_bf16_fp16_y_triton', True, None), ('test_rmsnorm_1_31744_True_fp16_fp16_y_triton', True, None), ('test_rmsnorm_1_31744_False_fp16_fp16_y_triton', True, None), ('test_rmsnorm_2_10_True_fp16_bf16_rsigma', True, None), ('test_rmsnorm_2_10_True_bf16_fp16_y_triton', True, None), ('test_rmsnorm_4096_8192_True_fp16_bf16_y_triton', True, None), ('test_rmsnorm_1_4_False_bf16_fp16_rsigma', True, None), ('test_rmsnorm_256_4096_False_bf16_fp16_y_triton', True, None), ('test_rmsnorm_4096_8192_False_fp16_fp16_rsigma', True, None), ('test_rmsnorm_256_4096_False_bf16_fp16_rsigma', True, None), ('test_rmsnorm_4096_8192_True_fp16_bf16_rsigma', True, None), ('test_rmsnorm_873_1245_False_bf16_fp16_rsigma', True, None), ('test_rmsnorm_8192_65536_False_fp16_fp16_rsigma', True, None), ('test_rmsnorm_256_4096_False_fp16_bf16_y_triton', True, None), ('test_rmsnorm_873_1245_True_fp16_fp16_rsigma', True, None), ('test_rmsnorm_1_31744_False_bf16_fp16_y_triton', True, None), ('test_rmsnorm_1_4_True_fp16_fp16_y_triton', True, None), ('test_rmsnorm_2_10_True_bf16_fp16_rsigma', True, None), ('test_rmsnorm_256_4096_True_fp16_bf16_y_triton', True, None), ('test_rmsnorm_4096_8192_True_bf16_bf16_y_triton', True, None), ('test_rmsnorm_2_10_False_bf16_fp16_rsigma', True, None), ('test_rmsnorm_2_10_False_fp16_fp16_y_triton', True, None), ('test_rmsnorm_8192_65536_True_bf16_bf16_rsigma', True, None), ('test_rmsnorm_873_1245_True_fp16_fp16_y_triton', True, None), ('test_rmsnorm_873_1245_True_bf16_fp16_rsigma', True, None), ('test_rmsnorm_873_1245_False_bf16_bf16_y_triton', True, None), ('test_rmsnorm_2_10_False_fp16_fp16_rsigma', True, None), ('test_rmsnorm_256_4096_False_bf16_bf16_y_triton', True, None), ('test_rmsnorm_4096_8192_True_fp16_fp16_y_triton', True, None), ('test_rmsnorm_4096_8192_False_bf16_bf16_y_triton', True, None), ('test_rmsnorm_8192_65536_True_bf16_fp16_rsigma', True, None), ('test_rmsnorm_8192_65536_False_bf16_bf16_y_triton', True, None), ('test_rmsnorm_873_1245_True_bf16_fp16_y_triton', True, None), ('test_rmsnorm_1_31744_True_bf16_fp16_rsigma', True, None), ('test_rmsnorm_1_31744_False_fp16_bf16_y_triton', True, None), ('test_rmsnorm_1_4_True_bf16_fp16_y_triton', True, None), ('test_rmsnorm_256_4096_True_bf16_bf16_rsigma', True, None), ('test_rmsnorm_1_4_True_bf16_fp16_rsigma', True, None), ('test_rmsnorm_1_4_False_bf16_bf16_rsigma', True, None), ('test_rmsnorm_2_10_True_fp16_fp16_y_triton', True, None), ('test_rmsnorm_873_1245_True_bf16_bf16_rsigma', True, None), ('test_rmsnorm_256_4096_True_fp16_fp16_y_triton', True, None), ('test_rmsnorm_1_4_True_fp16_fp16_rsigma', True, None), ('test_rmsnorm_873_1245_True_fp16_bf16_y_triton', True, None), ('test_rmsnorm_4096_8192_False_fp16_bf16_rsigma', True, None), ('test_rmsnorm_873_1245_False_fp16_bf16_y_triton', True, None), ('test_rmsnorm_1_31744_False_bf16_bf16_rsigma', True, None), ('test_rmsnorm_1_31744_True_bf16_bf16_y_triton', True, None), ('test_rmsnorm_256_4096_False_bf16_bf16_rsigma', True, None), ('test_rmsnorm_1_31744_False_fp16_bf16_rsigma', True, None), ('test_rmsnorm_2_10_True_fp16_fp16_rsigma', True, None), ('test_rmsnorm_2_10_True_fp16_bf16_y_triton', True, None), ('test_rmsnorm_1_4_True_fp16_bf16_y_triton', True, None), ('test_rmsnorm_1_31744_True_bf16_bf16_rsigma', True, None), ('test_rmsnorm_8192_65536_False_fp16_bf16_rsigma', True, None), ('test_rmsnorm_8192_65536_False_fp16_bf16_y_triton', True, None), ('test_rmsnorm_8192_65536_True_fp16_bf16_rsigma', True, None), ('test_rmsnorm_1_4_False_fp16_fp16_rsigma', True, None), ('test_rmsnorm_1_4_False_bf16_fp16_y_triton', True, None), ('test_rmsnorm_4096_8192_True_bf16_fp16_y_triton', True, None), ('test_rmsnorm_873_1245_False_fp16_fp16_rsigma', True, None), ('test_rmsnorm_256_4096_True_bf16_fp16_rsigma', True, None), ('test_rmsnorm_1_4_True_fp16_bf16_rsigma', True, None), ('test_rmsnorm_8192_65536_False_fp16_fp16_y_triton', True, None), ('test_rmsnorm_1_31744_True_fp16_fp16_rsigma', True, None), ('test_rmsnorm_1_4_True_bf16_bf16_y_triton', True, None), ('test_rmsnorm_1_4_False_fp16_bf16_rsigma', True, None), ('test_rmsnorm_4096_8192_True_bf16_bf16_rsigma', True, None), ('test_rmsnorm_8192_65536_False_bf16_fp16_rsigma', True, None), ('test_rmsnorm_4096_8192_False_bf16_bf16_rsigma', True, None), ('test_rmsnorm_256_4096_True_bf16_fp16_y_triton', True, None), ('test_rmsnorm_4096_8192_False_bf16_fp16_rsigma', True, None), ('test_rmsnorm_1_4_True_bf16_bf16_rsigma', True, None), ('test_rmsnorm_1_4_False_fp16_bf16_y_triton', True, None), ('test_rmsnorm_1_31744_True_fp16_bf16_y_triton', True, None), ('test_rmsnorm_4096_8192_True_bf16_fp16_rsigma', True, None), ('test_rmsnorm_256_4096_True_fp16_bf16_rsigma', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 25,
+        "file_name": "rmsnorm_bwd.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 80, 'matched_tensors': 80, 'match_percentage': 100.0, 'detailed_results': [('test_rmsnorm_1_31744_False_fp16_fp16_grad_g_triton', True, None), ('test_rmsnorm_873_1245_False_bf16_bf16_grad_x_triton', True, None), ('test_rmsnorm_1_31744_True_fp16_fp16_grad_x_triton', True, None), ('test_rmsnorm_873_1245_True_fp16_fp16_grad_x_triton', True, None), ('test_rmsnorm_256_4096_False_bf16_fp16_grad_g_triton', True, None), ('test_rmsnorm_2_10_True_fp16_bf16_grad_x_triton', True, None), ('test_rmsnorm_873_1245_True_bf16_bf16_grad_x_triton', True, None), ('test_rmsnorm_1_4_True_bf16_fp16_grad_g_triton', True, None), ('test_rmsnorm_2_10_True_bf16_bf16_grad_g_triton', True, None), ('test_rmsnorm_1_4_True_bf16_bf16_grad_x_triton', True, None), ('test_rmsnorm_2_10_True_fp16_fp16_grad_g_triton', True, None), ('test_rmsnorm_256_4096_True_bf16_fp16_grad_g_triton', True, None), ('test_rmsnorm_2_10_True_fp16_bf16_grad_g_triton', True, None), ('test_rmsnorm_256_4096_True_fp16_fp16_grad_g_triton', True, None), ('test_rmsnorm_1_31744_True_fp16_bf16_grad_x_triton', True, None), ('test_rmsnorm_2_10_True_fp16_fp16_grad_x_triton', True, None), ('test_rmsnorm_256_4096_True_fp16_bf16_grad_x_triton', True, None), ('test_rmsnorm_256_4096_True_bf16_fp16_grad_x_triton', True, None), ('test_rmsnorm_2_10_False_bf16_bf16_grad_x_triton', True, None), ('test_rmsnorm_1_4_False_fp16_fp16_grad_g_triton', True, None), ('test_rmsnorm_1_31744_False_bf16_bf16_grad_g_triton', True, None), ('test_rmsnorm_1_31744_True_bf16_bf16_grad_g_triton', True, None), ('test_rmsnorm_256_4096_False_fp16_fp16_grad_g_triton', True, None), ('test_rmsnorm_873_1245_True_bf16_fp16_grad_x_triton', True, None), ('test_rmsnorm_256_4096_False_bf16_bf16_grad_x_triton', True, None), ('test_rmsnorm_1_31744_False_bf16_fp16_grad_g_triton', True, None), ('test_rmsnorm_256_4096_True_bf16_bf16_grad_g_triton', True, None), ('test_rmsnorm_1_31744_False_fp16_bf16_grad_x_triton', True, None), ('test_rmsnorm_256_4096_False_fp16_bf16_grad_g_triton', True, None), ('test_rmsnorm_256_4096_False_bf16_fp16_grad_x_triton', True, None), ('test_rmsnorm_873_1245_False_fp16_bf16_grad_x_triton', True, None), ('test_rmsnorm_256_4096_True_bf16_bf16_grad_x_triton', True, None), ('test_rmsnorm_1_31744_True_bf16_fp16_grad_x_triton', True, None), ('test_rmsnorm_1_31744_False_bf16_fp16_grad_x_triton', True, None), ('test_rmsnorm_2_10_False_bf16_fp16_grad_x_triton', True, None), ('test_rmsnorm_1_4_False_bf16_fp16_grad_g_triton', True, None), ('test_rmsnorm_2_10_True_bf16_fp16_grad_g_triton', True, None), ('test_rmsnorm_1_31744_False_fp16_fp16_grad_x_triton', True, None), ('test_rmsnorm_2_10_False_bf16_bf16_grad_g_triton', True, None), ('test_rmsnorm_873_1245_True_fp16_bf16_grad_g_triton', True, None), ('test_rmsnorm_2_10_True_bf16_bf16_grad_x_triton', True, None), ('test_rmsnorm_1_4_True_fp16_fp16_grad_g_triton', True, None), ('test_rmsnorm_873_1245_False_bf16_bf16_grad_g_triton', True, None), ('test_rmsnorm_256_4096_False_fp16_bf16_grad_x_triton', True, None), ('test_rmsnorm_1_4_True_bf16_bf16_grad_g_triton', True, None), ('test_rmsnorm_2_10_True_bf16_fp16_grad_x_triton', True, None), ('test_rmsnorm_1_31744_True_fp16_bf16_grad_g_triton', True, None), ('test_rmsnorm_873_1245_True_fp16_fp16_grad_g_triton', True, None), ('test_rmsnorm_1_31744_True_fp16_fp16_grad_g_triton', True, None), ('test_rmsnorm_873_1245_False_fp16_fp16_grad_x_triton', True, None), ('test_rmsnorm_1_31744_False_fp16_bf16_grad_g_triton', True, None), ('test_rmsnorm_2_10_False_fp16_bf16_grad_x_triton', True, None), ('test_rmsnorm_2_10_False_fp16_fp16_grad_x_triton', True, None), ('test_rmsnorm_873_1245_False_bf16_fp16_grad_x_triton', True, None), ('test_rmsnorm_1_4_True_fp16_fp16_grad_x_triton', True, None), ('test_rmsnorm_1_31744_False_bf16_bf16_grad_x_triton', True, None), ('test_rmsnorm_2_10_False_fp16_bf16_grad_g_triton', True, None), ('test_rmsnorm_1_31744_True_bf16_bf16_grad_x_triton', True, None), ('test_rmsnorm_873_1245_True_bf16_bf16_grad_g_triton', True, None), ('test_rmsnorm_1_4_True_fp16_bf16_grad_g_triton', True, None), ('test_rmsnorm_2_10_False_fp16_fp16_grad_g_triton', True, None), ('test_rmsnorm_873_1245_True_fp16_bf16_grad_x_triton', True, None), ('test_rmsnorm_256_4096_True_fp16_bf16_grad_g_triton', True, None), ('test_rmsnorm_873_1245_False_bf16_fp16_grad_g_triton', True, None), ('test_rmsnorm_1_4_False_fp16_fp16_grad_x_triton', True, None), ('test_rmsnorm_1_4_False_fp16_bf16_grad_g_triton', True, None), ('test_rmsnorm_873_1245_True_bf16_fp16_grad_g_triton', True, None), ('test_rmsnorm_873_1245_False_fp16_fp16_grad_g_triton', True, None), ('test_rmsnorm_873_1245_False_fp16_bf16_grad_g_triton', True, None), ('test_rmsnorm_1_4_False_bf16_fp16_grad_x_triton', True, None), ('test_rmsnorm_1_4_False_bf16_bf16_grad_x_triton', True, None), ('test_rmsnorm_256_4096_False_bf16_bf16_grad_g_triton', True, None), ('test_rmsnorm_256_4096_False_fp16_fp16_grad_x_triton', True, None), ('test_rmsnorm_1_4_True_bf16_fp16_grad_x_triton', True, None), ('test_rmsnorm_1_4_False_bf16_bf16_grad_g_triton', True, None), ('test_rmsnorm_2_10_False_bf16_fp16_grad_g_triton', True, None), ('test_rmsnorm_1_4_False_fp16_bf16_grad_x_triton', True, None), ('test_rmsnorm_256_4096_True_fp16_fp16_grad_x_triton', True, None), ('test_rmsnorm_1_4_True_fp16_bf16_grad_x_triton', True, None), ('test_rmsnorm_1_31744_True_bf16_fp16_grad_g_triton', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 26,
+        "file_name": "naive_softmax.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 10, 'matched_tensors': 10, 'match_percentage': 100.0, 'detailed_results': [('test_softmax_4096_8192', True, None), ('test_softmax_359_1', True, None), ('test_softmax_1_128', True, None), ('test_softmax_128_1', True, None), ('test_softmax_1_131072', True, None), ('test_softmax_1_359', True, None), ('test_softmax_1_89999', True, None), ('test_softmax_1_1', True, None), ('test_softmax_8192_8192', True, None), ('test_softmax_1823_781', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 27,
+        "file_name": "multreduce_matmul_dot_kernel.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 14, 'matched_tensors': 14, 'match_percentage': 100.0, 'detailed_results': [('test_matmul_2_16384_16384_True', True, None), ('test_matmul_1_8192_28672_False', True, None), ('test_matmul_1_4096_3078_False', True, None), ('test_matmul_1_4096_3078_True', True, None), ('test_matmul_1_6144_6144_True', True, None), ('test_matmul_1_6144_6144_False', True, None), ('test_matmul_1_8192_28672_True', True, None), ('test_matmul_2_16384_16384_False', True, None), ('test_matmul_1_23_31_False', True, None), ('test_matmul_1_4096_4096_True', True, None), ('test_matmul_1_4096_4096_False', True, None), ('test_matmul_1_23_31_True', True, None), ('test_matmul_1_23_128_False', True, None), ('test_matmul_1_23_128_True', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 28,
+        "file_name": "moe_gemm.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 92, 'matched_tensors': 92, 'match_percentage': 100.0, 'detailed_results': [('test_correctness_fp8_fp8_type0_True_False_64_1792_128_2_8', True, None), ('test_correctness_fp8_fp8_type0_True_False_16_14336_128_1_4', True, None), ('test_correctness_int8_w8a8_True_True_64_7186_128_2_8', True, None), ('test_correctness_int8_w8a16_True_False_64_14336_4096_2_8', True, None), ('test_correctness_fp8_fp8_type0_True_True_64_7186_128_2_8', True, None), ('test_correctness_fp8_fp8_type0_True_True_16_14336_128_1_1', True, None), ('test_correctness_fp8_fp8_type0_True_True_64_64_128_2_8', True, None), ('test_correctness_int8_w8a8_True_True_64_1792_128_2_8', True, None), ('test_correctness_False_16_14336_1_2_4', True, None), ('test_correctness_int8_w8a8_True_True_16_14336_1_2_4', True, None), ('test_correctness_int8_w8a8_True_True_64_14336_4096_2_8', True, None), ('test_correctness_fp8_fp8_type0_True_False_16_14336_128_1_1', True, None), ('test_correctness_fp8_fp8_type1_True_False_64_3584_128_2_8', True, None), ('test_correctness_fp8_fp8_type0_True_False_64_7186_128_2_8', True, None), ('test_correctness_fp8_fp8_type1_True_True_64_14336_4096_2_8', True, None), ('test_correctness_fp8_fp8_type1_True_True_16_14336_128_1_4', True, None), ('test_correctness_fp8_fp8_type1_True_True_64_7186_128_2_8', True, None), ('test_correctness_int8_w8a8_True_False_16_14336_128_1_1', True, None), ('test_correctness_fp8_fp8_type1_True_False_16_14336_128_1_4', True, None), ('test_correctness_True_16_14336_1_2_4', True, None), ('test_correctness_int8_w8a16_True_True_16_14336_128_1_1', True, None), ('test_correctness_True_64_1792_128_2_8', True, None), ('test_correctness_int8_w8a8_True_True_16_14336_128_1_4', True, None), ('test_correctness_True_64_64_128_2_8', True, None), ('test_correctness_int8_w8a16_True_True_64_1792_128_2_8', True, None), ('test_correctness_int8_w8a16_True_True_1_14336_128_2_4', True, None), ('test_correctness_fp8_fp8_type1_True_True_16_14336_1_2_4', True, None), ('test_correctness_fp8_fp8_type1_True_True_64_64_128_2_8', True, None), ('test_correctness_False_16_14336_128_1_1', True, None), ('test_correctness_int8_w8a8_True_False_64_1792_128_2_8', True, None), ('test_correctness_int8_w8a16_True_True_16_14336_1_2_4', True, None), ('test_correctness_fp8_fp8_type1_True_True_64_1792_128_2_8', True, None), ('test_correctness_True_64_3584_128_2_8', True, None), ('test_correctness_True_3_14336_128_2_4', True, None), ('test_correctness_int8_w8a8_True_True_16_14336_128_1_1', True, None), ('test_correctness_True_16_14336_128_1_1', True, None), ('test_correctness_fp8_fp8_type1_True_False_16_14336_128_1_1', True, None), ('test_correctness_fp8_fp8_type0_True_True_16_14336_128_1_4', True, None), ('test_correctness_fp8_fp8_type0_True_False_16_14336_1_2_4', True, None), ('test_correctness_int8_w8a16_True_True_16_14336_128_1_4', True, None), ('test_correctness_False_64_64_128_2_8', True, None), ('test_correctness_int8_w8a16_True_False_64_3584_128_2_8', True, None), ('test_correctness_True_1_14336_128_2_4', True, None), ('test_correctness_int8_w8a8_True_False_1_14336_128_2_4', True, None), ('test_correctness_True_16_14336_128_1_4', True, None), ('test_correctness_int8_w8a8_True_False_16_14336_128_1_4', True, None), ('test_correctness_int8_w8a16_True_False_64_1792_128_2_8', True, None), ('test_correctness_fp8_fp8_type0_True_True_64_14336_4096_2_8', True, None), ('test_correctness_int8_w8a8_True_True_64_64_128_2_8', True, None), ('test_correctness_int8_w8a8_True_False_64_7186_128_2_8', True, None), ('test_correctness_True_64_14336_4096_2_8', True, None), ('test_correctness_int8_w8a16_True_True_64_14336_4096_2_8', True, None), ('test_correctness_int8_w8a8_True_False_64_64_128_2_8', True, None), ('test_correctness_int8_w8a16_True_False_1_14336_128_2_4', True, None), ('test_correctness_fp8_fp8_type1_True_False_64_64_128_2_8', True, None), ('test_correctness_fp8_fp8_type1_True_True_1_14336_128_2_4', True, None), ('test_correctness_False_64_14336_4096_2_8', True, None), ('test_correctness_int8_w8a16_True_True_64_3584_128_2_8', True, None), ('test_correctness_int8_w8a8_True_False_16_14336_1_2_4', True, None), ('test_correctness_fp8_fp8_type0_True_False_64_3584_128_2_8', True, None), ('test_correctness_fp8_fp8_type1_True_False_16_14336_1_2_4', True, None), ('test_correctness_fp8_fp8_type1_True_False_64_14336_4096_2_8', True, None), ('test_correctness_fp8_fp8_type1_True_False_1_14336_128_2_4', True, None), ('test_correctness_int8_w8a16_True_False_16_14336_128_1_1', True, None), ('test_correctness_fp8_fp8_type0_True_False_64_14336_4096_2_8', True, None), ('test_correctness_int8_w8a8_True_True_1_14336_128_2_4', True, None), ('test_correctness_True_64_7186_128_2_8', True, None), ('test_correctness_fp8_fp8_type0_True_True_64_1792_128_2_8', True, None), ('test_correctness_fp8_fp8_type1_True_True_16_14336_128_1_1', True, None), ('test_correctness_fp8_fp8_type0_True_True_1_14336_128_2_4', True, None), ('test_correctness_fp8_fp8_type0_True_True_64_3584_128_2_8', True, None), ('test_correctness_False_1_14336_128_2_4', True, None), ('test_correctness_int8_w8a8_True_False_64_3584_128_2_8', True, None), ('test_correctness_fp8_fp8_type1_True_False_64_7186_128_2_8', True, None), ('test_correctness_int8_w8a8_True_True_64_3584_128_2_8', True, None), ('test_correctness_fp8_fp8_type0_True_True_16_14336_1_2_4', True, None), ('test_correctness_int8_w8a16_True_True_64_64_128_2_8', True, None), ('test_correctness_False_3_14336_128_2_4', True, None), ('test_correctness_False_64_1792_128_2_8', True, None), ('test_correctness_False_64_3584_128_2_8', True, None), ('test_correctness_int8_w8a16_True_False_64_64_128_2_8', True, None), ('test_correctness_int8_w8a16_True_True_64_7186_128_2_8', True, None), ('test_correctness_False_16_14336_128_1_4', True, None), ('test_correctness_False_64_7186_128_2_8', True, None), ('test_correctness_int8_w8a16_True_False_16_14336_128_1_4', True, None), ('test_correctness_fp8_fp8_type0_True_False_64_64_128_2_8', True, None), ('test_correctness_int8_w8a16_True_False_64_7186_128_2_8', True, None), ('test_correctness_int8_w8a16_True_False_16_14336_1_2_4', True, None), ('test_correctness_fp8_fp8_type0_True_False_1_14336_128_2_4', True, None), ('test_correctness_fp8_fp8_type1_True_True_64_3584_128_2_8', True, None), ('test_correctness_fp8_fp8_type1_True_False_64_1792_128_2_8', True, None), ('test_correctness_int8_w8a8_True_False_64_14336_4096_2_8', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 29,
+        "file_name": "layernorm.py",
+        "call_status": 1,
+        "exec_status": 1,
+        "stdout": "{'total_tensors': 11, 'matched_tensors': 11, 'match_percentage': 100.0, 'detailed_results': [('test_layernorm_2_128_fwd', True, None), ('test_layernorm_1_128_fwd', True, None), ('test_layernorm_4096_8192_fwd', True, None), ('test_layernorm_1823_781_fwd', True, None), ('test_layernorm_1_131072_fwd', True, None), ('test_layernorm_1_4_fwd', True, None), ('test_layernorm_128_2_fwd', True, None), ('test_layernorm_359_1_fwd', True, None), ('test_layernorm_1_89999_fwd', True, None), ('test_layernorm_1_359_fwd', True, None), ('test_layernorm_8192_8192_fwd', True, None)]}",
+        "stderr": "None",
+        "difficulty": -1
+    },
+    {
+        "pass_num": 30,
+        "file_name": "gemm.py",
+        "call_status": 0,
+        "exec_status": 0,
+        "stdout": "{'total_tensors': 0, 'matched_tensors': 0, 'match_percentage': 0, 'detailed_results': []}",
+        "stderr": "None__________ test_correctness[1024-1024-1024-fp16-fp16-fp16-True-True] ___________\n\nM = 1024, N = 1024, K = 1024, col_a = True, col_b = True, in_dtype_a = 'fp16'\nin_dtype_b = 'fp16', out_dtype = 'fp16'\nrequest = <FixtureRequest for <Function test_correctness[1024-1024-1024-fp16-fp16-fp16-True-True]>>\n\n    @pytest.mark.parametrize(\n        \"M, N, K, in_dtype_a, in_dtype_b, out_dtype, col_a, col_b\",\n        [(*shape, in_dtype_a, in_dtype_b, out_dtype, col_a, col_b)\n         for shape in get_x_vals()\n         for in_dtype_a, in_dtype_b, out_dtype in [\n            ('fp16', 'fp16', 'fp16'),   ('bf16', 'bf16', 'bf16'),   ('fp32', 'fp32', 'fp32'),\n            ('fp8e4', 'fp8e4', 'fp16'), ('fp8e5', 'fp8e5', 'fp16'), ('fp16', 'fp8e4', 'fp16'),\n            ('fp16', 'fp8e5', 'fp16'),  ('bf16', 'fp8e4', 'bf16'),  ('bf16', 'fp8e5', 'bf16'),\n            ('int8', 'int8', 'int8'),   ('int8', 'int8', 'int32')]\n         # Defines if a matrix is row or column major.\n         for col_a in [True, False]\n         for col_b in [True, False]])\n    # yapf: enable\n    def test_correctness(M, N, K, col_a, col_b, in_dtype_a, in_dtype_b, out_dtype, request):\n        set_seed()\n        torch_in_dtype_a = name_to_torch_types[in_dtype_a]\n        torch_in_dtype_b = name_to_torch_types[in_dtype_b]\n        a, a_fp32, a_scale = gen_input(M, K, torch_in_dtype_a, col_a, seed=1, device='cuda')\n        b, b_fp32, b_scale = gen_input(K, N, torch_in_dtype_b, col_b, seed=2, device='cuda')\n        torch_out_dtype = name_to_torch_types[out_dtype]\n        c = torch.empty((M, N), device=a.device, dtype=torch_out_dtype)\n        # For 8-bit, we have scaled to the dynamic range of the data type.\n        # This requires us to compute in fp32 because for e5m2, the range is same as fp16 (e5m10).\n        # If we use fp16 it is possible to return infs from the torch.matmul call.\n        if dtype_is_8_bit(torch_in_dtype_a) or dtype_is_8_bit(torch_in_dtype_b):\n            matmul(a, b, c, a_scale, b_scale, scale_a8_b8='tensor', activation=\"\")\n            torch_output = torch.matmul(a_fp32, b_fp32)\n            # Set a_scale to 1.0 if it is not set\n            torch_output = torch_output * (a_scale or 1.0) * b_scale\n        # For other dtypes, use the same torch matmul as the dtype.\n        else:\n>           matmul(a, b, c, a_scale=None, b_scale=None, scale_a8_b8=None, activation=\"\")\n\ndata/ROCm/data/ROCm_call/gemm/tmp/tmp/gen/gemm_gen_triton_code_499576.py:701: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \ndata/ROCm/data/ROCm_call/gemm/tmp/tmp/gen/gemm_gen_triton_code_499576.py:560: in matmul\n    matmul_kernel[grid](\n/var/lib/jenkins/triton/python/triton/runtime/jit.py:330: in <lambda>\n    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)\n/var/lib/jenkins/triton/python/triton/runtime/autotuner.py:186: in run\n    timings = {config: self._bench(*args, config=config, **kwargs) for config in pruned_configs}\n/var/lib/jenkins/triton/python/triton/runtime/autotuner.py:166: in _bench\n    return self.do_bench(kernel_call, quantiles=(0.5, 0.2, 0.8))\n/var/lib/jenkins/triton/python/triton/runtime/autotuner.py:113: in <lambda>\n    self.do_bench = lambda kernel_call, quantiles: do_bench_cudagraph(\n/var/lib/jenkins/triton/python/triton/testing.py:50: in do_bench_cudagraph\n    fn()\n/var/lib/jenkins/triton/python/triton/runtime/autotuner.py:152: in kernel_call\n    self.fn.run(\n/var/lib/jenkins/triton/python/triton/runtime/autotuner.py:385: in run\n    return self.fn.run(*args, **kwargs)\n/var/lib/jenkins/triton/python/triton/runtime/jit.py:623: in run\n    kernel = self.compile(\n/var/lib/jenkins/triton/python/triton/compiler/compiler.py:279: in compile\n    next_module = compile_ir(module, metadata)\n/var/lib/jenkins/triton/python/triton/backends/amd/compiler.py:360: in <lambda>\n    stages[\"ttgir\"] = lambda src, metadata: self.make_ttgir(src, metadata, options)\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nmod = <triton._C.libtriton.ir.module object at 0x7f24e0a3e870>\nmetadata = {'allow_flush_denorm': False, 'allowed_dot_input_precisions': ('ieee',), 'arch': 'gfx942', 'backend_name': 'hip', ...}\noptions = HIPOptions(num_warps=4, waves_per_eu=2, num_stages=2, num_ctas=1, num_buffers_warp_spec=0, num_consumer_groups=0, reg_...=2, allow_flush_denorm=False, max_num_imprecise_acc_default=0, backend_name='hip', instruction_sched_variant='default')\n\n    @staticmethod\n    def make_ttgir(mod, metadata, options):\n        pm = ir.pass_manager(mod.context)\n        pm.enable_debug()\n        passes.ttir.add_convert_to_ttgpuir(pm, f\"hip:{options.arch}\", options.num_warps, options.warp_size,\n                                           options.num_ctas)\n        pm.run(mod)\n        pm = ir.pass_manager(mod.context)\n        pm.enable_debug()\n        passes.ttgpuir.add_coalesce(pm)\n        passes.ttgpuir.add_remove_layout_conversions(pm)\n        passes.ttgpuir.add_optimize_thread_locality(pm)\n        amd.passes.ttgpuir.add_accelerate_matmul(pm, options.arch, options.matrix_instr_nonkdim, options.kpack)\n        passes.ttgpuir.add_remove_layout_conversions(pm)\n        amd.passes.ttgpuir.add_optimize_epilogue(pm)\n        passes.ttgpuir.add_optimize_dot_operands(pm, True)\n        if amd.has_matrix_core_feature(options.arch):\n            assert options.num_stages != 0, (\"Triton AMD backend pipeliner has been updated. \"\n                                             \"We used to trigger software pipelining with \"\n                                             \"num_stages == 0. Now it will not happen anymore; \"\n                                             \"please update to use num_stages == 2 for \"\n                                             \"equivalent behavior in the past.\")\n            amd.passes.ttgpuir.add_stream_pipelinev2(pm, options.num_stages)\n            passes.common.add_canonicalizer(pm)\n        amd.passes.ttgpuir.insert_instruction_sched_hints(pm)\n        passes.ttgpuir.add_optimize_dot_operands(pm, True)\n        passes.ttgpuir.add_remove_layout_conversions(pm)\n        passes.ttgpuir.add_reduce_data_duplication(pm)\n        if amd.has_matrix_core_feature(options.arch):\n            amd.passes.ttgpuir.add_reorder_instructions(pm)\n        if os.environ.get(\"AMDGCN_USE_BUFFER_OPS\", \"0\") == \"1\":\n            amd.passes.ttgpuir.add_canonicalize_pointers(pm)\n            passes.common.add_canonicalizer(pm)\n            amd.passes.ttgpuir.add_convert_to_buffer_ops(pm)\n        passes.common.add_canonicalizer(pm)\n        passes.common.add_cse(pm)\n        passes.common.add_symbol_dce(pm)\n>       pm.run(mod)\nE       RuntimeError: PassManager::run failed\n\n/var/lib/jenkins/triton/python/triton/backends/amd/compiler.py:243: RuntimeError",
+        "difficulty": -1
+    }
+]

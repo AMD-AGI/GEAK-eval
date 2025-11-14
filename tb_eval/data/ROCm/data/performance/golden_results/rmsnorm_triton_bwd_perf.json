@@ -1,0 +1,53 @@
+[
+    {
+        "params": {
+            "M": 256,
+            "N": 4096,
+            "ZERO_CENTERED_GAMMA": false,
+            "dtype_str": "fp16",
+            "eps": 1e-05,
+            "blk_size_fwd": 4096,
+            "USE_BLOCKED_fwd": false,
+            "NUM_PRGMS_fwd": 256
+        },
+        "ms": 0.0174,
+        "min_ms": 0.0214,
+        "max_ms": 0.0157,
+        "GB/s": 241.03,
+        "TFLOPS": 0.24
+    },
+    {
+        "params": {
+            "M": 2048,
+            "N": 2048,
+            "ZERO_CENTERED_GAMMA": false,
+            "dtype_str": "fp16",
+            "eps": 1e-05,
+            "blk_size_fwd": 2048,
+            "USE_BLOCKED_fwd": false,
+            "NUM_PRGMS_fwd": 304
+        },
+        "ms": 0.0166,
+        "min_ms": 0.0183,
+        "max_ms": 0.0153,
+        "GB/s": 1009.05,
+        "TFLOPS": 1.01
+    },
+    {
+        "params": {
+            "M": 1,
+            "N": 31744,
+            "ZERO_CENTERED_GAMMA": false,
+            "dtype_str": "fp16",
+            "eps": 1e-05,
+            "blk_size_fwd": 32768,
+            "USE_BLOCKED_fwd": false,
+            "NUM_PRGMS_fwd": 1
+        },
+        "ms": 0.0168,
+        "min_ms": 0.0213,
+        "max_ms": 0.0155,
+        "GB/s": 11.34,
+        "TFLOPS": 0.01
+    }
+]

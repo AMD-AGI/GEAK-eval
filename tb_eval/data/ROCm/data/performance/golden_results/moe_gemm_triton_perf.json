@@ -1,0 +1,162 @@
+[
+    {
+        "params": {
+            "M_orig": 64,
+            "N": 14336,
+            "K": 4096,
+            "top_k": 2,
+            "E": 8,
+            "routed_weight": true,
+            "dtype_str": "fp16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 0.4095,
+        "min_ms": 0.413,
+        "max_ms": 0.4068,
+        "GB/s": 2304.55,
+        "TFLOPS": 36.71
+    },
+    {
+        "params": {
+            "M_orig": 256,
+            "N": 7168,
+            "K": 4096,
+            "top_k": 2,
+            "E": 8,
+            "routed_weight": true,
+            "dtype_str": "fp16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 0.3603,
+        "min_ms": 0.3633,
+        "max_ms": 0.3568,
+        "GB/s": 1329.97,
+        "TFLOPS": 83.45
+    },
+    {
+        "params": {
+            "M_orig": 1024,
+            "N": 14336,
+            "K": 4096,
+            "top_k": 2,
+            "E": 8,
+            "routed_weight": true,
+            "dtype_str": "fp16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 1.4164,
+        "min_ms": 1.4278,
+        "max_ms": 1.3934,
+        "GB/s": 710.69,
+        "TFLOPS": 169.83
+    },
+    {
+        "params": {
+            "M_orig": 16,
+            "N": 1024,
+            "K": 512,
+            "top_k": 1,
+            "E": 4,
+            "routed_weight": true,
+            "dtype_str": "fp16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 0.0711,
+        "min_ms": 0.0726,
+        "max_ms": 0.0696,
+        "GB/s": 59.7,
+        "TFLOPS": 0.24
+    },
+    {
+        "params": {
+            "M_orig": 64,
+            "N": 14336,
+            "K": 4096,
+            "top_k": 2,
+            "E": 8,
+            "routed_weight": false,
+            "dtype_str": "fp16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 0.4065,
+        "min_ms": 0.4101,
+        "max_ms": 0.4036,
+        "GB/s": 2321.37,
+        "TFLOPS": 36.98
+    },
+    {
+        "params": {
+            "M_orig": 256,
+            "N": 7168,
+            "K": 4096,
+            "top_k": 2,
+            "E": 8,
+            "routed_weight": false,
+            "dtype_str": "fp16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 0.357,
+        "min_ms": 0.3604,
+        "max_ms": 0.3543,
+        "GB/s": 1342.29,
+        "TFLOPS": 84.21
+    },
+    {
+        "params": {
+            "M_orig": 1024,
+            "N": 14336,
+            "K": 4096,
+            "top_k": 2,
+            "E": 8,
+            "routed_weight": false,
+            "dtype_str": "fp16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 1.4151,
+        "min_ms": 1.4376,
+        "max_ms": 1.4046,
+        "GB/s": 711.34,
+        "TFLOPS": 169.96
+    },
+    {
+        "params": {
+            "M_orig": 16,
+            "N": 1024,
+            "K": 512,
+            "top_k": 1,
+            "E": 4,
+            "routed_weight": false,
+            "dtype_str": "fp16",
+            "BLOCK_SIZE_M": 64,
+            "BLOCK_SIZE_N": 64,
+            "BLOCK_SIZE_K": 32,
+            "GROUP_SIZE_M": 8
+        },
+        "ms": 0.0692,
+        "min_ms": 0.0708,
+        "max_ms": 0.068,
+        "GB/s": 61.32,
+        "TFLOPS": 0.24
+    }
+]

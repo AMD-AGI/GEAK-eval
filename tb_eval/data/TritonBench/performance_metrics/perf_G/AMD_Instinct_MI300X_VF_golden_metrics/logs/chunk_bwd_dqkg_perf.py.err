@@ -1,0 +1,2 @@
+Memory access fault by GPU node-8 (Agent handle: 0x55e8f5b87e10) on address 0x7f4112e07000. Reason: Unknown.
+Aborted (core dumped)

@@ -1,0 +1,16 @@
+[
+    {
+        "params": {
+            "batch": 4,
+            "heads": 30,
+            "seq_len": 4352,
+            "head_dim": 128,
+            "dtype_str": "bfloat16"
+        },
+        "ms": 0.203,
+        "min_ms": 0.203,
+        "max_ms": 0.203,
+        "GB/s": 2635.0,
+        "TFLOPS": 5722.0
+    }
+]

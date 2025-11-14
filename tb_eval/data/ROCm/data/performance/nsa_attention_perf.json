@@ -1,0 +1,128 @@
+[
+    {
+        "params": {
+            "b": 1,
+            "n": 4096,
+            "qh": 64,
+            "kh": 4,
+            "d": 128,
+            "vd": 128,
+            "stride": 16,
+            "kernel_size": 32,
+            "select_size": 64,
+            "top_n": 16,
+            "window_size": 512,
+            "dtype_str": "bfloat16"
+        },
+        "ms": 9.1554,
+        "min_ms": 9.1463,
+        "max_ms": 9.1595,
+        "GB/s": 15.58,
+        "TFLOPS": 60.63
+    },
+    {
+        "params": {
+            "b": 1,
+            "n": 8192,
+            "qh": 64,
+            "kh": 4,
+            "d": 128,
+            "vd": 128,
+            "stride": 16,
+            "kernel_size": 32,
+            "select_size": 64,
+            "top_n": 16,
+            "window_size": 512,
+            "dtype_str": "bfloat16"
+        },
+        "ms": 18.963,
+        "min_ms": 18.963,
+        "max_ms": 18.9631,
+        "GB/s": 15.04,
+        "TFLOPS": 117.1
+    },
+    {
+        "params": {
+            "b": 1,
+            "n": 16384,
+            "qh": 64,
+            "kh": 4,
+            "d": 128,
+            "vd": 128,
+            "stride": 16,
+            "kernel_size": 32,
+            "select_size": 64,
+            "top_n": 16,
+            "window_size": 512,
+            "dtype_str": "bfloat16"
+        },
+        "ms": 41.4486,
+        "min_ms": 41.4486,
+        "max_ms": 41.4486,
+        "GB/s": 13.76,
+        "TFLOPS": 214.29
+    },
+    {
+        "params": {
+            "b": 1,
+            "n": 32768,
+            "qh": 64,
+            "kh": 4,
+            "d": 128,
+            "vd": 128,
+            "stride": 16,
+            "kernel_size": 32,
+            "select_size": 64,
+            "top_n": 16,
+            "window_size": 512,
+            "dtype_str": "bfloat16"
+        },
+        "ms": 96.9984,
+        "min_ms": 96.9984,
+        "max_ms": 96.9984,
+        "GB/s": 11.76,
+        "TFLOPS": 366.27
+    },
+    {
+        "params": {
+            "b": 1,
+            "n": 65536,
+            "qh": 64,
+            "kh": 4,
+            "d": 128,
+            "vd": 128,
+            "stride": 16,
+            "kernel_size": 32,
+            "select_size": 64,
+            "top_n": 16,
+            "window_size": 512,
+            "dtype_str": "bfloat16"
+        },
+        "ms": 249.6336,
+        "min_ms": 249.6336,
+        "max_ms": 249.6336,
+        "GB/s": 9.14,
+        "TFLOPS": 569.28
+    },
+    {
+        "params": {
+            "b": 1,
+            "n": 131072,
+            "qh": 64,
+            "kh": 4,
+            "d": 128,
+            "vd": 128,
+            "stride": 16,
+            "kernel_size": 32,
+            "select_size": 64,
+            "top_n": 16,
+            "window_size": 512,
+            "dtype_str": "bfloat16"
+        },
+        "ms": 749.3426,
+        "min_ms": 749.3426,
+        "max_ms": 749.3426,
+        "GB/s": 6.09,
+        "TFLOPS": 758.59
+    }
+]

@@ -1,0 +1,5 @@
+triton==3.3.0
+parse_llm_code
+pandas
+numpy==1.26
+openai==0.28
