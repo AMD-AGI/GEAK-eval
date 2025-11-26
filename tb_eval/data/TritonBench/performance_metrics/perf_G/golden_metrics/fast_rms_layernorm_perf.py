@@ -17,7 +17,7 @@ class performance_metrics(Performance_Metrics):
         
     def get_input_tensors(self):
         self.input_tensors = []
-        for i in range(2, 16):
+        for i in range(2, 15):
             size = 2 ** i
             # Create a simple layernorm module with the appropriate size
             layernorm = SimpleLayerNorm(size)
