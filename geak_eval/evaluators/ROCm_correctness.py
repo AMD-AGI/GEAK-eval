@@ -5,7 +5,7 @@ import numpy as np
 import os
 import torch
 import subprocess
-from tb_eval.constants import Names
+from geak_eval.constants import Names
 
 
 torch.set_printoptions(profile="full")

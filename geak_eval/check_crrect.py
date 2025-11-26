@@ -7,10 +7,10 @@ import shutil
 # This assumes the script is run from the root of the TB-eval-OE project,
 # so it can correctly import the library components.
 try:
-    from tb_eval.evaluators.interface import get_evaluators
-    from tb_eval.constants import Names
+    from geak_eval.evaluators.interface import get_evaluators
+    from geak_eval.constants import Names
 except ImportError:
-    print("❌ ERROR: Could not import tb_eval modules.")
+    print("❌ ERROR: Could not import geak_eval modules.")
     print("Please make sure you run this script from the root of the 'TB-eval-OE' project directory.")
     sys.exit(1)
 
