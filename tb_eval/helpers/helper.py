@@ -114,6 +114,32 @@ def extract_errors(stderr_string: str) -> str:
     # If neither type of error is found, return an empty string.
     return ""
     
+def extract_json_from_stdout(stdout_string: str) -> dict:
+    """
+    Extracts a JSON object from a string that contains json in markdown format e.g. ```json\n .... \n```.
+
+    Args:
+        stdout_string: The complete stdout output as a string.
+
+    Returns:
+        A dictionary containing the extracted JSON data, or an empty dictionary
+        if no valid JSON is found.
+    """
+    # Use a regular expression to find the content between the ```json
+    # and the closing ```.
+    pattern = re.compile(r'```json\s*(.*?)\s*```', re.DOTALL)
+
+    match = pattern.search(stdout_string)
+
+    if match:
+        json_string = match.group(1).strip()
+        try:
+            return json.loads(json_string)
+        except json.JSONDecodeError:
+            return {}
+    else:
+        return {}
+
 def get_fname_difficulty_from_label(label):
     # triton_root = DEFAULT_TRITON_BENCH_ROOT
     triton_root = os.path.join(REPO_ROOT, "data", "TritonBench", "data", "TritonBench_G_comp_alpac_v1_fixed_with_difficulty.json")
