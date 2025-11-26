@@ -1,0 +1,67 @@
+[
+    {
+        "params": {
+            "M": 2048,
+            "N": 2048,
+            "dtype_str": "fp16",
+            "LOGGED_BLOCK_SIZE_heuristic": 2048
+        },
+        "ms": 0.0259,
+        "min_ms": 0.0273,
+        "max_ms": 0.0245,
+        "GB/s": 970.17,
+        "TFLOPS": 1.46
+    },
+    {
+        "params": {
+            "M": 4096,
+            "N": 4096,
+            "dtype_str": "fp16",
+            "LOGGED_BLOCK_SIZE_heuristic": 4096
+        },
+        "ms": 0.0755,
+        "min_ms": 0.0767,
+        "max_ms": 0.0746,
+        "GB/s": 1333.39,
+        "TFLOPS": 2.0
+    },
+    {
+        "params": {
+            "M": 8192,
+            "N": 8192,
+            "dtype_str": "fp16",
+            "LOGGED_BLOCK_SIZE_heuristic": 8192
+        },
+        "ms": 0.3184,
+        "min_ms": 0.3207,
+        "max_ms": 0.3163,
+        "GB/s": 1264.57,
+        "TFLOPS": 1.9
+    },
+    {
+        "params": {
+            "M": 1,
+            "N": 32000,
+            "dtype_str": "fp16",
+            "LOGGED_BLOCK_SIZE_heuristic": 32768
+        },
+        "ms": 0.1819,
+        "min_ms": 0.1834,
+        "max_ms": 0.1804,
+        "GB/s": 1.06,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M": 1,
+            "N": 131072,
+            "dtype_str": "fp16",
+            "LOGGED_BLOCK_SIZE_heuristic": 32768
+        },
+        "ms": 0.7608,
+        "min_ms": 0.7648,
+        "max_ms": 0.7557,
+        "GB/s": 1.03,
+        "TFLOPS": 0.0
+    }
+]

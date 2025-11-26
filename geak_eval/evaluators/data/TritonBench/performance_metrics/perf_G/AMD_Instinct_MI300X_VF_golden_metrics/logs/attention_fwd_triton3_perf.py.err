@@ -1,0 +1,6 @@
+/home/vinajosh/code/main/tb_eval/data/TritonBench/data/TritonBench_G_v1/attention_fwd_triton3.py:263: UserWarning: Triton Attention Output Resources. out of resource: shared memory, Required: 212992, Hardware limit: 65536. Reducing block sizes or `num_stages` may help.
+Use smaller block size 32.
+  warn(f"Triton Attention Output Resources. {E}\nUse smaller block size {_BLOCK_N}.")
+/home/vinajosh/code/main/tb_eval/data/TritonBench/data/TritonBench_G_v1/attention_fwd_triton3.py:263: UserWarning: Triton Attention Output Resources. out of resource: shared memory, Required: 98304, Hardware limit: 65536. Reducing block sizes or `num_stages` may help.
+Use smaller block size 16.
+  warn(f"Triton Attention Output Resources. {E}\nUse smaller block size {_BLOCK_N}.")

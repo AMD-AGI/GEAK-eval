@@ -1,0 +1,28 @@
+[
+    {
+        "params": {
+            "N_rows_const": 128,
+            "M_cols_const": 512,
+            "dtype_str": "float16",
+            "num_warps": 1
+        },
+        "ms": 0.4136,
+        "min_ms": 0.4259,
+        "max_ms": 0.4117,
+        "GB/s": 0.63,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "N_rows_const": 1024,
+            "M_cols_const": 64,
+            "dtype_str": "float16",
+            "num_warps": 1
+        },
+        "ms": 0.2114,
+        "min_ms": 0.2148,
+        "max_ms": 0.2101,
+        "GB/s": 1.24,
+        "TFLOPS": 0.0
+    }
+]

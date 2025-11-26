@@ -1,0 +1,506 @@
+[
+    {
+        "params": {
+            "M_dim": 128,
+            "N_dim": 64,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0064,
+        "min_ms": 0.0069,
+        "max_ms": 0.0063,
+        "GB/s": 2.59,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 128,
+            "N_dim": 128,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0066,
+        "max_ms": 0.0062,
+        "GB/s": 5.25,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 128,
+            "N_dim": 256,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0067,
+        "max_ms": 0.0062,
+        "GB/s": 10.45,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 128,
+            "N_dim": 512,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0084,
+        "min_ms": 0.0089,
+        "max_ms": 0.0081,
+        "GB/s": 15.67,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 128,
+            "N_dim": 1024,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0172,
+        "min_ms": 0.0179,
+        "max_ms": 0.0166,
+        "GB/s": 15.22,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 256,
+            "N_dim": 64,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0066,
+        "max_ms": 0.0062,
+        "GB/s": 5.29,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 256,
+            "N_dim": 128,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0067,
+        "max_ms": 0.0062,
+        "GB/s": 10.49,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 256,
+            "N_dim": 256,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0076,
+        "min_ms": 0.0082,
+        "max_ms": 0.0074,
+        "GB/s": 17.27,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 256,
+            "N_dim": 512,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0263,
+        "min_ms": 0.0269,
+        "max_ms": 0.026,
+        "GB/s": 9.99,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 512,
+            "N_dim": 64,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0067,
+        "max_ms": 0.0062,
+        "GB/s": 10.57,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 512,
+            "N_dim": 128,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0073,
+        "min_ms": 0.0078,
+        "max_ms": 0.0071,
+        "GB/s": 18.2,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 512,
+            "N_dim": 256,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0244,
+        "min_ms": 0.0249,
+        "max_ms": 0.0241,
+        "GB/s": 10.8,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 1024,
+            "N_dim": 64,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0066,
+        "min_ms": 0.0073,
+        "max_ms": 0.0064,
+        "GB/s": 20.25,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 1024,
+            "N_dim": 128,
+            "dtype_str": "fp16"
+        },
+        "ms": 0.0214,
+        "min_ms": 0.0221,
+        "max_ms": 0.0212,
+        "GB/s": 12.32,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 128,
+            "N_dim": 64,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0066,
+        "max_ms": 0.0062,
+        "GB/s": 5.29,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 128,
+            "N_dim": 128,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0067,
+        "max_ms": 0.0062,
+        "GB/s": 10.49,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 128,
+            "N_dim": 256,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0077,
+        "min_ms": 0.0083,
+        "max_ms": 0.0075,
+        "GB/s": 17.09,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 128,
+            "N_dim": 512,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0161,
+        "min_ms": 0.0169,
+        "max_ms": 0.0155,
+        "GB/s": 16.3,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 128,
+            "N_dim": 1024,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0469,
+        "min_ms": 0.0478,
+        "max_ms": 0.0465,
+        "GB/s": 11.19,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 256,
+            "N_dim": 64,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0066,
+        "max_ms": 0.0062,
+        "GB/s": 10.57,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 256,
+            "N_dim": 128,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0073,
+        "min_ms": 0.0079,
+        "max_ms": 0.0071,
+        "GB/s": 18.1,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 256,
+            "N_dim": 256,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0254,
+        "min_ms": 0.0259,
+        "max_ms": 0.0251,
+        "GB/s": 10.35,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 256,
+            "N_dim": 512,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0541,
+        "min_ms": 0.0546,
+        "max_ms": 0.0537,
+        "GB/s": 9.71,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 512,
+            "N_dim": 64,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0068,
+        "min_ms": 0.0073,
+        "max_ms": 0.0066,
+        "GB/s": 19.65,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 512,
+            "N_dim": 128,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0228,
+        "min_ms": 0.0235,
+        "max_ms": 0.0225,
+        "GB/s": 11.6,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 512,
+            "N_dim": 256,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0212,
+        "min_ms": 0.0219,
+        "max_ms": 0.0209,
+        "GB/s": 24.86,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 1024,
+            "N_dim": 64,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0203,
+        "min_ms": 0.021,
+        "max_ms": 0.0199,
+        "GB/s": 13.1,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 1024,
+            "N_dim": 128,
+            "dtype_str": "fp32"
+        },
+        "ms": 0.0194,
+        "min_ms": 0.0202,
+        "max_ms": 0.019,
+        "GB/s": 27.29,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 128,
+            "N_dim": 64,
+            "dtype_str": "bf16"
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0066,
+        "max_ms": 0.0062,
+        "GB/s": 2.64,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 128,
+            "N_dim": 128,
+            "dtype_str": "bf16"
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0067,
+        "max_ms": 0.0062,
+        "GB/s": 5.25,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 128,
+            "N_dim": 256,
+            "dtype_str": "bf16"
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0068,
+        "max_ms": 0.0063,
+        "GB/s": 10.39,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 128,
+            "N_dim": 512,
+            "dtype_str": "bf16"
+        },
+        "ms": 0.0096,
+        "min_ms": 0.01,
+        "max_ms": 0.0093,
+        "GB/s": 13.71,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 128,
+            "N_dim": 1024,
+            "dtype_str": "bf16"
+        },
+        "ms": 0.0323,
+        "min_ms": 0.0332,
+        "max_ms": 0.032,
+        "GB/s": 8.12,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 256,
+            "N_dim": 64,
+            "dtype_str": "bf16"
+        },
+        "ms": 0.0066,
+        "min_ms": 0.0073,
+        "max_ms": 0.0062,
+        "GB/s": 5.03,
+        "TFLOPS": 0.0
+    },
+    {
+        "params": {
+            "M_dim": 256,
+            "N_dim": 128,
+            "dtype_str": "bf16"
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0067,
+        "max_ms": 0.0063,
+        "GB/s": 10.43,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 256,
+            "N_dim": 256,
+            "dtype_str": "bf16"
+        },
+        "ms": 0.0086,
+        "min_ms": 0.0091,
+        "max_ms": 0.0084,
+        "GB/s": 15.34,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 256,
+            "N_dim": 512,
+            "dtype_str": "bf16"
+        },
+        "ms": 0.0221,
+        "min_ms": 0.0228,
+        "max_ms": 0.0218,
+        "GB/s": 11.89,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 512,
+            "N_dim": 64,
+            "dtype_str": "bf16"
+        },
+        "ms": 0.0063,
+        "min_ms": 0.0068,
+        "max_ms": 0.0063,
+        "GB/s": 10.51,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 512,
+            "N_dim": 128,
+            "dtype_str": "bf16"
+        },
+        "ms": 0.0092,
+        "min_ms": 0.0097,
+        "max_ms": 0.009,
+        "GB/s": 14.33,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 512,
+            "N_dim": 256,
+            "dtype_str": "bf16"
+        },
+        "ms": 0.0209,
+        "min_ms": 0.0216,
+        "max_ms": 0.0204,
+        "GB/s": 12.6,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 1024,
+            "N_dim": 64,
+            "dtype_str": "bf16"
+        },
+        "ms": 0.0077,
+        "min_ms": 0.0083,
+        "max_ms": 0.0076,
+        "GB/s": 17.2,
+        "TFLOPS": 0.01
+    },
+    {
+        "params": {
+            "M_dim": 1024,
+            "N_dim": 128,
+            "dtype_str": "bf16"
+        },
+        "ms": 0.0156,
+        "min_ms": 0.0165,
+        "max_ms": 0.0151,
+        "GB/s": 16.9,
+        "TFLOPS": 0.01
+    }
+]
