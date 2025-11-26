@@ -2,11 +2,10 @@
 import argparse
 from glob import glob
 import numpy as np
-import os
 import torch
 import subprocess
 from tb_eval.constants import Names
-
+from loguru import logger
 
 torch.set_printoptions(profile="full")
 
@@ -215,17 +214,8 @@ def test_pt_correctness(ref_file, gen_file, atol=1e-3, rtol=1e-3, verbose=False)
     gen_stderr, ref_stderr = None, None  
       
     # Convert file paths to PT paths  
-    # FIX: Only replace the .py extension, not all dots in the path
-    ref_file_pt_path = ref_file[:-3] + '_py.pt' if ref_file.endswith('.py') else ref_file + '.pt'
-    gen_file_pt_path = gen_file[:-3] + '_py.pt' if gen_file.endswith('.py') else gen_file + '.pt'
-    
-    print(f"\nDEBUG test_pt_correctness: Loading PT files")
-    print(f"DEBUG: ref_file = {ref_file}")
-    print(f"DEBUG: gen_file = {gen_file}")
-    print(f"DEBUG: ref_file_pt_path = {ref_file_pt_path}")
-    print(f"DEBUG: gen_file_pt_path = {gen_file_pt_path}")
-    print(f"DEBUG: ref_file_pt_path exists? {os.path.exists(ref_file_pt_path)}")
-    print(f"DEBUG: gen_file_pt_path exists? {os.path.exists(gen_file_pt_path)}")
+    ref_file_pt_path = ref_file.replace('.', '_') + '.pt'  
+    gen_file_pt_path = gen_file.replace('.', '_') + '.pt'  
       
     # Load generated file  
     try:  
@@ -263,103 +253,19 @@ def test_pt_correctness(ref_file, gen_file, atol=1e-3, rtol=1e-3, verbose=False)
 
 
 
-def test_correctness_rocm(ref_file, gen_file, var_name='result_gold', atol=1e-3, rtol=1e-3, verbose=False):
-    print(f"\n{'='*80}")
-    print(f"DEBUG: Starting test_correctness_rocm")
-    print(f"DEBUG: ref_file = {ref_file}")
-    print(f"DEBUG: gen_file = {gen_file}")
-    
-    # Check which python is being used
-    which_python = subprocess.run(['which python3'], capture_output=True, text=True, shell=True)
-    print(f"DEBUG: which python3 = {which_python.stdout.strip()}")
-    print(f"DEBUG: CONDA_DEFAULT_ENV = {os.environ.get('CONDA_DEFAULT_ENV', 'NOT SET')}")
-    print(f"DEBUG: HIP_VISIBLE_DEVICES = {os.environ.get('HIP_VISIBLE_DEVICES', 'NOT SET')}")
-    print(f"DEBUG: CUDA_VISIBLE_DEVICES = {os.environ.get('CUDA_VISIBLE_DEVICES', 'NOT SET')}")
-    print(f"DEBUG: Current working directory = {os.getcwd()}")
-    print(f"DEBUG: PATH = {os.environ.get('PATH', 'NOT SET')[:200]}...")
-    print(f"{'='*80}\n")
-    
-    # GPU warmup to prevent cold-start segfaults (in-process only)
-    # NOTE: Subprocess warmup removed because it doesn't work in conda environments
-    print("DEBUG: Running in-process GPU warmup...")
-    try:
-        import torch
-        if torch.cuda.is_available():
-            device = torch.device('cuda')
-            x = torch.randn(100, 100, device=device)
-            y = x @ x.T
-            torch.cuda.synchronize()
-            del x, y
-            torch.cuda.empty_cache()
-            print("DEBUG: In-process GPU warmup completed")
-    except Exception as e:
-        print(f"DEBUG: In-process GPU warmup failed: {e}")
-    print()
-    
-    # Use sys.executable to ensure we use the same Python (conda environment) for subprocesses
-    import sys
-    ref_cmd = f'{sys.executable} -m pytest --capture=sys -k "not test_performance and not test_save_performance_results" {ref_file}'
-    gen_cmd = f'{sys.executable} -m pytest --capture=sys -k "not test_performance and not test_save_performance_results" {gen_file}'
-    
-    # Helper function to run pytest with retry on segfault
-    def run_pytest_with_retry(cmd, label, max_retries=2):
-        for attempt in range(max_retries + 1):
-            if attempt > 0:
-                print(f"DEBUG: Retry {attempt}/{max_retries} for {label} (previous attempt segfaulted)")
-                # Clear Triton cache on retry
-                import shutil
-                triton_cache = os.path.expanduser("~/.triton/cache")
-                if os.path.exists(triton_cache):
-                    print(f"DEBUG: Clearing Triton cache: {triton_cache}")
-                    try:
-                        shutil.rmtree(triton_cache)
-                    except Exception as e:
-                        print(f"DEBUG: Failed to clear Triton cache: {e}")
-                # Force garbage collection and wait longer
-                import gc
-                gc.collect()
-                import torch
-                if torch.cuda.is_available():
-                    torch.cuda.empty_cache()
-                    print(f"DEBUG: Cleared CUDA/HIP cache")
-                import time
-                time.sleep(2)  # Increased to 2 seconds before retry
-            
-            print(f"DEBUG: Running {label}: {cmd}")
-            result = subprocess.run([cmd], capture_output=True, text=True, shell=True)
-            print(f"DEBUG: {label} return code: {result.returncode}")
-            print(f"DEBUG: {label} stdout length: {len(result.stdout)}")
-            print(f"DEBUG: {label} stderr length: {len(result.stderr)}")
-            
-            # Return code 139 = SIGSEGV (segmentation fault)
-            if result.returncode == 139:
-                print(f"⚠️ WARNING: {label} segfaulted (return code 139) on attempt {attempt + 1}")
-                if len(result.stderr) > 0:
-                    print(f"DEBUG: Segfault stderr (first 500 chars): {result.stderr[:500]}")
-                if attempt < max_retries:
-                    continue  # Retry
-                else:
-                    print(f"❌ ERROR: {label} segfaulted after {max_retries + 1} attempts")
-                    print(f"DEBUG: Full stderr: {result.stderr}")
-            
-            return result
-        
-        return result  # Should never reach here, but just in case
-    
-    ref_result_call = run_pytest_with_retry(ref_cmd, "ref_cmd")
-    print()
-    gen_result_call = run_pytest_with_retry(gen_cmd, "gen_cmd")
+def test_correctness_rocm(ref_file, gen_file, var_name='result_gold', atol=1e-3, rtol=1e-3, verbose=False, global_timeout=60*60):
+    # per_test_timeout = 60*10 # 5 minutes per test
+    logger.info("Global timeout: %ds", global_timeout)
+    # ref_result_call = subprocess.run([f'python3 -m pytest --capture=sys -k "not test_performance and not test_save_performance_results" {ref_file}'], capture_output=True, text=True, shell=True)
+    # gen_result_call = subprocess.run([f'python3 -m pytest --capture=sys -k "not test_performance and not test_save_performance_results" {gen_file}'], capture_output=True, text=True, shell=True)
 
-    # Check if .pt files exist BEFORE calling test_pt_correctness
-    ref_pt_path = ref_file[:-3] + '_py.pt' if ref_file.endswith('.py') else ref_file + '.pt'
-    gen_pt_path = gen_file[:-3] + '_py.pt' if gen_file.endswith('.py') else gen_file + '.pt'
-    
-    print(f"\nDEBUG: Checking for .pt files before test_pt_correctness:")
-    print(f"DEBUG: Expected ref_pt_path = {ref_pt_path}")
-    print(f"DEBUG: ref_pt_path exists? {os.path.exists(ref_pt_path)}")
-    print(f"DEBUG: Expected gen_pt_path = {gen_pt_path}")
-    print(f"DEBUG: gen_pt_path exists? {os.path.exists(gen_pt_path)}")
-    
+    # ref_result_call = subprocess.run([f'python3 -m pytest --timeout={per_test_timeout} --capture=sys -k "not test_performance and not test_save_performance_results" {ref_file}'], capture_output=True, text=True, shell=True, timeout=global_timeout)
+    # gen_result_call = subprocess.run([f'python3 -m pytest --timeout={per_test_timeout} --capture=sys -k "not test_performance and not test_save_performance_results" {gen_file}'], capture_output=True, text=True, shell=True, timeout=global_timeout)
+
+    ref_result_call = subprocess.run([f'python3 -m pytest --capture=sys -k "not test_performance and not test_save_performance_results" {ref_file}'], capture_output=True, text=True, shell=True, timeout=global_timeout)
+    gen_result_call = subprocess.run([f'python3 -m pytest --capture=sys -k "not test_performance and not test_save_performance_results" {gen_file}'], capture_output=True, text=True, shell=True, timeout=global_timeout)
+
+
     gen_call_acc, exec_acc, match_stats, gen_stderr = test_pt_correctness(ref_file, gen_file, atol=atol, rtol=rtol, verbose=verbose)  
 
     print(f"Logs stderr: {gen_result_call.stdout}")
@@ -380,12 +286,13 @@ def parse_args():
     parser.add_argument("--var_name", type=str, default="result_gold")
     parser.add_argument("--atol", type=float, default=1e-3)
     parser.add_argument("--rtol", type=float, default=1e-1)
+    parser.add_argument("--global_timeout", type=int, default=60*60)
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
     args = parser.parse_args()
     return args
 
 if __name__ == "__main__":
     args = parse_args()
-    gen_call_acc, exec_acc, stdout, gen_stderr = test_correctness_rocm(args.ref_file, args.gen_file, args.var_name, atol=args.atol, rtol=args.rtol, verbose=args.verbose)
+    gen_call_acc, exec_acc, stdout, gen_stderr = test_correctness_rocm(args.ref_file, args.gen_file, args.var_name, atol=args.atol, rtol=args.rtol, verbose=args.verbose, global_timeout=args.global_timeout)
     print(f"{Names.PYTEST_SEPARATOR}")
     print(f"{gen_call_acc}{Names.RET_SEPERATOR}{exec_acc}{Names.RET_SEPERATOR}{stdout}{Names.RET_SEPERATOR}{gen_stderr}")
