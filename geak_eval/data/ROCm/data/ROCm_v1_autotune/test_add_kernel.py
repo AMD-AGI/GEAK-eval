@@ -45,7 +45,7 @@ import os
 from numpy.random import RandomState
 import pytest
 from torch.testing import assert_close
-from tb_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
+from geak_eval.perf.ROCm.performance_utils_pytest import PytestBenchmarker, do_bench_config, save_all_benchmark_results
 from typing import Dict
 
 import triton
@@ -124,7 +124,7 @@ def test_add(SIZE, BLOCK_SIZE, dtype_str, request):
     def grid(meta):
         return (triton.cdiv(SIZE, meta['BLOCK_SIZE']), )
 
-    add_kernel[grid](x, y, output, SIZE) #, BLOCK_SIZE=BLOCK_SIZE)
+    add_kernel[grid](x, y, output, SIZE)
 
     output_torch = x + y
     torch.set_printoptions(profile='full')
@@ -163,8 +163,8 @@ def test_performance(SIZE, BLOCK_SIZE_ARG, dtype_str, request): # Function accep
 
     kernel_args = [x, y, output, SIZE]
     
-    # The op_lambda passes BLOCK_SIZE_ARG (runtime value) as the kernel's `BLOCK_SIZE` (constexpr name)
-    op_lambda = lambda: add_kernel[grid](*kernel_args) #, BLOCK_SIZE=BLOCK_SIZE_ARG)
+    # The op_lambda does not pass BLOCK_SIZE because autotuner will handle it
+    op_lambda = lambda: add_kernel[grid](*kernel_args)
 
     bench_config = do_bench_config(warm_up=25, repetition=100) # Smaller for faster debug
     benchmarker = PytestBenchmarker(op_callable=op_lambda,
