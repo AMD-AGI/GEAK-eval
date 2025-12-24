@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='tb_eval',  # Replace with your module/package name
+    name='geak_eval',  # Replace with your module/package name
     version='0.1.0',
     author='Vinay Joshi',
     author_email='vinajosh@amd.com',
@@ -16,7 +16,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'tb_eval=tb_eval.run:main',
+            'geak_eval=geak_eval.run:main',
         ],
     },
     classifiers=[
