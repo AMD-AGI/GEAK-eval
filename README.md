@@ -12,10 +12,10 @@ Please note that installation does not automatically install dependancies. You m
 ### Running evaluation
 You can run evaluations in the following two ways:
 1. Command line run:
-    - `tb_eval -f PATH_TO_FOLDER_OR_FILE -o NAME_OF_OUTPUT_FILE -ds tbg` for Tritonbench-G-v1
-    - `tb_eval -f PATH_TO_FOLDER_OR_FILE -o NAME_OF_OUTPUT_FILE -ds rocm` for ROCm
-2. From python script: the following is a bare minimum example, for a detail example please see `tb_eval/run.py`.
-    - `from tb_eval.evaluators.interface import get_evaluators`
+    - `geak_eval -f PATH_TO_FOLDER_OR_FILE -o NAME_OF_OUTPUT_FILE -ds tbg` for Tritonbench-G-v1
+    - `geak_eval -f PATH_TO_FOLDER_OR_FILE -o NAME_OF_OUTPUT_FILE -ds rocm` for ROCm
+2. From python script: the following is a bare minimum example, for a detail example please see `geak_eval/run.py`.
+    - `from geak_eval.evaluators.interface import get_evaluators`
     - `evaluator = get_evaluators["tbg"]() # for TritonBenchG eval`
     - `evaluator = get_evaluators["rocm"]() # for ROCm eval`
     - `call_status, exec_status, stdout, stderr = evaluator(generated_code, log_root=PATH_TO_LOG, file_name="kernel.py", atol=1e-5, rtol=1e-2) # run evaluations`
@@ -45,16 +45,16 @@ Please raise github issue or PR for any issues/help or contributions!
 
 You can contribute in the following ways:
 1. Add new kernels for evaluations: 
-    - Add the dataset of new kernels under `tb_eval/data`.
-    - Add the path of this new dataset in `tb_eval.constants`.
-    - Add an evaluator interface for this new dataset in `tb_eval.evaluators.interface`.
-    - Add an evaluator to be run by the interface in `tb_eval.evaluators`. The evaluator is a function that only runs python call and does not run if imported as a module. The `evaluator` (e.g. `TB_correctness.py`) is run by its `interface` (e.g. `interface.TestAllCloseEvaluatorTBG`).  
-2. You can add new metrics for evaluator to work with in `tb_eval.metrics`.
-3. You can add new performance eval metrics for your (or existing) dataset under `tb_eval.perf`.
+    - Add the dataset of new kernels under `geak_eval/data`.
+    - Add the path of this new dataset in `geak_eval.constants`.
+    - Add an evaluator interface for this new dataset in `geak_eval.evaluators.interface`.
+    - Add an evaluator to be run by the interface in `geak_eval.evaluators`. The evaluator is a function that only runs python call and does not run if imported as a module. The `evaluator` (e.g. `TB_correctness.py`) is run by its `interface` (e.g. `interface.TestAllCloseEvaluatorTBG`).  
+2. You can add new metrics for evaluator to work with in `geak_eval.metrics`.
+3. You can add new performance eval metrics for your (or existing) dataset under `geak_eval.perf`.
 
 ### Updates
 * [2025-07-16] Added autotune compatible ROCm kernels and naive softmax, use `-tp` argument with path to this folder as below:
-    - `tb_eval eval -f PATH_TO_EVAL_FOLDER -o RESULT_NAME -ds rocm -tp tb_eval/data/ROCm/data/ROCm_v1_autotune`
+    - `geak_eval eval -f PATH_TO_EVAL_FOLDER -o RESULT_NAME -ds rocm -tp geak_eval/data/ROCm/data/ROCm_v1_autotune`
     - `naive_softmax.py` kernel from [rocm blog](https://rocm.docs.amd.com/projects/ai-developer-hub/en/latest/notebooks/gpu_dev_optimize/triton_kernel_dev.html#naive-version) is added to this repo.
     - Use `-c` argument to directly run evaluations on python triton code file(s)/folder instead of json-based parsing.
 
