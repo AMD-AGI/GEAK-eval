@@ -1,0 +1,2 @@
+/home/vinajosh/code/main/geak_eval/data/TritonBench/data/TritonBench_G_v1/triton_linear_activation.py:223: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is deprecated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
+  @custom_fwd(cast_inputs=torch.float16)
