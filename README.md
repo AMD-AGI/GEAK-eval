@@ -1,9 +1,5 @@
-# Improved TritonBench evaluation framework
+# GEAK-eval: Evaluation Framework for Improved TritonBench and ROCmBench
 
-### Update
-- The integration of correctness checking inside the performance evaluation suite does not change the command in any way, i.e. you can still continue to use the following evaluation instructions.
-- This integration changes that TBG does correctness and evaluation inside the `evaluate` function called in `run.py`. However, since ROCm interface has not changed, we conditionally do performance evaluation of ROCm in `run.py`.
-  
 ### Dependancy installation
 - Install requirements as `pip install -r requirements.txt`
 
@@ -16,8 +12,8 @@ Please note that installation does not automatically install dependancies. You m
 ### Running evaluation
 You can run evaluations in the following two ways:
 1. Command line run:
-    - `geak_eval -f PATH_TO_FOLDER_OR_FILE -o NAME_OF_OUTPUT_FILE -ds tbg` for Tritonbench-G-v1
-    - `geak_eval -f PATH_TO_FOLDER_OR_FILE -o NAME_OF_OUTPUT_FILE -ds rocm` for ROCm
+    - `geak-eval -f PATH_TO_FOLDER_OR_FILE -o NAME_OF_OUTPUT_FILE -ds tbg` for Tritonbench-G-v1
+    - `geak-eval -f PATH_TO_FOLDER_OR_FILE -o NAME_OF_OUTPUT_FILE -ds rocm` for ROCm
 2. From python script: the following is a bare minimum example, for a detail example please see `geak_eval/run.py`.
     - `from geak_eval.evaluators.interface import get_evaluators`
     - `evaluator = get_evaluators["tbg"]() # for TritonBenchG eval`
@@ -37,12 +33,11 @@ You can run evaluations in the following two ways:
 1. Use `torch.allclose` to compare two runs (ground truth and generated).
 1. Fix ground truth files to include `result_gold = test_*()`.
 1. Ensure consistent seed across files.
-1. Integrated the correctness checks inside the performance evaluation suite. This is due to large number of unit tests available in performance suite and speedup must be computed by re-evaluating ground truth kernel.
 
 
 We have also integrated performance measurement into the framework. Kernel evaluation flow is as follows:
 1. Check if the kernel is callable: run the test function of the kernel.
-2. If the kernel is callable then check if the kernel matches ground truth by comparing outputs of the generated kernel on known tests.
+2. If the kernel is callable then check if the kernel matches ground truthe by comparing outputs of the generated kernel on know tests.
 3. If the generated kernel is correct: run the performance evaluation.
 
 #### Help/support/contribute:
@@ -59,7 +54,7 @@ You can contribute in the following ways:
 
 ### Updates
 * [2025-07-16] Added autotune compatible ROCm kernels and naive softmax, use `-tp` argument with path to this folder as below:
-    - `geak_eval eval -f PATH_TO_EVAL_FOLDER -o RESULT_NAME -ds rocm -tp geak_eval/data/ROCm/data/ROCm_v1_autotune`
+    - `geak-eval eval -f PATH_TO_EVAL_FOLDER -o RESULT_NAME -ds rocm -tp geak_eval/data/ROCm/data/ROCm_v1_autotune`
     - `naive_softmax.py` kernel from [rocm blog](https://rocm.docs.amd.com/projects/ai-developer-hub/en/latest/notebooks/gpu_dev_optimize/triton_kernel_dev.html#naive-version) is added to this repo.
     - Use `-c` argument to directly run evaluations on python triton code file(s)/folder instead of json-based parsing.
 
